@@ -1,5 +1,6 @@
 export * from "./app.js";
 export * from "./companion.js";
+export * from "./context-bar.js";
 export * from "./completion.js";
 export * from "./diff.js";
 export * from "./editor.js";
@@ -10,6 +11,7 @@ export * from "./picker.js";
 export * from "./pixel-frames.js";
 export * from "./renderer.js";
 export * from "./skins.js";
+export * from "./spec-progress.js";
 export * from "./syntax.js";
 export * from "./themes.js";
 export * from "./widgets.js";
