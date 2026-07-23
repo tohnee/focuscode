@@ -44,6 +44,7 @@ import {
   type CompletionProvider,
   type PickerProvider,
   type ReasoningEffort,
+  type SpecDecisionView,
   type TuiKeymap,
   type TuiMascot,
   type TuiTheme,
@@ -150,6 +151,10 @@ export interface FullScreenAgentOptions {
   /** Optional session cost budget (USD) used by /cost and the cost widget. */
   sessionBudget?: number;
   changeModel(spec: string): Promise<ModelProfile>;
+  /** SpecEngine 确认回调透传。 */
+  onSpecConfirm?(specId: string, choices: Record<string, string>): void;
+  /** SpecEngine 拒绝回调透传。 */
+  onSpecDecline?(specId: string): void;
   onReady?(tui: FullScreenTui): void;
 }
 
@@ -423,6 +428,8 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
       }
       return "Unknown command: /" + name;
     },
+    ...(options.onSpecConfirm ? { onSpecConfirm: options.onSpecConfirm } : {}),
+    ...(options.onSpecDecline ? { onSpecDecline: options.onSpecDecline } : {}),
   });
   options.onReady?.(tui);
   tui.setCompanion(companion);
@@ -466,7 +473,7 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
   await running;
 }
 
-function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () => boolean): void {
+export function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () => boolean): void {
   const speak = (kind: CheerKind) => {
     if (cheerOn?.()) tui.setSpeech(pickCheer(kind));
   };
@@ -476,6 +483,8 @@ function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () => bool
     speak("thinking");
   } else if (event.type === "text_delta") {
     tui.appendAssistant(event.delta);
+  } else if (event.type === "reasoning_delta") {
+    tui.appendReasoning(event.delta);
   } else if (event.type === "tool_start") {
     tui.setMood("working");
     tui.setStatus("Running " + event.call.name + "…");
@@ -511,6 +520,67 @@ function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () => bool
     tui.addMessage("system", event.message);
     tui.setMood("oops");
     speak("oops");
+  } else if (event.type === "spec_start") {
+    tui.setSpecProgress({
+      phase: "start",
+      trigger: event.trigger,
+      stages: [],
+      startTime: Date.now(),
+    });
+    tui.setStatus("✦ Spec engine started (" + event.trigger + ")");
+    speak("thinking");
+  } else if (event.type === "spec_stage") {
+    tui.updateSpecStage(event.stage, {
+      status: "done",
+      model: event.model,
+      durationMs: event.durationMs,
+      fellBack: event.fellBack,
+    });
+    tui.setStatus(
+      "✦ " + event.stage + (event.fellBack ? " (fallback)" : " ✓") + " " + event.durationMs + "ms",
+    );
+  } else if (event.type === "spec_draft_ready") {
+    tui.setSpecDraft({
+      specId: event.specId,
+      topic: event.topic,
+    });
+    tui.setSpeech("Spec draft ready: " + event.topic);
+  } else if (event.type === "spec_confirmation_required") {
+    const decisions: SpecDecisionView[] = (event.decisions as unknown[]).map((raw) => {
+      const d = raw as {
+        id: string;
+        point: string;
+        severity: "critical" | "major" | "minor";
+        options: { label: string; description: string; tradeoffs?: string }[];
+      };
+      return {
+        id: d.id,
+        point: d.point,
+        severity: d.severity,
+        options: d.options.map((o) => ({ label: o.label, description: o.description })),
+        selectedIndex: 0,
+      } satisfies SpecDecisionView;
+    });
+    tui.setSpecConfirmation(event.specId, decisions);
+    tui.setMood("thinking");
+  } else if (event.type === "spec_confirmed") {
+    tui.clearSpecConfirmation();
+    tui.setMood("happy");
+    tui.setStatus("✦ Spec confirmed");
+  } else if (event.type === "spec_skipped") {
+    tui.setSpecProgress({ phase: "skipped", stages: [] });
+    tui.setStatus("✦ Spec skipped: " + event.reason);
+  } else if (event.type === "spec_completed") {
+    const startTime = tui.getSpecStartTime();
+    const totalDuration = startTime ? Date.now() - startTime : undefined;
+    tui.setSpecProgress({
+      phase: "completed",
+      stages: [],
+      ...(totalDuration !== undefined ? { totalDuration } : {}),
+      ...(event.specId ? { specId: event.specId } : {}),
+    });
+    tui.setMood("happy");
+    tui.setStatus("✦ Spec completed · " + (totalDuration ?? 0) + "ms");
   } else if (event.type === "agent_end") {
     tui.setStatus(
       event.response.stopped +
