@@ -3,6 +3,13 @@ import type { CompanionState } from "./companion.js";
 import { renderMarkdownTranscript } from "./markdown.js";
 import { mascotFrame, type MascotMood, type TuiMascot } from "./mascots.js";
 import { renderPicker, type PickerState } from "./picker.js";
+import {
+  renderSpecConfirmation,
+  renderSpecProgress,
+  type SpecConfirmationState,
+  type SpecProgressState,
+} from "./spec-progress.js";
+import { renderContextBar, type ContextUsageState } from "./context-bar.js";
 import { bg, fg, type TuiTheme } from "./themes.js";
 import {
   charWidth,
@@ -63,6 +70,16 @@ export interface TuiRenderState {
   sessionCost?: number;
   /** Optional session budget cap in USD; when set, the cost bar shows a ratio. */
   sessionBudget?: number;
+  /** SpecEngine 进度状态;缺省 idle 时不渲染。 */
+  specProgress?: SpecProgressState;
+  /** SpecEngine 待确认决策;存在时渲染交互式 UI。 */
+  specConfirmation?: SpecConfirmationState;
+  /** 模型 reasoning 累积文本。 */
+  reasoning?: string;
+  /** 是否展开显示 reasoning。 */
+  reasoningExpanded?: boolean;
+  /** Context window 使用量;存在时在 footer 显示进度条。 */
+  contextUsage?: ContextUsageState;
 }
 
 const MAX_INPUT_ROWS = 5;
@@ -145,6 +162,30 @@ export function renderTui(state: TuiRenderState): string {
     );
   }
   const separator = fg(theme.muted, "├" + "─".repeat(width - 2) + "┤");
+  // SpecEngine progress widget (shown when phase !== idle)
+  const specLines: string[] = [];
+  if (state.specProgress && state.specProgress.phase !== "idle") {
+    const rendered = renderSpecProgress(state.specProgress, bodyWidth, theme);
+    for (const line of rendered) {
+      specLines.push(line);
+    }
+  }
+  // Spec confirmation overlay (takes priority over normal body)
+  if (state.specConfirmation) {
+    const confirmLines = renderSpecConfirmation(state.specConfirmation, width, theme);
+    specLines.push(...confirmLines);
+  }
+  // Reasoning indicator (collapsed: show indicator; expanded: show text)
+  let reasoningLine = "";
+  if (state.reasoning) {
+    if (state.reasoningExpanded) {
+      const text = state.reasoning.replaceAll(/\r?\n/g, " ");
+      const truncated = text.length > bodyWidth - 4 ? text.slice(0, bodyWidth - 5) + "…" : text;
+      reasoningLine = "💭 " + truncated;
+    } else {
+      reasoningLine = "💭 thinking...";
+    }
+  }
   const queue = state.queued ? " · queued " + state.queued : "";
   const spinner = state.busy ? SPINNER[state.tick % SPINNER.length] + " " : "";
   const companionBadge = state.companion ? renderCompanionBadge(state.companion, theme) : "";
@@ -152,7 +193,8 @@ export function renderTui(state: TuiRenderState): string {
     state.sessionCost !== undefined
       ? renderCostBadge(state.sessionCost, state.sessionBudget, theme)
       : "";
-  const footerExtras = [companionBadge, costBadge].filter(Boolean).join(" · ");
+  const contextBadge = state.contextUsage ? renderContextBar(state.contextUsage, 30, theme) : "";
+  const footerExtras = [companionBadge, costBadge, contextBadge].filter(Boolean).join(" · ");
   const footerText =
     " " +
     sanitizeTerminalText(state.mascot.name) +
@@ -175,13 +217,25 @@ export function renderTui(state: TuiRenderState): string {
       ),
     ) +
     fg(theme.accent, "│");
+  const reasoningRows: string[] = reasoningLine ? [reasoningLine] : [];
   if (state.picker) {
     const overlay = renderPickerOverlay(state.picker, width, height, theme);
     return bg(theme.background, [top, header, ...overlay, footer, bottom].join("\n"));
   }
   return bg(
     theme.background,
-    [top, header, ...body, separator, ...completionRows, ...inputRows, footer, bottom].join("\n"),
+    [
+      top,
+      header,
+      ...body,
+      ...specLines,
+      ...reasoningRows,
+      separator,
+      ...completionRows,
+      ...inputRows,
+      footer,
+      bottom,
+    ].join("\n"),
   );
 }
 

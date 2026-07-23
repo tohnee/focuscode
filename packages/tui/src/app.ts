@@ -17,7 +17,18 @@ import {
   type ReasoningEffort,
 } from "./picker.js";
 import { renderTui, type TuiRenderState, type TuiTranscriptLine } from "./renderer.js";
+import {
+  advanceConfirmation,
+  collectChoices,
+  createInitialSpecProgress,
+  createSpecConfirmation,
+  type SpecConfirmationState,
+  type SpecDecisionView,
+  type SpecProgressState,
+  type SpecStageInfo,
+} from "./spec-progress.js";
 import { getTheme, TUI_THEMES, type TuiTheme } from "./themes.js";
+import type { ContextUsageState } from "./context-bar.js";
 
 export interface FullScreenTuiOptions {
   input: ReadStream;
@@ -44,6 +55,10 @@ export interface FullScreenTuiOptions {
   onSteer(text: string): Promise<void>;
   onAbort(): void;
   onCommand?(command: string): Promise<string | void>;
+  /** SpecEngine 交互式确认回调。当用户在 TUI 里完成决策选择时调用。 */
+  onSpecConfirm?(specId: string, choices: Record<string, string>): void;
+  /** SpecEngine 拒绝整个 spec 时调用。 */
+  onSpecDecline?(specId: string): void;
 }
 
 export class FullScreenTui {
@@ -82,6 +97,11 @@ export class FullScreenTui {
   private companion: CompanionState | undefined;
   private sessionCost: number | undefined;
   private sessionBudget: number | undefined;
+  private specProgress: SpecProgressState = createInitialSpecProgress();
+  private specConfirmation: SpecConfirmationState | undefined;
+  private reasoning: string | undefined;
+  private reasoningExpanded: boolean | undefined;
+  private contextUsage: ContextUsageState | undefined;
 
   constructor(private readonly options: FullScreenTuiOptions) {
     this.theme = getTheme(options.theme);
@@ -192,6 +212,99 @@ export class FullScreenTui {
   setSessionCost(spent: number | undefined, budget?: number): void {
     this.sessionCost = spent;
     this.sessionBudget = budget;
+    this.render();
+  }
+
+  /** Update SpecEngine progress state. */
+  setSpecProgress(state: SpecProgressState): void {
+    this.specProgress = { ...state, stages: [...state.stages] };
+    this.render();
+  }
+
+  /** Update or insert a single spec stage. */
+  updateSpecStage(
+    name: string,
+    info: Partial<SpecStageInfo> & { status: SpecStageInfo["status"] },
+  ): void {
+    const stages = [...this.specProgress.stages];
+    const idx = stages.findIndex((s) => s.name === name);
+    const updated: SpecStageInfo = idx >= 0 ? { ...stages[idx]!, ...info } : { name, ...info };
+    if (idx >= 0) stages[idx] = updated;
+    else stages.push(updated);
+    this.specProgress = { ...this.specProgress, stages };
+    this.render();
+  }
+
+  /** Set spec draft preview (topic + understanding). */
+  setSpecDraft(draft: { specId?: string; topic?: string }): void {
+    this.specProgress = {
+      ...this.specProgress,
+      ...(draft.specId !== undefined ? { specId: draft.specId } : {}),
+      ...(draft.topic !== undefined ? { topic: draft.topic } : {}),
+    };
+    this.render();
+  }
+
+  /** Get spec start time for duration calculation. */
+  getSpecStartTime(): number | undefined {
+    return this.specProgress.startTime;
+  }
+
+  /** Show interactive spec confirmation UI. */
+  setSpecConfirmation(specId: string, decisions: SpecDecisionView[]): void {
+    this.specConfirmation = createSpecConfirmation(specId, decisions);
+    this.render();
+  }
+
+  /** Current confirmation state (for external assertion / input handling). */
+  getSpecConfirmationState(): SpecConfirmationState | undefined {
+    return this.specConfirmation;
+  }
+
+  /** Clear confirmation UI (after spec_confirmed or spec_skipped). */
+  clearSpecConfirmation(): void {
+    this.specConfirmation = undefined;
+    this.render();
+  }
+
+  /** Advance confirmation navigation; triggers callback on completion. */
+  confirmSpecNavigation(action: "option_up" | "option_down" | "confirm" | "cancel"): void {
+    if (!this.specConfirmation) return;
+    const next = advanceConfirmation(this.specConfirmation, action);
+    this.specConfirmation = next;
+    if (next.completed) {
+      if (action === "cancel") {
+        this.options.onSpecDecline?.(next.specId);
+      } else {
+        const choices = collectChoices(next);
+        this.options.onSpecConfirm?.(next.specId, choices);
+      }
+      this.specConfirmation = undefined;
+    }
+    this.render();
+  }
+
+  /** Append reasoning text (from reasoning_delta events). */
+  appendReasoning(delta: string): void {
+    this.reasoning = (this.reasoning ?? "") + delta;
+    this.render();
+  }
+
+  /** Clear reasoning buffer. */
+  clearReasoning(): void {
+    this.reasoning = undefined;
+    this.render();
+  }
+
+  /** Toggle reasoning expanded state. */
+  setReasoningExpanded(expanded: boolean): void {
+    this.reasoningExpanded = expanded;
+    this.render();
+  }
+
+  /** Update context usage display. */
+  setContextUsage(state: ContextUsageState): void {
+    this.contextUsage = { ...state };
     this.render();
   }
 
@@ -344,6 +457,13 @@ export class FullScreenTui {
       ...(this.companion ? { companion: this.companion } : {}),
       ...(this.sessionCost !== undefined ? { sessionCost: this.sessionCost } : {}),
       ...(this.sessionBudget !== undefined ? { sessionBudget: this.sessionBudget } : {}),
+      specProgress: this.specProgress,
+      ...(this.specConfirmation ? { specConfirmation: this.specConfirmation } : {}),
+      ...(this.reasoning ? { reasoning: this.reasoning } : {}),
+      ...(this.reasoningExpanded !== undefined
+        ? { reasoningExpanded: this.reasoningExpanded }
+        : {}),
+      ...(this.contextUsage ? { contextUsage: this.contextUsage } : {}),
       scrollOffset: this.scrollOffset,
     };
   }
@@ -356,6 +476,10 @@ export class FullScreenTui {
     // decoder would otherwise drop the leading ESC and turn `ESC m` into `m`.
     if (this.picker) {
       this.handlePickerInput(value);
+      return;
+    }
+    if (this.specConfirmation) {
+      this.handleSpecConfirmationInput(value);
       return;
     }
     if (value.startsWith("\u001bm")) {
@@ -486,6 +610,43 @@ export class FullScreenTui {
     this.render();
   }
 
+  /**
+   * Handle keystrokes while the spec confirmation overlay is open.
+   * Up/Down navigate options, Enter confirms current decision,
+   * Esc declines the entire spec.
+   */
+  private handleSpecConfirmationInput(value: string): void {
+    let index = 0;
+    while (index < value.length) {
+      const rest = value.slice(index);
+      // Esc declines spec
+      if (rest.startsWith("\u001b") && !rest.startsWith("\u001b[")) {
+        this.confirmSpecNavigation("cancel");
+        index += 1;
+        continue;
+      }
+      // Arrow up
+      if (rest.startsWith("\u001b[A")) {
+        this.confirmSpecNavigation("option_up");
+        index += 3;
+        continue;
+      }
+      // Arrow down
+      if (rest.startsWith("\u001b[B")) {
+        this.confirmSpecNavigation("option_down");
+        index += 3;
+        continue;
+      }
+      // Enter confirms
+      if (rest.startsWith("\r") || rest.startsWith("\n")) {
+        this.confirmSpecNavigation("confirm");
+        index += 1;
+        continue;
+      }
+      index += 1;
+    }
+  }
+
   private confirmPickerSelection(): void {
     if (!this.picker) return;
     const result = confirmPicker(this.picker);
@@ -605,6 +766,8 @@ export class FullScreenTui {
       this.setStatus(
         this.mascot.name + " · " + this.mascot.species + " · " + this.mascot.catchphrase,
       );
+    } else if (action === "toggle_reasoning") {
+      this.reasoningExpanded = !this.reasoningExpanded;
     }
   }
 
