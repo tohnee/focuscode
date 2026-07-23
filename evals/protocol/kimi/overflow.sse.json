@@ -1,0 +1,39 @@
+[
+  {
+    "id": "chatcmpl-fixture-kimi-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000006,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "role": "assistant",
+          "content": "A very long answer that exceeds the output budget "
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000006,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      { "index": 0, "delta": { "content": "and therefore stops early" }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000006,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "length" }],
+    "usage": { "prompt_tokens": 300, "completion_tokens": 131072, "total_tokens": 131372 }
+  },
+  "[DONE]"
+]

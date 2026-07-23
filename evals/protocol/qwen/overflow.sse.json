@@ -1,0 +1,31 @@
+[
+  {
+    "id": "chatcmpl-fixture-qwen-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000105,
+    "model": "qwen3-coder-plus",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "role": "assistant", "content": "An answer that runs into the token ceiling " },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000105,
+    "model": "qwen3-coder-plus",
+    "choices": [{ "index": 0, "delta": { "content": "and is truncated" }, "finish_reason": null }]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000105,
+    "model": "qwen3-coder-plus",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "length" }],
+    "usage": { "prompt_tokens": 260, "completion_tokens": 65536, "total_tokens": 65796 }
+  },
+  "[DONE]"
+]

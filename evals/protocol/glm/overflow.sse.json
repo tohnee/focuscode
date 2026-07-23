@@ -1,0 +1,31 @@
+[
+  {
+    "id": "chatcmpl-fixture-glm-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000205,
+    "model": "glm-5.2",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "role": "assistant", "content": "A response that hits the completion limit " },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000205,
+    "model": "glm-5.2",
+    "choices": [{ "index": 0, "delta": { "content": "mid-paragraph" }, "finish_reason": null }]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000205,
+    "model": "glm-5.2",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "length" }],
+    "usage": { "prompt_tokens": 240, "completion_tokens": 131072, "total_tokens": 131312 }
+  },
+  "[DONE]"
+]

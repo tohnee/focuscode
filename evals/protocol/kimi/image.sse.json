@@ -1,0 +1,40 @@
+[
+  {
+    "id": "chatcmpl-fixture-kimi-image",
+    "object": "chat.completion.chunk",
+    "created": 1784000004,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "role": "assistant", "content": "The diagram shows two execution paths: " },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-image",
+    "object": "chat.completion.chunk",
+    "created": 1784000004,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "content": "a session agent and an audit kernel." },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-image",
+    "object": "chat.completion.chunk",
+    "created": 1784000004,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }],
+    "usage": { "prompt_tokens": 1024, "completion_tokens": 16, "total_tokens": 1040 }
+  },
+  "[DONE]"
+]

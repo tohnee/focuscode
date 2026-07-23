@@ -1,0 +1,24 @@
+[
+  {
+    "id": "chatcmpl-fixture-deepseek-abort",
+    "object": "chat.completion.chunk",
+    "created": 1784000304,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "role": "assistant", "content": "DeepSeek partial " },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-abort",
+    "object": "chat.completion.chunk",
+    "created": 1784000304,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [{ "index": 0, "delta": { "content": "answer" }, "finish_reason": null }]
+  }
+]

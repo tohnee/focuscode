@@ -1,0 +1,48 @@
+[
+  {
+    "id": "chatcmpl-fixture-kimi-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000001,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "role": "assistant", "reasoning_content": "First, inspect the entry point. " },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000001,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "reasoning_content": "Then patch the parser." },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000001,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [{ "index": 0, "delta": { "content": "Fixed the parser." }, "finish_reason": null }]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000001,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }],
+    "usage": { "prompt_tokens": 210, "completion_tokens": 24, "total_tokens": 234 }
+  },
+  "[DONE]"
+]

@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "package": "@focuscode/cli",
+  "version": "0.4.0-beta.2",
+  "tarball": "/Users/tohnee/agents/focus-code/focuscode/reports/npm/focuscode-cli-0.4.0-beta.2.tgz",
+  "sizeBytes": 158111,
+  "sha256": "55750634062e090c57a48b4945831cf1b92ba018952fe8fc835bb4756e04c9ad",
+  "installedFiles": [
+    "LICENSE",
+    "README.md",
+    "bundle/focuscode.mjs",
+    "model-packs/generic-openai/README.md",
+    "model-packs/generic-openai/pack.json",
+    "package.json"
+  ],
+  "checks": [
+    "npm pack",
+    "clean npm install with lifecycle scripts disabled",
+    "installed --version",
+    "installed mascot command",
+    "clean-installed streaming tool-loop demo",
+    "clean-installed audited-kernel run with bundled Model Pack",
+    "published file allowlist"
+  ]
+}

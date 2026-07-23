@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+reports
+apps/cli/bundle
+.focuscode-state
+.tmp
+pnpm-lock.yaml

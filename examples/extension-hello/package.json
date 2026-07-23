@@ -1,0 +1,21 @@
+{
+  "name": "@focuscode/example-hello-extension",
+  "version": "0.1.0",
+  "description": "Minimal FocusCode command and tool extension",
+  "type": "module",
+  "files": [
+    "index.mjs",
+    "README.md"
+  ],
+  "focuscode": {
+    "apiVersion": "focuscode.extension.v1",
+    "entry": "./index.mjs",
+    "displayName": "Hello FocusCode",
+    "description": "Adds /hello and a read-only workspace_clock tool",
+    "permissions": [
+      "commands",
+      "tools",
+      "events"
+    ]
+  }
+}

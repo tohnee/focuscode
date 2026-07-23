@@ -1,0 +1,13 @@
+{
+  "name": "@focuscode/control-api",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@focuscode/contracts": "workspace:*",
+    "@focuscode/persistence": "workspace:*"
+  }
+}

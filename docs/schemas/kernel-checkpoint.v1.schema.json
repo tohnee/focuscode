@@ -1,0 +1,517 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "kernel-checkpoint.v1",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "taskId",
+    "state",
+    "eventVersion",
+    "turn",
+    "actionCount",
+    "startedAt",
+    "updatedAt",
+    "publicPlan",
+    "recentEffects",
+    "model"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "kernel-checkpoint.v1",
+      "type": "string"
+    },
+    "taskId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "state": {
+      "anyOf": [
+        {
+          "const": "CREATED",
+          "type": "string"
+        },
+        {
+          "const": "PREFLIGHT",
+          "type": "string"
+        },
+        {
+          "const": "WAITING_INPUT",
+          "type": "string"
+        },
+        {
+          "const": "READY",
+          "type": "string"
+        },
+        {
+          "const": "RUNNING",
+          "type": "string"
+        },
+        {
+          "const": "WAITING_APPROVAL",
+          "type": "string"
+        },
+        {
+          "const": "PAUSED",
+          "type": "string"
+        },
+        {
+          "const": "VERIFYING",
+          "type": "string"
+        },
+        {
+          "const": "REVIEW_READY",
+          "type": "string"
+        },
+        {
+          "const": "RECONCILING",
+          "type": "string"
+        },
+        {
+          "const": "BLOCKED",
+          "type": "string"
+        },
+        {
+          "const": "ACCEPTED",
+          "type": "string"
+        },
+        {
+          "const": "REJECTED",
+          "type": "string"
+        },
+        {
+          "const": "CANCELLING",
+          "type": "string"
+        },
+        {
+          "const": "CANCELLED",
+          "type": "string"
+        },
+        {
+          "const": "FAILED",
+          "type": "string"
+        },
+        {
+          "const": "EXPIRED",
+          "type": "string"
+        }
+      ]
+    },
+    "eventVersion": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "turn": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "actionCount": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "startedAt": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+      "type": "string"
+    },
+    "updatedAt": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+      "type": "string"
+    },
+    "publicPlan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recentEffects": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "actionId",
+          "grantId",
+          "status",
+          "observedEffects",
+          "artifacts",
+          "reconciliation"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "const": "effect-receipt.v1",
+            "type": "string"
+          },
+          "actionId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "grantId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "grant": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "schemaVersion",
+              "grantId",
+              "taskId",
+              "subject",
+              "capabilities",
+              "constraints",
+              "expiresAt",
+              "fencingToken",
+              "policySnapshotDigest"
+            ],
+            "properties": {
+              "schemaVersion": {
+                "const": "capability-grant.v1",
+                "type": "string"
+              },
+              "grantId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "taskId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "subject": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["taskId", "workerId", "modelCertificateId"],
+                "properties": {
+                  "taskId": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "workerId": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "modelCertificateId": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "constraints": {
+                "type": "array",
+                "items": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["kind", "value"],
+                  "properties": {
+                    "kind": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "value": {}
+                  }
+                }
+              },
+              "expiresAt": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+                "type": "string"
+              },
+              "fencingToken": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "policySnapshotDigest": {
+                "pattern": "^sha256:[a-f0-9]{64}$",
+                "type": "string"
+              }
+            }
+          },
+          "status": {
+            "anyOf": [
+              {
+                "const": "applied",
+                "type": "string"
+              },
+              {
+                "const": "rejected",
+                "type": "string"
+              },
+              {
+                "const": "partial",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "type": "string"
+              }
+            ]
+          },
+          "observedEffects": {
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["class", "detail"],
+              "properties": {
+                "class": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "resource": {
+                  "type": "string"
+                },
+                "detail": {}
+              }
+            }
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["artifactId", "mediaType", "digest"],
+              "properties": {
+                "artifactId": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "mediaType": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "digest": {
+                  "pattern": "^sha256:[a-f0-9]{64}$",
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "before": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "after": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "reconciliation": {
+            "anyOf": [
+              {
+                "const": "matched",
+                "type": "string"
+              },
+              {
+                "const": "mismatch",
+                "type": "string"
+              },
+              {
+                "const": "required",
+                "type": "string"
+              }
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "model": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "modelId",
+        "modelRevision",
+        "tokenizer",
+        "chatTemplate",
+        "modelPack",
+        "deploymentProfile",
+        "certificateId",
+        "certifiedCapabilities",
+        "riskLevel"
+      ],
+      "properties": {
+        "modelId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "modelRevision": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "tokenizer": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "chatTemplate": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "modelPack": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "deploymentProfile": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "certificateId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "certifiedCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "riskLevel": {
+          "anyOf": [
+            {
+              "const": "sandbox-only",
+              "type": "string"
+            },
+            {
+              "const": "explore",
+              "type": "string"
+            },
+            {
+              "const": "change",
+              "type": "string"
+            },
+            {
+              "const": "pilot",
+              "type": "string"
+            }
+          ]
+        },
+        "expiresAt": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+          "type": "string"
+        }
+      }
+    },
+    "baseline": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["schemaVersion", "conclusion", "phase", "results", "summary"],
+      "properties": {
+        "schemaVersion": {
+          "const": "verification-report.v1",
+          "type": "string"
+        },
+        "conclusion": {
+          "anyOf": [
+            {
+              "const": "PASS",
+              "type": "string"
+            },
+            {
+              "const": "BASELINE_FAIL",
+              "type": "string"
+            },
+            {
+              "const": "PARTIAL",
+              "type": "string"
+            },
+            {
+              "const": "BLOCKED",
+              "type": "string"
+            },
+            {
+              "const": "UNKNOWN",
+              "type": "string"
+            },
+            {
+              "const": "REGRESSION",
+              "type": "string"
+            }
+          ]
+        },
+        "phase": {
+          "anyOf": [
+            {
+              "const": "baseline",
+              "type": "string"
+            },
+            {
+              "const": "target",
+              "type": "string"
+            }
+          ]
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "commandId",
+              "exitCode",
+              "stdout",
+              "stderr",
+              "durationMs",
+              "timedOut",
+              "digest"
+            ],
+            "properties": {
+              "commandId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "exitCode": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "stdout": {
+                "type": "string"
+              },
+              "stderr": {
+                "type": "string"
+              },
+              "durationMs": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "timedOut": {
+                "type": "boolean"
+              },
+              "digest": {
+                "pattern": "^sha256:[a-f0-9]{64}$",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

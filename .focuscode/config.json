@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "focuscode-repo.v1",
+  "protectedPaths": [".git", ".github/workflows", ".focuscode", "pnpm-lock.yaml", "LICENSE"],
+  "commands": [
+    {
+      "id": "verify",
+      "argv": ["pnpm", "verify"],
+      "timeoutMs": 300000
+    }
+  ],
+  "verificationCommandIds": ["verify"]
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "chatcmpl-fixture-kimi-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000000,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      { "index": 0, "delta": { "role": "assistant", "content": "" }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000000,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      { "index": 0, "delta": { "content": "The repository uses a " }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000000,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      { "index": 0, "delta": { "content": "layered harness design." }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000000,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }],
+    "usage": { "prompt_tokens": 128, "completion_tokens": 9, "total_tokens": 137 }
+  },
+  "[DONE]"
+]

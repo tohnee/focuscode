@@ -1,0 +1,13 @@
+{
+  "id": "team_sakura",
+  "name": "Team Sakura",
+  "background": 235,
+  "foreground": 255,
+  "accent": 213,
+  "secondary": 117,
+  "success": 120,
+  "warning": 228,
+  "danger": 210,
+  "muted": 245,
+  "border": "·"
+}

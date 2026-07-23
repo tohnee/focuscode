@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - packages/*
+
+nodeVersion: 22.20.0
+engineStrict: true
+savePrefix: ""
+
+allowBuilds:
+  esbuild: true
+
+catalog:
+  "@sinclair/typebox": 0.34.52

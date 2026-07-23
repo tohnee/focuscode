@@ -1,0 +1,10 @@
+node_modules/
+dist/
+reports/coverage/
+reports/npm/*.tgz
+.focuscode-state/
+.tmp/
+*.log
+.DS_Store
+apps/cli/bundle/
+apps/cli/model-packs/

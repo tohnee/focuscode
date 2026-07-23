@@ -1,0 +1,57 @@
+[
+  {
+    "id": "chatcmpl-fixture-deepseek-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000301,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "role": "assistant",
+          "reasoning_content": "The race is between checkpoint save "
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000301,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "reasoning_content": "and event append; replay must rebuild." },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000301,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "content": "Replay now rebuilds the checkpoint." },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000301,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }],
+    "usage": { "prompt_tokens": 320, "completion_tokens": 40, "total_tokens": 360 }
+  },
+  "[DONE]"
+]

@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "execution-context.v1",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "taskId",
+    "tenantId",
+    "actor",
+    "dataClass",
+    "policySnapshot",
+    "budget",
+    "traceId",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "execution-context.v1",
+      "type": "string"
+    },
+    "taskId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "tenantId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "actor": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "kind"],
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "const": "user",
+              "type": "string"
+            },
+            {
+              "const": "service",
+              "type": "string"
+            },
+            {
+              "const": "agent",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "dataClass": {
+      "anyOf": [
+        {
+          "const": "standard",
+          "type": "string"
+        },
+        {
+          "const": "restricted",
+          "type": "string"
+        }
+      ]
+    },
+    "policySnapshot": {
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "budget": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["maxTurns", "maxActions", "maxWallTimeMs", "maxChangedFiles", "maxChangedLines"],
+      "properties": {
+        "maxTurns": {
+          "minimum": 1,
+          "maximum": 200,
+          "type": "integer"
+        },
+        "maxActions": {
+          "minimum": 0,
+          "maximum": 2000,
+          "type": "integer"
+        },
+        "maxWallTimeMs": {
+          "minimum": 1000,
+          "type": "integer"
+        },
+        "maxChangedFiles": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxChangedLines": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "traceId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "createdAt": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+      "type": "string"
+    }
+  }
+}

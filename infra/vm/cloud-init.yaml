@@ -1,0 +1,22 @@
+#cloud-config
+users:
+  - name: focuscode
+    lock_passwd: true
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - REPLACE_WITH_OPERATOR_PUBLIC_KEY
+package_update: true
+packages:
+  - ca-certificates
+  - git
+  - nodejs
+  - npm
+  - python3
+  - ripgrep
+runcmd:
+  - [mkdir, -p, /mnt/focuscode-workspace]
+  - [chown, "focuscode:focuscode", /mnt/focuscode-workspace]
+  - [chmod, "0750", /mnt/focuscode-workspace]
+
+# Attach the repository using a hypervisor shared directory (virtiofs/9p) at
+# /mnt/focuscode-workspace. FocusCode executes over SSH with BatchMode and strict host keys.

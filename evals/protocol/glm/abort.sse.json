@@ -1,0 +1,22 @@
+[
+  {
+    "id": "chatcmpl-fixture-glm-abort",
+    "object": "chat.completion.chunk",
+    "created": 1784000204,
+    "model": "glm-5.2",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "role": "assistant", "content": "Interrupted glm " },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-abort",
+    "object": "chat.completion.chunk",
+    "created": 1784000204,
+    "model": "glm-5.2",
+    "choices": [{ "index": 0, "delta": { "content": "stream" }, "finish_reason": null }]
+  }
+]

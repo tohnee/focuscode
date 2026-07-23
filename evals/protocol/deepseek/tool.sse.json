@@ -1,0 +1,68 @@
+[
+  {
+    "id": "chatcmpl-fixture-deepseek-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000302,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_deepseek_fixture_1",
+              "type": "function",
+              "function": { "name": "bash", "arguments": "" }
+            }
+          ]
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000302,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "tool_calls": [{ "index": 0, "function": { "arguments": "{\"command\":\"pnpm" } }]
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000302,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "tool_calls": [{ "index": 0, "function": { "arguments": " build\"}" } }]
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000302,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "tool_calls" }],
+    "usage": { "prompt_tokens": 148, "completion_tokens": 12, "total_tokens": 160 }
+  },
+  "[DONE]"
+]

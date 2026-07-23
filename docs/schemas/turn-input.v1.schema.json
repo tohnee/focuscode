@@ -1,0 +1,699 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "turn-input.v1",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "task",
+    "execution",
+    "state",
+    "turn",
+    "publicPlan",
+    "tools",
+    "recentEvents",
+    "recentEffects"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "turn-input.v1",
+      "type": "string"
+    },
+    "task": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["schemaVersion", "repoId", "baseRef", "mode", "objective", "acceptanceCriteria"],
+      "properties": {
+        "schemaVersion": {
+          "const": "task-spec.v1",
+          "type": "string"
+        },
+        "repoId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "baseRef": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "const": "explore",
+              "type": "string"
+            },
+            {
+              "const": "change",
+              "type": "string"
+            },
+            {
+              "const": "review",
+              "type": "string"
+            },
+            {
+              "const": "verify",
+              "type": "string"
+            }
+          ]
+        },
+        "objective": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "acceptanceCriteria": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["id", "description"],
+            "properties": {
+              "id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "description": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "verificationCommandId": {
+                "minLength": 1,
+                "type": "string"
+              }
+            }
+          }
+        },
+        "scope": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "maxFiles": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "maxChangedLines": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        },
+        "requestedProfile": {
+          "anyOf": [
+            {
+              "const": "balanced",
+              "type": "string"
+            },
+            {
+              "const": "quality",
+              "type": "string"
+            },
+            {
+              "const": "local",
+              "type": "string"
+            },
+            {
+              "const": "fast",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "execution": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "taskId",
+        "tenantId",
+        "actor",
+        "dataClass",
+        "policySnapshot",
+        "budget",
+        "traceId",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "execution-context.v1",
+          "type": "string"
+        },
+        "taskId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "tenantId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "actor": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["id", "kind"],
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "kind": {
+              "anyOf": [
+                {
+                  "const": "user",
+                  "type": "string"
+                },
+                {
+                  "const": "service",
+                  "type": "string"
+                },
+                {
+                  "const": "agent",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        "dataClass": {
+          "anyOf": [
+            {
+              "const": "standard",
+              "type": "string"
+            },
+            {
+              "const": "restricted",
+              "type": "string"
+            }
+          ]
+        },
+        "policySnapshot": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "budget": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "maxTurns",
+            "maxActions",
+            "maxWallTimeMs",
+            "maxChangedFiles",
+            "maxChangedLines"
+          ],
+          "properties": {
+            "maxTurns": {
+              "minimum": 1,
+              "maximum": 200,
+              "type": "integer"
+            },
+            "maxActions": {
+              "minimum": 0,
+              "maximum": 2000,
+              "type": "integer"
+            },
+            "maxWallTimeMs": {
+              "minimum": 1000,
+              "type": "integer"
+            },
+            "maxChangedFiles": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxChangedLines": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        },
+        "traceId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "createdAt": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+          "type": "string"
+        }
+      }
+    },
+    "state": {
+      "anyOf": [
+        {
+          "const": "CREATED",
+          "type": "string"
+        },
+        {
+          "const": "PREFLIGHT",
+          "type": "string"
+        },
+        {
+          "const": "WAITING_INPUT",
+          "type": "string"
+        },
+        {
+          "const": "READY",
+          "type": "string"
+        },
+        {
+          "const": "RUNNING",
+          "type": "string"
+        },
+        {
+          "const": "WAITING_APPROVAL",
+          "type": "string"
+        },
+        {
+          "const": "PAUSED",
+          "type": "string"
+        },
+        {
+          "const": "VERIFYING",
+          "type": "string"
+        },
+        {
+          "const": "REVIEW_READY",
+          "type": "string"
+        },
+        {
+          "const": "RECONCILING",
+          "type": "string"
+        },
+        {
+          "const": "BLOCKED",
+          "type": "string"
+        },
+        {
+          "const": "ACCEPTED",
+          "type": "string"
+        },
+        {
+          "const": "REJECTED",
+          "type": "string"
+        },
+        {
+          "const": "CANCELLING",
+          "type": "string"
+        },
+        {
+          "const": "CANCELLED",
+          "type": "string"
+        },
+        {
+          "const": "FAILED",
+          "type": "string"
+        },
+        {
+          "const": "EXPIRED",
+          "type": "string"
+        }
+      ]
+    },
+    "turn": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "publicPlan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "description",
+          "inputSchema",
+          "outputSchema",
+          "schemaDigest",
+          "effectClasses",
+          "idempotency",
+          "requiredCapabilities"
+        ],
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "version": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "inputSchema": {
+            "type": "object",
+            "patternProperties": {
+              "^(.*)$": {}
+            }
+          },
+          "outputSchema": {
+            "type": "object",
+            "patternProperties": {
+              "^(.*)$": {}
+            }
+          },
+          "schemaDigest": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "effectClasses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "idempotency": {
+            "anyOf": [
+              {
+                "const": "read",
+                "type": "string"
+              },
+              {
+                "const": "idempotent",
+                "type": "string"
+              },
+              {
+                "const": "conditional",
+                "type": "string"
+              },
+              {
+                "const": "non_idempotent",
+                "type": "string"
+              }
+            ]
+          },
+          "requiredCapabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "recentEvents": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "eventId",
+          "taskId",
+          "seq",
+          "kind",
+          "at",
+          "actor",
+          "payload",
+          "digest"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "const": "domain-event.v1",
+            "type": "string"
+          },
+          "eventId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "taskId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "seq": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "kind": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "at": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+            "type": "string"
+          },
+          "actor": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["id", "kind"],
+            "properties": {
+              "id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "kind": {
+                "anyOf": [
+                  {
+                    "const": "user",
+                    "type": "string"
+                  },
+                  {
+                    "const": "service",
+                    "type": "string"
+                  },
+                  {
+                    "const": "agent",
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          },
+          "payload": {},
+          "digest": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recentEffects": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "actionId",
+          "grantId",
+          "status",
+          "observedEffects",
+          "artifacts",
+          "reconciliation"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "const": "effect-receipt.v1",
+            "type": "string"
+          },
+          "actionId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "grantId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "grant": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "schemaVersion",
+              "grantId",
+              "taskId",
+              "subject",
+              "capabilities",
+              "constraints",
+              "expiresAt",
+              "fencingToken",
+              "policySnapshotDigest"
+            ],
+            "properties": {
+              "schemaVersion": {
+                "const": "capability-grant.v1",
+                "type": "string"
+              },
+              "grantId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "taskId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "subject": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["taskId", "workerId", "modelCertificateId"],
+                "properties": {
+                  "taskId": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "workerId": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "modelCertificateId": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "constraints": {
+                "type": "array",
+                "items": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["kind", "value"],
+                  "properties": {
+                    "kind": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "value": {}
+                  }
+                }
+              },
+              "expiresAt": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+                "type": "string"
+              },
+              "fencingToken": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "policySnapshotDigest": {
+                "pattern": "^sha256:[a-f0-9]{64}$",
+                "type": "string"
+              }
+            }
+          },
+          "status": {
+            "anyOf": [
+              {
+                "const": "applied",
+                "type": "string"
+              },
+              {
+                "const": "rejected",
+                "type": "string"
+              },
+              {
+                "const": "partial",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "type": "string"
+              }
+            ]
+          },
+          "observedEffects": {
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["class", "detail"],
+              "properties": {
+                "class": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "resource": {
+                  "type": "string"
+                },
+                "detail": {}
+              }
+            }
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["artifactId", "mediaType", "digest"],
+              "properties": {
+                "artifactId": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "mediaType": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "digest": {
+                  "pattern": "^sha256:[a-f0-9]{64}$",
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "before": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "after": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "reconciliation": {
+            "anyOf": [
+              {
+                "const": "matched",
+                "type": "string"
+              },
+              {
+                "const": "mismatch",
+                "type": "string"
+              },
+              {
+                "const": "required",
+                "type": "string"
+              }
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

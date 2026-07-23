@@ -1,0 +1,64 @@
+[
+  {
+    "id": "chatcmpl-fixture-glm-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000202,
+    "model": "glm-5.2",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_glm_fixture_1",
+              "type": "function",
+              "function": { "name": "grep", "arguments": "" }
+            }
+          ]
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000202,
+    "model": "glm-5.2",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "tool_calls": [{ "index": 0, "function": { "arguments": "{\"pattern\":\"circuit" } }]
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000202,
+    "model": "glm-5.2",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "tool_calls": [{ "index": 0, "function": { "arguments": "\",\"path\":\"src\"}" } }]
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000202,
+    "model": "glm-5.2",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "tool_calls" }],
+    "usage": { "prompt_tokens": 132, "completion_tokens": 17, "total_tokens": 149 }
+  },
+  "[DONE]"
+]

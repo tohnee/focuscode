@@ -1,0 +1,34 @@
+[
+  {
+    "id": "chatcmpl-fixture-deepseek-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000305,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "role": "assistant", "content": "A completion that reaches the cap " },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000305,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [{ "index": 0, "delta": { "content": "without finishing" }, "finish_reason": null }]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-overflow",
+    "object": "chat.completion.chunk",
+    "created": 1784000305,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "length" }],
+    "usage": { "prompt_tokens": 512, "completion_tokens": 8192, "total_tokens": 8704 }
+  },
+  "[DONE]"
+]

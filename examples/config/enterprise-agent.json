@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "focuscode-agent.v1",
+  "provider": "deepseek",
+  "model": "deepseek-v4-pro",
+  "approval": "ask",
+  "sandbox": {
+    "kind": "auto",
+    "image": "registry.example.com/focuscode-runner@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "network": "none",
+    "allowHostFallback": false,
+    "requireImageDigest": true
+  },
+  "media": {
+    "allowRemoteImages": false
+  },
+  "enterprise": {
+    "enabled": true,
+    "allowedProviders": ["deepseek"],
+    "allowedModels": ["deepseek/deepseek-v4-pro"],
+    "requireIsolatedSandbox": true,
+    "auditHmacKeyEnv": "FOCUSCODE_AUDIT_HMAC_KEY",
+    "allowProjectExtensions": false,
+    "allowedExtensions": ["@example/focuscode-approved-tools"]
+  },
+  "requireExtensionSignatures": true
+}

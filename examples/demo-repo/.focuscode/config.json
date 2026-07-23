@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "focuscode-repo.v1",
+  "protectedPaths": [".git", ".focuscode", "package-lock.json"],
+  "commands": [
+    {
+      "id": "test",
+      "argv": ["node", "--test"],
+      "timeoutMs": 30000
+    }
+  ],
+  "verificationCommandIds": ["test"]
+}

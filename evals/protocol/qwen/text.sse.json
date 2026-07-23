@@ -1,0 +1,36 @@
+[
+  {
+    "id": "chatcmpl-fixture-qwen-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000100,
+    "model": "qwen3-coder-plus",
+    "choices": [
+      { "index": 0, "delta": { "role": "assistant", "content": "" }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000100,
+    "model": "qwen3-coder-plus",
+    "choices": [
+      { "index": 0, "delta": { "content": "Run the tests with " }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000100,
+    "model": "qwen3-coder-plus",
+    "choices": [{ "index": 0, "delta": { "content": "pnpm test." }, "finish_reason": null }]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000100,
+    "model": "qwen3-coder-plus",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }],
+    "usage": { "prompt_tokens": 96, "completion_tokens": 7, "total_tokens": 103 }
+  },
+  "[DONE]"
+]

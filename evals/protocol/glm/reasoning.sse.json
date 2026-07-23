@@ -1,0 +1,53 @@
+[
+  {
+    "id": "chatcmpl-fixture-glm-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000201,
+    "model": "glm-5.2",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "role": "assistant",
+          "reasoning_content": "Check the grant before the effect. "
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000201,
+    "model": "glm-5.2",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "reasoning_content": "The receipt must cite the grant." },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000201,
+    "model": "glm-5.2",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "content": "Receipts now cite their grant." },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000201,
+    "model": "glm-5.2",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }],
+    "usage": { "prompt_tokens": 175, "completion_tokens": 26, "total_tokens": 201 }
+  },
+  "[DONE]"
+]

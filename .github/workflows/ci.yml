@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.20.0"
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.7.0 --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify architecture, build, tests and coverage
+        run: pnpm verify
+      - name: Run deterministic harness demo
+        run: pnpm demo
+      - name: Run deterministic CLI agent demo
+        run: pnpm agent:demo
+      - name: Pack and clean-install the standalone npm CLI
+        run: pnpm npm:verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            reports/coverage
+            reports/npm
+          if-no-files-found: error
+          retention-days: 7

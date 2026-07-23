@@ -1,0 +1,69 @@
+[
+  {
+    "id": "chatcmpl-fixture-kimi-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000002,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_kimi_fixture_1",
+              "type": "function",
+              "function": { "name": "read", "arguments": "" }
+            }
+          ]
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000002,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "tool_calls": [{ "index": 0, "function": { "arguments": "{\"path\":" } }]
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000002,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [
+      {
+        "index": 0,
+        "delta": {
+          "tool_calls": [{ "index": 0, "function": { "arguments": "\"src/index.ts\"}" } }]
+        },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-kimi-tool",
+    "object": "chat.completion.chunk",
+    "created": 1784000002,
+    "model": "kimi-k3",
+    "system_fingerprint": "fp_kimi_k3_2026_06",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "tool_calls" }],
+    "usage": { "prompt_tokens": 156, "completion_tokens": 14, "total_tokens": 170 }
+  },
+  "[DONE]"
+]

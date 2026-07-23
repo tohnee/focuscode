@@ -1,0 +1,36 @@
+[
+  {
+    "id": "chatcmpl-fixture-qwen-usage",
+    "object": "chat.completion.chunk",
+    "created": 1784000103,
+    "model": "qwen3-coder-plus",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "role": "assistant", "content": "Cached context reused." },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-usage",
+    "object": "chat.completion.chunk",
+    "created": 1784000103,
+    "model": "qwen3-coder-plus",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-usage",
+    "object": "chat.completion.chunk",
+    "created": 1784000103,
+    "model": "qwen3-coder-plus",
+    "choices": [],
+    "usage": {
+      "prompt_tokens": 640,
+      "completion_tokens": 5,
+      "total_tokens": 645,
+      "prompt_tokens_details": { "cached_tokens": 384 }
+    }
+  },
+  "[DONE]"
+]

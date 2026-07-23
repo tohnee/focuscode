@@ -1,0 +1,41 @@
+{
+  "name": "@focuscode/cli",
+  "version": "0.4.0-beta.2",
+  "description": "Model-neutral terminal coding agent with TUI, OAuth, multimodal input and isolated execution",
+  "type": "module",
+  "bin": {
+    "focuscode": "./bundle/focuscode.mjs",
+    "focus": "./bundle/focuscode.mjs",
+    "fc": "./bundle/focuscode.mjs",
+    "fox": "./bundle/focuscode.mjs"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "node ../../scripts/build-npm-cli.mjs"
+  },
+  "files": [
+    "bundle",
+    "model-packs",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "@focuscode/action-domain": "workspace:*",
+    "@focuscode/agent-runtime": "workspace:*",
+    "@focuscode/auth": "workspace:*",
+    "@focuscode/asset-plane": "workspace:*",
+    "@focuscode/contracts": "workspace:*",
+    "@focuscode/ecosystem": "workspace:*",
+    "@focuscode/persistence": "workspace:*",
+    "@focuscode/sdk": "workspace:*",
+    "@focuscode/sandbox": "workspace:*",
+    "@focuscode/tui": "workspace:*"
+  }
+}

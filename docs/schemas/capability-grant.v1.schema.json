@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "capability-grant.v1",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "grantId",
+    "taskId",
+    "subject",
+    "capabilities",
+    "constraints",
+    "expiresAt",
+    "fencingToken",
+    "policySnapshotDigest"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "capability-grant.v1",
+      "type": "string"
+    },
+    "grantId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "taskId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "subject": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["taskId", "workerId", "modelCertificateId"],
+      "properties": {
+        "taskId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "workerId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "modelCertificateId": {
+          "minLength": 1,
+          "type": "string"
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["kind", "value"],
+        "properties": {
+          "kind": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "value": {}
+        }
+      }
+    },
+    "expiresAt": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+      "type": "string"
+    },
+    "fencingToken": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "policySnapshotDigest": {
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "type": "string"
+    }
+  }
+}

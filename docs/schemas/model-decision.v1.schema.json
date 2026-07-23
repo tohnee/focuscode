@@ -1,0 +1,264 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "model-decision.v1",
+  "anyOf": [
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["kind", "content"],
+      "properties": {
+        "kind": {
+          "const": "respond",
+          "type": "string"
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["kind", "questions"],
+      "properties": {
+        "kind": {
+          "const": "ask_user",
+          "type": "string"
+        },
+        "questions": {
+          "minItems": 1,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["kind", "intents"],
+      "properties": {
+        "kind": {
+          "const": "tool_intent",
+          "type": "string"
+        },
+        "intents": {
+          "minItems": 1,
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "schemaVersion",
+              "actionId",
+              "taskId",
+              "tool",
+              "arguments",
+              "expectedEffects",
+              "justification"
+            ],
+            "properties": {
+              "schemaVersion": {
+                "const": "action-intent.v1",
+                "type": "string"
+              },
+              "actionId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "taskId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "tool": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["id", "version", "schemaDigest"],
+                "properties": {
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "version": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "schemaDigest": {
+                    "pattern": "^sha256:[a-f0-9]{64}$",
+                    "type": "string"
+                  }
+                }
+              },
+              "arguments": {},
+              "expectedEffects": {
+                "type": "array",
+                "items": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["class", "description"],
+                  "properties": {
+                    "class": {
+                      "anyOf": [
+                        {
+                          "const": "read",
+                          "type": "string"
+                        },
+                        {
+                          "const": "file_write",
+                          "type": "string"
+                        },
+                        {
+                          "const": "command",
+                          "type": "string"
+                        },
+                        {
+                          "const": "network",
+                          "type": "string"
+                        },
+                        {
+                          "const": "secret",
+                          "type": "string"
+                        },
+                        {
+                          "const": "git",
+                          "type": "string"
+                        },
+                        {
+                          "const": "delegation",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "resource": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "justification": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "baseState": {
+                "pattern": "^sha256:[a-f0-9]{64}$",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["kind", "delegation"],
+      "properties": {
+        "kind": {
+          "const": "delegate_intent",
+          "type": "string"
+        },
+        "delegation": {}
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["kind", "steps", "evidence"],
+      "properties": {
+        "kind": {
+          "const": "plan_revision",
+          "type": "string"
+        },
+        "steps": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["artifactId", "mediaType", "digest"],
+            "properties": {
+              "artifactId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "mediaType": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "digest": {
+                "pattern": "^sha256:[a-f0-9]{64}$",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["kind", "summary", "evidence", "residualRisks"],
+      "properties": {
+        "kind": {
+          "const": "completion_candidate",
+          "type": "string"
+        },
+        "summary": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["artifactId", "mediaType", "digest"],
+            "properties": {
+              "artifactId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "mediaType": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "digest": {
+                "pattern": "^sha256:[a-f0-9]{64}$",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "residualRisks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}

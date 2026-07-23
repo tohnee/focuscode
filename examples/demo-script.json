@@ -1,0 +1,51 @@
+[
+  {
+    "kind": "tool_intent_template",
+    "intents": [
+      {
+        "toolId": "read_file_range",
+        "arguments": { "path": "src/math.js", "startLine": 1, "endLine": 20 },
+        "expectedEffects": [
+          {
+            "class": "read",
+            "resource": "src/math.js",
+            "description": "Inspect the failing implementation"
+          }
+        ],
+        "justification": "Read the smallest relevant source file before editing."
+      }
+    ]
+  },
+  {
+    "kind": "tool_intent_template",
+    "intents": [
+      {
+        "toolId": "apply_edit_ir",
+        "arguments": {
+          "path": "src/math.js",
+          "edits": [
+            {
+              "search": "return left - right;",
+              "replace": "return left + right;",
+              "expectedOccurrences": 1
+            }
+          ]
+        },
+        "expectedEffects": [
+          {
+            "class": "file_write",
+            "resource": "src/math.js",
+            "description": "Correct the arithmetic operator"
+          }
+        ],
+        "justification": "Apply a one-line, uniquely anchored fix."
+      }
+    ]
+  },
+  {
+    "kind": "completion_candidate",
+    "summary": "Corrected add() to return the sum; request deterministic verification.",
+    "evidence": [],
+    "residualRisks": []
+  }
+]

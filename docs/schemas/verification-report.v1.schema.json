@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "verification-report.v1",
+  "additionalProperties": false,
+  "type": "object",
+  "required": ["schemaVersion", "conclusion", "phase", "results", "summary"],
+  "properties": {
+    "schemaVersion": {
+      "const": "verification-report.v1",
+      "type": "string"
+    },
+    "conclusion": {
+      "anyOf": [
+        {
+          "const": "PASS",
+          "type": "string"
+        },
+        {
+          "const": "BASELINE_FAIL",
+          "type": "string"
+        },
+        {
+          "const": "PARTIAL",
+          "type": "string"
+        },
+        {
+          "const": "BLOCKED",
+          "type": "string"
+        },
+        {
+          "const": "UNKNOWN",
+          "type": "string"
+        },
+        {
+          "const": "REGRESSION",
+          "type": "string"
+        }
+      ]
+    },
+    "phase": {
+      "anyOf": [
+        {
+          "const": "baseline",
+          "type": "string"
+        },
+        {
+          "const": "target",
+          "type": "string"
+        }
+      ]
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "commandId",
+          "exitCode",
+          "stdout",
+          "stderr",
+          "durationMs",
+          "timedOut",
+          "digest"
+        ],
+        "properties": {
+          "commandId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "exitCode": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stdout": {
+            "type": "string"
+          },
+          "stderr": {
+            "type": "string"
+          },
+          "durationMs": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "timedOut": {
+            "type": "boolean"
+          },
+          "digest": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "string"
+    }
+  }
+}

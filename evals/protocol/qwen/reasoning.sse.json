@@ -1,0 +1,46 @@
+[
+  {
+    "id": "chatcmpl-fixture-qwen-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000101,
+    "model": "qwen3-coder-plus",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "role": "assistant", "reasoning_content": "The failure is in the tokenizer. " },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000101,
+    "model": "qwen3-coder-plus",
+    "choices": [
+      {
+        "index": 0,
+        "delta": { "reasoning_content": "Add a boundary case to the fixture." },
+        "finish_reason": null
+      }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000101,
+    "model": "qwen3-coder-plus",
+    "choices": [
+      { "index": 0, "delta": { "content": "Added the boundary fixture." }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-qwen-reasoning",
+    "object": "chat.completion.chunk",
+    "created": 1784000101,
+    "model": "qwen3-coder-plus",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }],
+    "usage": { "prompt_tokens": 188, "completion_tokens": 31, "total_tokens": 219 }
+  },
+  "[DONE]"
+]

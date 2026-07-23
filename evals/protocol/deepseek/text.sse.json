@@ -1,0 +1,42 @@
+[
+  {
+    "id": "chatcmpl-fixture-deepseek-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000300,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      { "index": 0, "delta": { "role": "assistant", "content": "" }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000300,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      { "index": 0, "delta": { "content": "Facts are append-only; " }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000300,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [
+      { "index": 0, "delta": { "content": "checkpoints are derived." }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-deepseek-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000300,
+    "model": "deepseek-v4-pro",
+    "system_fingerprint": "fp_deepseek_v4_2026_06",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }],
+    "usage": { "prompt_tokens": 88, "completion_tokens": 8, "total_tokens": 96 }
+  },
+  "[DONE]"
+]

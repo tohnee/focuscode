@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "task-spec.v1",
+  "additionalProperties": false,
+  "type": "object",
+  "required": ["schemaVersion", "repoId", "baseRef", "mode", "objective", "acceptanceCriteria"],
+  "properties": {
+    "schemaVersion": {
+      "const": "task-spec.v1",
+      "type": "string"
+    },
+    "repoId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "baseRef": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "mode": {
+      "anyOf": [
+        {
+          "const": "explore",
+          "type": "string"
+        },
+        {
+          "const": "change",
+          "type": "string"
+        },
+        {
+          "const": "review",
+          "type": "string"
+        },
+        {
+          "const": "verify",
+          "type": "string"
+        }
+      ]
+    },
+    "objective": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "acceptanceCriteria": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["id", "description"],
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "verificationCommandId": {
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      }
+    },
+    "scope": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "maxFiles": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "maxChangedLines": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      }
+    },
+    "requestedProfile": {
+      "anyOf": [
+        {
+          "const": "balanced",
+          "type": "string"
+        },
+        {
+          "const": "quality",
+          "type": "string"
+        },
+        {
+          "const": "local",
+          "type": "string"
+        },
+        {
+          "const": "fast",
+          "type": "string"
+        }
+      ]
+    }
+  }
+}

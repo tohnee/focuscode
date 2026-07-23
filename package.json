@@ -1,0 +1,44 @@
+{
+  "name": "focuscode",
+  "version": "0.4.0-beta.2",
+  "private": true,
+  "description": "Model-portable, policy-controlled coding agent harness",
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r build",
+    "test": "pnpm build && vitest run",
+    "test:coverage": "pnpm build && vitest run --coverage",
+    "lint": "node scripts/check-boundaries.mjs && node scripts/export-schemas.mjs --check && prettier --check .",
+    "format": "prettier --write .",
+    "schemas": "pnpm build && node scripts/export-schemas.mjs",
+    "manifest": "node scripts/generate-source-manifest.mjs",
+    "verify": "pnpm lint && pnpm test:coverage",
+    "demo": "pnpm build && node scripts/run-demo.mjs",
+    "agent:demo": "pnpm build && node scripts/run-agent-demo.mjs",
+    "npm:bundle": "node scripts/build-npm-cli.mjs",
+    "npm:verify": "node scripts/verify-npm-package.mjs",
+    "release:check": "pnpm verify && pnpm demo && pnpm agent:demo && pnpm npm:verify",
+    "focuscode": "node apps/cli/dist/index.js",
+    "link:global": "pnpm build && pnpm add --global ./apps/cli",
+    "sandbox:image": "docker build -t focuscode/sandbox:node22 infra/sandbox",
+    "control-api": "node apps/control-api/dist/index.js",
+    "share-server": "pnpm --filter @focuscode/share-server build && node apps/share-server/dist/index.js"
+  },
+  "devDependencies": {
+    "@focuscode/agent-runtime": "workspace:*",
+    "@focuscode/testkit": "workspace:*",
+    "@types/node": "22.20.1",
+    "@vitest/coverage-v8": "4.1.10",
+    "esbuild": "0.28.1",
+    "fast-check": "4.9.0",
+    "prettier": "3.9.5",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  }
+}

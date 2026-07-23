@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "focuscode-agent.v1",
+  "approval": "ask",
+  "contextWindow": 128000,
+  "maxOutputTokens": 16384,
+  "temperature": 0,
+  "toolMode": "auto",
+  "maxRounds": 40,
+  "sandbox": {
+    "kind": "auto",
+    "image": "node:22-bookworm",
+    "network": "none",
+    "allowHostFallback": false
+  },
+  "tui": {
+    "enabled": true,
+    "theme": "aurora",
+    "mascot": "mochi",
+    "keymap": {}
+  },
+  "requireExtensionSignatures": true,
+  "protectedPaths": [".git", ".env", ".npmrc", ".focuscode"],
+  "disabledTools": []
+}

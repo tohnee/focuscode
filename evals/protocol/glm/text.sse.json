@@ -1,0 +1,36 @@
+[
+  {
+    "id": "chatcmpl-fixture-glm-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000200,
+    "model": "glm-5.2",
+    "choices": [
+      { "index": 0, "delta": { "role": "assistant", "content": "" }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000200,
+    "model": "glm-5.2",
+    "choices": [
+      { "index": 0, "delta": { "content": "The sandbox defaults to " }, "finish_reason": null }
+    ]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000200,
+    "model": "glm-5.2",
+    "choices": [{ "index": 0, "delta": { "content": "auto isolation." }, "finish_reason": null }]
+  },
+  {
+    "id": "chatcmpl-fixture-glm-text",
+    "object": "chat.completion.chunk",
+    "created": 1784000200,
+    "model": "glm-5.2",
+    "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }],
+    "usage": { "prompt_tokens": 110, "completion_tokens": 8, "total_tokens": 118 }
+  },
+  "[DONE]"
+]

@@ -1,0 +1,13 @@
+{
+  "name": "@focuscode/share-server",
+  "version": "0.4.0-beta.2",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@focuscode/ecosystem": "workspace:*"
+  }
+}

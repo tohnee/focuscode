@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "model-pack.v1",
+  "id": "invalid-pack",
+  "family": "fixture",
+  "revision": "0",
+  "systemPrompt": "invalid on purpose",
+  "responseFormat": "json"
+}
