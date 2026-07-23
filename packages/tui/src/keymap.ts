@@ -21,7 +21,8 @@ export type TuiAction =
   | "scroll_up"
   | "scroll_down"
   | "cycle_theme"
-  | "cycle_mascot";
+  | "cycle_mascot"
+  | "toggle_reasoning";
 
 export type TuiKeymap = Record<string, TuiAction>;
 
@@ -137,13 +138,39 @@ function parseBufferedInput(
   return { parsed, consumed: index };
 }
 
+const VALID_ACTIONS: readonly TuiAction[] = [
+  "submit",
+  "newline",
+  "abort",
+  "exit",
+  "clear",
+  "backspace",
+  "delete_word",
+  "cursor_left",
+  "cursor_right",
+  "home",
+  "end",
+  "word_left",
+  "word_right",
+  "undo",
+  "kill_line",
+  "yank",
+  "complete",
+  "history_previous",
+  "history_next",
+  "scroll_up",
+  "scroll_down",
+  "cycle_theme",
+  "cycle_mascot",
+  "toggle_reasoning",
+];
+
 export function mergeKeymap(overrides: Partial<TuiKeymap> = {}): TuiKeymap {
   const result = { ...DEFAULT_KEYMAP };
   for (const [key, action] of Object.entries(overrides)) {
     if (!action) continue;
     if (!validKey(key)) throw new Error("Invalid key binding: " + key);
-    if (!Object.values(DEFAULT_KEYMAP).includes(action))
-      throw new Error("Invalid TUI action: " + action);
+    if (!VALID_ACTIONS.includes(action)) throw new Error("Invalid TUI action: " + action);
     for (const [existing, value] of Object.entries(result)) {
       if (value === action) delete result[existing];
     }
