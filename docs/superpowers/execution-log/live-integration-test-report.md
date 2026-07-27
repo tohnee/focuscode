@@ -1,19 +1,34 @@
 # SpecEngine Live Integration Test Report
 
-- **Date**: 2026-07-23
+- **Date**: 2026-07-24 (ARK re-verification)
 - **Script**: `tests/spec-engine-live-test.ts`
-- **Target**: GLM (智谱) API — `glm-5.2` via OpenAI-compatible protocol
-- **Endpoint**: `https://open.bigmodel.cn/api/coding/paas/v4`
-- **Status**: Script verified (load + skip path); live API run pending API key
+- **Target**: ARK (火山方舟) API — `glm-5.2` via OpenAI-compatible protocol
+- **Endpoint**: `https://ark.cn-beijing.volces.com/api/plan/v3`
+- **Status**: ✅ Live API run PASSED — spec document generated and persisted
 
 ## Summary
 
-The live integration test script for the SpecEngine 5-stage clarification pipeline
-(classifier → explorer → drafter → decision-detector → enhancer) has been created
-and verified for correct loading. The script could not be executed against the real
-GLM API because `ZAI_API_KEY` was not present in the environment; the script
-correctly detected this and exited with code 2 (skip), which is the designed
-CI-gating behavior.
+The SpecEngine 5-stage clarification pipeline (classifier → explorer → drafter →
+decision-detector → enhancer) has been successfully exercised against the real
+ARK (火山方舟) API serving `glm-5.2`. The pipeline returned `action: "apply"`,
+persisted a spec document to `docs/specs/2026-07-24-firecracker-microvm-sandbox-backend-2.md`,
+and emitted all required `spec_stage` events. Key decisions were auto-resolved
+by the test harness, exercising the confirmation → resolution flow end-to-end.
+
+### Latest ARK Run (2026-07-24T04:25:39Z → 04:28:32Z)
+
+| Stage            | Duration      | Model       |
+| ---------------- | ------------- | ----------- |
+| explore          | 5,575ms       | main-model  |
+| draft            | 27,569ms      | ark/glm-5.2 |
+| detect-decisions | 106,211ms     | ark/glm-5.2 |
+| enhance          | 33,769ms      | ark/glm-5.2 |
+| **Total**        | **173,247ms** |             |
+
+- Spec ID: `spec_1784867172_fe7482`
+- Enhanced prompt: 7,510 chars / 7 initial todos
+- 4 key decisions auto-resolved (1 critical, 3 major)
+- Events: `spec_start`, `spec_stage`×4, `spec_draft_ready`, `spec_confirmation_required`, `spec_confirmed`, `spec_completed`
 
 ## Verification Performed
 
@@ -49,23 +64,70 @@ Fix applied: added `"@focuscode/agent-runtime": "workspace:*"` to the root
 for `@focuscode/testkit`. After `pnpm install`, the script resolved all
 imports correctly.
 
-### 3. Live API Run ⏳ (Pending)
+### 3. Live API Run ✅ PASSED (2026-07-24)
 
-Not executed — `ZAI_API_KEY` is absent from the current environment. To run
-the full live test:
+Executed against ARK (火山方舟) OpenAI-compatible endpoint with `glm-5.2`.
+The pipeline completed all five stages, emitted `spec_completed`, and wrote
+the spec document to disk. Generated spec file:
+
+- Path: `docs/specs/2026-07-24-firecracker-microvm-sandbox-backend.md`
+- Spec ID: `spec_1784854650_e4b933`
+- Created at: `2026-07-24T00:58:48.516Z`
+- Status: `confirmed`
+
+The generated spec includes a complete structure: goal, constraints (hard/soft,
+tagged by source), 6 acceptance criteria, 9 affected areas, 7-task breakdown
+with dependencies, 5 key decisions (2 critical / 2 major / 1 minor), and an
+enhanced prompt with execution order.
+
+To re-run the live test:
 
 ```bash
-export ZAI_API_KEY=<your-glm-api-key>
+export ARK_API_KEY=<your-ark-key>
 npx tsx tests/spec-engine-live-test.ts
 ```
+
+### 4. Spec Quality Validation ✅
+
+Manual review of the generated spec document confirms:
+
+- All required frontmatter fields present (`id`, `createdAt`, `updatedAt`,
+  `topic`, `trigger`, `status`)
+- Constraints correctly classified by source (`user` / `codebase` / `convention`)
+  and severity (`hard` / `soft`)
+- Acceptance criteria tagged with verification method (`build` / `test` / `lint`)
+  and explicit verification targets
+- Affected areas mapped with impact labels (`create` / `modify` / `review`)
+- Task breakdown respects dependencies (7 tasks, ordered by `dependsOn`)
+- Key decisions auto-resolved to first option (test harness behavior)
+- Enhanced prompt is well-structured with explicit execution order
 
 ## Script Design
 
 The script (`tests/spec-engine-live-test.ts`) is a standalone diagnostic, not a
-vitest test. It is gated by `ZAI_API_KEY` so it can sit in CI without failing
-when the key is absent (exit 2 = skip).
+vitest test. It is gated by `ARK_API_KEY` (preferred) or `ZAI_API_KEY` so it can
+sit in CI without failing when neither key is present (exit 2 = skip).
 
-### GLM Provider Configuration
+### ARK Provider Configuration (latest run)
+
+- Provider: `ark`
+- Model: `glm-5.2`
+- Protocol: `openai-chat` (OpenAI-compatible)
+- Base URL: `https://ark.cn-beijing.volces.com/api/plan/v3`
+- API key env: `ARK_API_KEY`
+- Context window: 1,000,000 tokens
+- Max output tokens: 8,192
+- Temperature: 0.2
+- Reasoning effort: `high`
+- Compatibility flags: none (plain OpenAI format, no `zai` thinking format)
+- Reliability: 120s timeout, 2 retries, 500ms–10s backoff
+
+> **API key format note**: The ARK API key is a hyphen-delimited string starting
+> with `ark-` (e.g. `ark-<uuid>-<suffix>`). The 401 "API key format is
+> incorrect" error indicates a malformed key — verify the UUID segments are
+> intact (8-4-4-4-12 hex pattern).
+
+### GLM Provider Configuration (ZAI alternative)
 
 - Provider: `glm-cn`
 - Model: `glm-5.2`
@@ -143,9 +205,9 @@ The script validates:
 
 ## Next Steps
 
-1. **Run the live test**: Set `ZAI_API_KEY` and execute the script to obtain
-   real pipeline timings, stage coverage, and spec document output.
-2. **Inspect the generated spec**: After a successful run, review the spec file
-   written to `docs/specs/` for content quality.
-3. **Iterate on prompt/config**: If any stage falls back or returns malformed
+1. **Iterate on prompt/config**: If any stage falls back or returns malformed
    output, tune the GLM compatibility flags or stage prompts.
+2. **Add real user-decision flow**: Currently the test harness auto-resolves
+   decisions; integrate with the TUI spec pane to allow real user choice.
+3. **Stage-specific model routing**: Configure different models for each stage
+   (e.g., cheaper model for classifier, stronger model for drafter).

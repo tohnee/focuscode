@@ -1,0 +1,25 @@
+{
+  "data": [
+    {
+      "id": "page-mascots",
+      "title": "伙伴图鉴",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1753531200000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/mascots.html",
+        "interactions": []
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "projectName": "FocusCode TUI 伙伴设计"
+  }
+}

@@ -1,4 +1,4 @@
-import type { TuiTheme } from "./themes.js";
+import { fg, type TuiTheme } from "./themes.js";
 
 /**
  * Pure TUI widgets: progress bars, cost bars, level badges. Each returns a
@@ -119,10 +119,6 @@ function sanitizeLabel(value: string): string {
     .replace(/[\u0000-\u001f\u007f-\u009f]/g, "")
     .replaceAll(/\s+/g, " ")
     .trim();
-}
-
-function fg(color: number, text: string): string {
-  return "\u001b[38;5;" + color + "m" + text + "\u001b[39m";
 }
 
 /** Visible width of a string ignoring SGR sequences (compact local copy). */

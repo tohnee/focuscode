@@ -1,6 +1,6 @@
 import { validateTuiMascot, type TuiMascot } from "./mascots.js";
 import { PIXEL_MASCOT_FRAMES } from "./pixel-frames.js";
-import { getTheme, validateTuiTheme, type TuiTheme } from "./themes.js";
+import { getTheme, isValidColorValue, validateTuiTheme, type TuiTheme } from "./themes.js";
 
 export const SKIN_SCHEMA_VERSION = "focuscode-skin.v1";
 export const SKIN_PACK_LIMITS = { maxDepth: 8, maxSerializedLength: 200 * 1024 } as const;
@@ -88,11 +88,10 @@ function validateSkinTheme(value: unknown): Partial<TuiTheme> {
     throw new Error("Skin theme border must be one character");
   }
   for (const field of THEME_COLOR_FIELDS) {
-    if (
-      theme[field] !== undefined &&
-      (!Number.isInteger(theme[field]) || Number(theme[field]) < 0 || Number(theme[field]) > 255)
-    ) {
-      throw new Error(`Skin theme ${field} must be an ANSI color from 0 to 255`);
+    if (theme[field] !== undefined && !isValidColorValue(theme[field])) {
+      throw new Error(
+        `Skin theme ${field} must be an ANSI color (0-255), #rrggbb hex, or [r,g,b] tuple`,
+      );
     }
   }
   return structuredClone(theme) as Partial<TuiTheme>;

@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { writeFile } from "node:fs/promises";
+import { writeFile, readFile, readdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import {
   CodingAgent,
   ExtensionHost,
@@ -21,9 +22,14 @@ import {
   type ApprovalHandler,
   type ApprovalMode,
   type ExtensionHostLike,
+  type KeyDecisionRule,
+  type ModelClient,
   type ModelPricing,
   type ModelProfile,
   type ResolvedAgentConfig,
+  type SpecEngineDeps,
+  type SpecEngineOptions,
+  type SpecStageModel,
   type TokenUsage,
 } from "@focuscode/agent-runtime";
 import { ExtensionPackageManager } from "@focuscode/ecosystem";
@@ -200,12 +206,41 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
   const renderer = new HumanEventRenderer({
     quietTools: mode === "print" && !process.stderr.isTTY,
   });
-  const eventSink =
+  const baseEventSink =
     mode === "json"
       ? jsonEventWriter()
       : mode === "rpc"
         ? rpcEventSink
         : (event: Parameters<HumanEventRenderer["handle"]>[0]) => renderer.handle(event);
+  // Wrap the event sink to intercept spec_confirmation_required events in
+  // non-TUI modes. In TUI mode the confirmation UI is handled by the TUI
+  // bridge. In interactive mode, prompt the user. In print/json mode,
+  // auto-decline to avoid hanging the pipeline indefinitely.
+  const eventSink: typeof baseEventSink = (event) => {
+    if (event.type === "spec_confirmation_required" && mode !== "tui") {
+      const specEngine = agent?.specEngineInstance;
+      if (specEngine) {
+        if (prompter && mode === "interactive") {
+          void (async () => {
+            const choices: Record<string, string> = {};
+            for (const decision of event.decisions as unknown[]) {
+              const d = decision as { id: string; point: string; options: { label: string }[] };
+              const labels = d.options.map((o) => o.label).join(", ");
+              const answer = await prompter.ask(`${d.point} [${labels}]: `);
+              choices[d.id] = answer || d.options[0]!.label;
+            }
+            specEngine.resolveDecisions(event.specId, choices);
+          })();
+        } else {
+          process.stderr.write(
+            `[spec] Auto-declining spec confirmation (non-interactive mode): ${event.specId}\n`,
+          );
+          specEngine.declineSpec(event.specId);
+        }
+      }
+    }
+    return baseEventSink(event);
+  };
   let tuiApproval: ((question: string) => Promise<boolean>) | undefined;
   const approve: ApprovalHandler | undefined =
     mode === "tui"
@@ -245,6 +280,18 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
         onApprovalRequired: (request) => agent?.notifyApprovalRequired(request),
       })
     : undefined;
+
+  // ─── SpecEngine options & deps ─────────────────────────────────────
+  // Build SpecEngineOptions when --spec-engine is passed. All pipeline
+  // stages default to the main model unless --spec-classifier-model or
+  // --spec-drafter-model specifies a separate small/medium model.
+  const specEngineDeps: SpecEngineDeps | undefined = args.specEngine
+    ? buildSpecEngineDeps(config.instructions ?? [])
+    : undefined;
+  const specEngineOptions: SpecEngineOptions | undefined = args.specEngine
+    ? await buildSpecEngineOptions(args, config, cwd)
+    : undefined;
+
   agent = await CodingAgent.create({
     cwd,
     model: config.model,
@@ -280,6 +327,10 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
           effectContext: spine.effectContext,
           onApprovalModeChange: (mode: ApprovalMode) => spine.setApprovalMode(mode),
         }
+      : {}),
+    // ─── SpecEngine ───────────────────────────────────────────────────
+    ...(specEngineOptions
+      ? { specEngine: specEngineOptions, specEngineDeps: specEngineDeps! }
       : {}),
   });
   sessionId = agent.sessionId;
@@ -331,6 +382,17 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
         onReady: (tui) => {
           tuiApproval = (question) => tui.requestApproval(question);
         },
+        // ─── SpecEngine confirmation bridge ───────────────────────────
+        // The TUI's spec confirmation UI calls these callbacks when the user
+        // confirms or declines key decisions. They forward to the engine's
+        // resolver, unblocking the clarify() pipeline.
+        ...(agent.specEngineInstance
+          ? {
+              onSpecConfirm: (specId: string, choices: Record<string, string>) =>
+                agent.specEngineInstance?.resolveDecisions(specId, choices),
+              onSpecDecline: (specId: string) => agent.specEngineInstance?.declineSpec(specId),
+            }
+          : {}),
       });
       return;
     }
@@ -472,6 +534,99 @@ function modelClientFactory(model: ModelProfile) {
     ...model,
     ...(accessTokenProvider ? { accessTokenProvider } : {}),
   });
+}
+
+// ─── SpecEngine builders ────────────────────────────────────────────────
+
+const DEFAULT_KEY_DECISION_RULES: KeyDecisionRule[] = [
+  {
+    name: "destructive-change",
+    description: "Any task that deletes files, drops tables, or removes existing functionality",
+  },
+  {
+    name: "arch-decision",
+    description:
+      "Choice between fundamentally different approaches (new module vs extend existing, REST vs GraphQL)",
+  },
+  { name: "new-dependency", description: "Introduction of a new npm/package dependency" },
+  {
+    name: "breaking-change",
+    description:
+      "Changes to public API, exported interfaces, or config schema that consumers depend on",
+  },
+  { name: "security-sensitive", description: "Changes to auth, permissions, crypto, or sandbox" },
+  { name: "irreversible", description: "Operations that cannot be undone (migrations, publishes)" },
+];
+
+function buildSpecEngineDeps(instructions: string[]): SpecEngineDeps {
+  return {
+    detectProjectType: (dir) => detectProjectType(dir),
+    instructions,
+    writeFile: (path, content) => writeFile(path, content, "utf8"),
+    readFile: (path) => readFile(path, "utf8"),
+    listDir: (dir) => readdir(dir),
+  };
+}
+
+function detectProjectType(dir: string): string {
+  if (existsSync(join(dir, "pnpm-workspace.yaml"))) return "typescript-monorepo";
+  if (existsSync(join(dir, "package.json"))) return "node-package";
+  if (existsSync(join(dir, "go.mod"))) return "go-module";
+  if (existsSync(join(dir, "pyproject.toml")) || existsSync(join(dir, "setup.py"))) {
+    return "python-package";
+  }
+  if (existsSync(join(dir, "Cargo.toml"))) return "rust-project";
+  return "unknown";
+}
+
+async function buildSpecEngineOptions(
+  args: AgentCliArgs,
+  config: ResolvedAgentConfig,
+  cwd: string,
+): Promise<SpecEngineOptions> {
+  const pipeline: SpecEngineOptions["pipeline"] = {};
+
+  // Build SpecStageModel for a --spec-*-model argument. Resolves the model
+  // profile via the same config resolution pipeline as the main model, so
+  // provider presets (base-url, api-key-env, etc.) are applied.
+  async function buildStageModel(
+    modelSpec: string | undefined,
+    fallback: SpecStageModel["fallback"],
+  ): Promise<SpecStageModel | undefined> {
+    if (!modelSpec) return undefined;
+    const spec = splitModelSpec(modelSpec, undefined);
+    const resolved = await resolveAgentConfig(cwd, {
+      ...configOverrides(args, spec),
+      projectTrusted: config.projectTrusted,
+    });
+    return {
+      profile: resolved.model,
+      client: modelClientFactory(resolved.model),
+      fallback,
+    };
+  }
+
+  const classifierStage = await buildStageModel(args.specClassifierModel, "primary");
+  if (classifierStage) pipeline.classifier = classifierStage;
+
+  const drafterStage = await buildStageModel(args.specDrafterModel, "primary");
+  if (drafterStage) {
+    pipeline.drafter = drafterStage;
+    // Enhancer uses the same tier as drafter (3B-7B) unless separately overridden
+    pipeline.enhancer = drafterStage;
+  }
+
+  // decisionDetector uses the same tier as classifier (1B-2B)
+  if (classifierStage) pipeline.decisionDetector = classifierStage;
+
+  return {
+    enabled: true,
+    autoTrigger: args.specAutoTrigger,
+    specDirectory: args.specDirectory ?? "docs/specs",
+    maxExplorationRounds: args.specMaxExplorationRounds ?? 6,
+    keyDecisionRules: DEFAULT_KEY_DECISION_RULES,
+    pipeline,
+  };
 }
 
 function splitModelSpec(
@@ -691,5 +846,18 @@ Sessions:
 
 Compatibility commands from Harness Alpha remain available:
   focuscode init | run | inspect | export
+
+Spec Engine:
+  --spec-engine               Enable the requirement clarification pipeline
+  --spec-auto-trigger         Auto-trigger on vague inputs (default: /spec only)
+  --spec-dir PATH             Directory for persisted specs (default: docs/specs)
+  --spec-max-exploration-rounds N  Max read-only exploration rounds (default: 6)
+  --spec-classifier-model [PROVIDER/]ID  Model for classify/detect stages (1B-2B)
+  --spec-drafter-model [PROVIDER/]ID     Model for draft/enhance stages (3B-7B)
+
+  When --spec-classifier-model / --spec-drafter-model are omitted, all stages
+  use the main model. Example:
+  focuscode --spec-engine --spec-classifier-model ollama/qwen2.5:1.5b \\
+    --spec-drafter-model ollama/qwen2.5:7b "/spec add user auth"
 `);
 }

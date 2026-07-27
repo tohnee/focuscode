@@ -29,6 +29,41 @@ import {
 } from "./spec-progress.js";
 import { getTheme, TUI_THEMES, type TuiTheme } from "./themes.js";
 import type { ContextUsageState } from "./context-bar.js";
+import {
+  closePalette,
+  confirmPalette,
+  createPaletteState,
+  movePaletteCursor,
+  updatePaletteQuery,
+  type PaletteCommand,
+  type PaletteState,
+} from "./command-palette.js";
+import {
+  advanceSearch,
+  closeSearch,
+  createSearchState,
+  searchTranscript,
+  type SearchState,
+} from "./search.js";
+import { createVimState, vimHandleKey, type VimAction, type VimState } from "./vim.js";
+import {
+  createInitialLayout,
+  cycleLayoutMode as cycleLayoutModeFn,
+  setLayoutMode as setLayoutModeFn,
+  type LayoutMode,
+  type LayoutState,
+} from "./layout.js";
+import {
+  addTodoItem as addTodoItemFn,
+  createInitialTodoPanel,
+  removeTodoItem as removeTodoItemFn,
+  setTodoItems as setTodoItemsFn,
+  updateTodoStatus as updateTodoStatusFn,
+  type TodoItem,
+  type TodoPanelState,
+  type TodoPriority,
+  type TodoStatus,
+} from "./todo-panel.js";
 
 export interface FullScreenTuiOptions {
   input: ReadStream;
@@ -59,6 +94,8 @@ export interface FullScreenTuiOptions {
   onSpecConfirm?(specId: string, choices: Record<string, string>): void;
   /** SpecEngine 拒绝整个 spec 时调用。 */
   onSpecDecline?(specId: string): void;
+  /** 命令面板确认回调。当用户从 palette 选择命令时调用。 */
+  onPaletteCommand?(command: PaletteCommand): void;
 }
 
 export class FullScreenTui {
@@ -102,6 +139,12 @@ export class FullScreenTui {
   private reasoning: string | undefined;
   private reasoningExpanded: boolean | undefined;
   private contextUsage: ContextUsageState | undefined;
+  private search: SearchState = createSearchState();
+  private palette: PaletteState = createPaletteState();
+  private vimEnabled = false;
+  private vimState: VimState = createVimState();
+  private layout: LayoutState = createInitialLayout();
+  private todoPanel: TodoPanelState = createInitialTodoPanel();
 
   constructor(private readonly options: FullScreenTuiOptions) {
     this.theme = getTheme(options.theme);
@@ -221,6 +264,14 @@ export class FullScreenTui {
     this.render();
   }
 
+  /** Snapshot of current SpecEngine progress state (read-only). */
+  getSpecProgress(): SpecProgressState {
+    return {
+      ...this.specProgress,
+      stages: this.specProgress.stages.map((s) => ({ ...s })),
+    };
+  }
+
   /** Update or insert a single spec stage. */
   updateSpecStage(
     name: string,
@@ -306,6 +357,169 @@ export class FullScreenTui {
   setContextUsage(state: ContextUsageState): void {
     this.contextUsage = { ...state };
     this.render();
+  }
+
+  // ─── Search ────────────────────────────────────────────────────────────
+
+  /** Open the transcript search bar. */
+  openSearch(): void {
+    this.search = { ...createSearchState(), visible: true };
+    this.render();
+  }
+
+  /** Close the search bar and clear state. */
+  closeSearch(): void {
+    this.search = closeSearch(this.search);
+    this.render();
+  }
+
+  /** Update search query and recompute matches against the current transcript. */
+  updateSearchQuery(query: string): void {
+    const matches = searchTranscript(this.transcript, query);
+    this.search = { ...this.search, query, matches, currentIndex: 0 };
+    this.render();
+  }
+
+  /** Advance to the next/previous match (wraps around). */
+  advanceSearch(delta: number): void {
+    this.search = advanceSearch(this.search, delta);
+    this.render();
+  }
+
+  /** Current search state snapshot. */
+  getSearchState(): SearchState {
+    return { ...this.search };
+  }
+
+  // ─── Command Palette ───────────────────────────────────────────────────
+
+  /** Open the command palette overlay. */
+  openPalette(): void {
+    this.palette = { ...createPaletteState(), visible: true };
+    this.render();
+  }
+
+  /** Close the palette overlay. */
+  closePalette(): void {
+    this.palette = closePalette(this.palette);
+    this.render();
+  }
+
+  /** Update palette query and re-filter commands. */
+  updatePaletteQuery(query: string): void {
+    this.palette = updatePaletteQuery(this.palette, query);
+    this.render();
+  }
+
+  /** Move the palette selection by delta (positive = down, negative = up). */
+  movePaletteCursor(delta: number): void {
+    this.palette = movePaletteCursor(this.palette, delta);
+    this.render();
+  }
+
+  /** Confirm the current palette selection; fires onPaletteCommand and closes. */
+  confirmPaletteSelection(): void {
+    const cmd = confirmPalette(this.palette);
+    if (cmd) {
+      try {
+        this.options.onPaletteCommand?.(cmd);
+      } catch {
+        // Swallow callback errors; palette UX stays non-blocking.
+      }
+    }
+    this.closePalette();
+  }
+
+  /** Set the palette command callback at runtime (used by tests / late-binding). */
+  setPaletteCallback(cb: (command: PaletteCommand) => void): void {
+    (this.options as { onPaletteCommand?: (command: PaletteCommand) => void }).onPaletteCommand =
+      cb;
+  }
+
+  // ─── Vim Mode ──────────────────────────────────────────────────────────
+
+  /** Toggle vim modal editing on/off. When off, vimState is undefined. */
+  setVimEnabled(enabled: boolean): void {
+    this.vimEnabled = enabled;
+    this.vimState = enabled ? createVimState() : createVimState();
+    this.render();
+  }
+
+  /** Current vim state (undefined when vim mode is disabled). */
+  getVimState(): VimState | undefined {
+    return this.vimEnabled ? { ...this.vimState } : undefined;
+  }
+
+  /**
+   * Test-only entry point that mirrors feedInput. Exposed so unit tests can
+   * drive the vim normal/insert state machine without constructing raw
+   * keymap sequences. Not part of the public stable API.
+   */
+  feedInputForTest(value: string): void {
+    this.feedInput(value);
+  }
+
+  // ─── Layout ────────────────────────────────────────────────────────────
+
+  /** Switch to a specific layout mode (classic/split/focus/wide). */
+  setLayoutMode(mode: LayoutMode): void {
+    this.layout = setLayoutModeFn(this.layout, mode);
+    this.render();
+  }
+
+  /** Cycle layout mode: classic → split → focus → wide → classic. */
+  cycleLayoutMode(): void {
+    const next = cycleLayoutModeFn(this.layout.mode);
+    this.layout = setLayoutModeFn(this.layout, next);
+    this.render();
+  }
+
+  /** Current layout state snapshot (defensive copy). */
+  getLayoutState(): LayoutState {
+    return {
+      ...this.layout,
+      panes: this.layout.panes.map((p) => ({ ...p })),
+    };
+  }
+
+  // ─── Todo Panel ────────────────────────────────────────────────────────
+
+  /** Replace all todo items. */
+  setTodoItems(items: TodoItem[]): void {
+    this.todoPanel = setTodoItemsFn(this.todoPanel, items);
+    this.render();
+  }
+
+  /** Append a new todo item with given content and priority. */
+  addTodoItem(content: string, priority: TodoPriority = "medium"): void {
+    this.todoPanel = addTodoItemFn(this.todoPanel, content, priority);
+    this.render();
+  }
+
+  /** Update todo item status by id. */
+  updateTodoStatus(id: string, status: TodoStatus): void {
+    this.todoPanel = updateTodoStatusFn(this.todoPanel, id, status);
+    this.render();
+  }
+
+  /** Remove a todo item by id. */
+  removeTodoItem(id: string): void {
+    this.todoPanel = removeTodoItemFn(this.todoPanel, id);
+    this.render();
+  }
+
+  /** Toggle todo panel visibility. */
+  toggleTodoPanel(): void {
+    this.todoPanel = { ...this.todoPanel, visible: !this.todoPanel.visible };
+    this.render();
+  }
+
+  /** Current todo panel state snapshot (defensive copy). */
+  getTodoPanelState(): TodoPanelState {
+    return {
+      ...this.todoPanel,
+      items: this.todoPanel.items.map((i) => ({ ...i })),
+    };
   }
 
   /**
@@ -464,6 +678,20 @@ export class FullScreenTui {
         ? { reasoningExpanded: this.reasoningExpanded }
         : {}),
       ...(this.contextUsage ? { contextUsage: this.contextUsage } : {}),
+      search: { ...this.search, matches: [...this.search.matches] },
+      palette: {
+        ...this.palette,
+        filtered: [...this.palette.filtered],
+      },
+      ...(this.vimEnabled ? { vim: { ...this.vimState } } : {}),
+      layout: {
+        ...this.layout,
+        panes: this.layout.panes.map((p) => ({ ...p })),
+      },
+      todoPanel: {
+        ...this.todoPanel,
+        items: this.todoPanel.items.map((i) => ({ ...i })),
+      },
       scrollOffset: this.scrollOffset,
     };
   }
@@ -492,6 +720,35 @@ export class FullScreenTui {
   };
 
   private feedInput(value: string): void {
+    // Palette overlay intercepts all input.
+    if (this.palette.visible) {
+      this.handlePaletteInput(value);
+      return;
+    }
+    // Search bar intercepts all input.
+    if (this.search.visible) {
+      this.handleSearchInput(value);
+      return;
+    }
+    // Vim normal/visual modes intercept printable keys; Esc in insert mode reverts.
+    if (
+      this.vimEnabled &&
+      (this.vimState.mode === "normal" ||
+        this.vimState.mode === "visual" ||
+        this.vimState.mode === "visual-line")
+    ) {
+      this.handleVimModalInput(value);
+      return;
+    }
+    if (this.vimEnabled && this.vimState.mode === "insert") {
+      // Esc returns to normal mode without inserting anything.
+      if (value === "\u001b") {
+        this.vimState = { mode: "normal" };
+        this.render();
+        return;
+      }
+      // Other input falls through to normal insert handling below.
+    }
     for (const key of this.inputDecoder.push(value)) {
       if (key.type === "text") {
         this.cancelCompletion();
@@ -504,6 +761,282 @@ export class FullScreenTui {
       }
     }
     this.render();
+  }
+
+  /**
+   * Handle keystrokes while the command palette overlay is open.
+   * Esc closes, Enter confirms, Up/Down move, Backspace trims query,
+   * printable chars extend query.
+   */
+  private handlePaletteInput(value: string): void {
+    let index = 0;
+    while (index < value.length) {
+      const rest = value.slice(index);
+      if (rest.startsWith("\u001b") && !rest.startsWith("\u001b[")) {
+        this.closePalette();
+        index += 1;
+        continue;
+      }
+      if (rest.startsWith("\r") || rest.startsWith("\n")) {
+        this.confirmPaletteSelection();
+        index += 1;
+        continue;
+      }
+      if (rest.startsWith("\u001b[A")) {
+        this.movePaletteCursor(-1);
+        index += 3;
+        continue;
+      }
+      if (rest.startsWith("\u001b[B")) {
+        this.movePaletteCursor(1);
+        index += 3;
+        continue;
+      }
+      if (rest.startsWith("\u007f") || rest.startsWith("\b")) {
+        if (this.palette.query.length > 0) {
+          this.updatePaletteQuery(this.palette.query.slice(0, -1));
+        }
+        index += 1;
+        continue;
+      }
+      if (rest.startsWith("\u001b[")) {
+        const match = /^(\u001b\[[0-?]*[ -/]*[@-~])/.exec(rest);
+        if (match) {
+          index += match[1]!.length;
+          continue;
+        }
+        index += 1;
+        continue;
+      }
+      const point = rest.codePointAt(0);
+      if (point !== undefined && point >= 32 && point !== 127) {
+        const char = String.fromCodePoint(point);
+        this.updatePaletteQuery(this.palette.query + char);
+        index += char.length;
+        continue;
+      }
+      index += 1;
+    }
+  }
+
+  /**
+   * Handle keystrokes while the search bar is open.
+   * Esc closes, Enter / arrow down advance, arrow up reverses,
+   * Backspace trims query, printable chars extend query.
+   */
+  private handleSearchInput(value: string): void {
+    let index = 0;
+    while (index < value.length) {
+      const rest = value.slice(index);
+      if (rest.startsWith("\u001b") && !rest.startsWith("\u001b[")) {
+        this.closeSearch();
+        index += 1;
+        continue;
+      }
+      if (rest.startsWith("\r") || rest.startsWith("\n")) {
+        this.advanceSearch(1);
+        index += 1;
+        continue;
+      }
+      if (rest.startsWith("\u001b[A")) {
+        this.advanceSearch(-1);
+        index += 3;
+        continue;
+      }
+      if (rest.startsWith("\u001b[B")) {
+        this.advanceSearch(1);
+        index += 3;
+        continue;
+      }
+      if (rest.startsWith("\u007f") || rest.startsWith("\b")) {
+        if (this.search.query.length > 0) {
+          this.updateSearchQuery(this.search.query.slice(0, -1));
+        }
+        index += 1;
+        continue;
+      }
+      if (rest.startsWith("\u001b[")) {
+        const match = /^(\u001b\[[0-?]*[ -/]*[@-~])/.exec(rest);
+        if (match) {
+          index += match[1]!.length;
+          continue;
+        }
+        index += 1;
+        continue;
+      }
+      const point = rest.codePointAt(0);
+      if (point !== undefined && point >= 32 && point !== 127) {
+        const char = String.fromCodePoint(point);
+        this.updateSearchQuery(this.search.query + char);
+        index += char.length;
+        continue;
+      }
+      index += 1;
+    }
+  }
+
+  /**
+   * Handle printable keys in vim normal or visual mode. Each character is fed
+   * to the vim state machine; the resulting action is applied to the editor.
+   * Control sequences (Esc, arrows, etc.) are passed through to the keymap
+   * decoder so navigation still works.
+   *
+   * The editor cursor is passed to `vimHandleKey` so the visual-mode anchor
+   * can be seeded from the real cursor position when entering visual mode.
+   * When a selection operator fires, the visual anchor (captured before the
+   * call) is forwarded to the editor's selection-aware methods.
+   */
+  private handleVimModalInput(value: string): void {
+    for (const char of value) {
+      // Skip control characters and CSI introducers; let the keymap handle them.
+      const cp = char.codePointAt(0);
+      if (cp === undefined) continue;
+      if (cp === 0x1b || cp === 0x0d || cp === 0x0a || cp === 0x7f || cp === 0x08) continue;
+      if (cp < 32) continue;
+      // Capture the visual anchor before the call: selection operators clear
+      // it from state, so we need a local copy to forward to the editor.
+      const anchor = this.vimState.visualAnchor;
+      const result = vimHandleKey(this.vimState, char, this.editor.getCursor());
+      this.vimState = result.state;
+      this.applyVimAction(result.action, anchor, result.textObject, result.replaceChar);
+    }
+    // Pass the original value through the keymap decoder so arrows / Ctrl
+    // bindings still fire (e.g. Esc to cancel operator is handled above by
+    // vimHandleKey; arrows for cursor movement work via EditorBuffer).
+    for (const key of this.inputDecoder.push(value)) {
+      if (key.type !== "text") {
+        void this.action(key.action).catch((error: unknown) => {
+          this.setStatus(error instanceof Error ? error.message : String(error));
+          this.setMood("oops");
+        });
+      }
+    }
+    this.render();
+  }
+
+  /**
+   * Apply a vim-emitted action to the editor buffer. The optional `anchor` is
+   * the visual selection anchor captured before the operator fired; it is only
+   * used by selection-aware actions (delete_selection, yank_selection, etc.).
+   */
+  private applyVimAction(
+    action: VimAction,
+    anchor?: { row: number; col: number },
+    textObject?: { modifier: "i" | "a"; target: string },
+    replaceChar?: string,
+  ): void {
+    switch (action) {
+      case "cursor_left":
+        this.editor.cursorLeft();
+        break;
+      case "cursor_right":
+        this.editor.cursorRight();
+        break;
+      case "cursor_up":
+        this.editor.cursorUp();
+        break;
+      case "cursor_down":
+        this.editor.cursorDown();
+        break;
+      case "word_left":
+        this.editor.wordLeft();
+        break;
+      case "word_right":
+        this.editor.wordRight();
+        break;
+      case "home":
+        this.editor.home();
+        break;
+      case "end":
+        this.editor.end();
+        break;
+      case "goto_top":
+        this.editor.gotoTop();
+        break;
+      case "goto_bottom":
+        this.editor.gotoBottom();
+        break;
+      case "delete_line":
+        this.editor.deleteLine();
+        break;
+      case "yank_line":
+        this.editor.yankLine();
+        break;
+      case "paste_after":
+        this.editor.pasteAfter();
+        break;
+      case "delete_char":
+        this.editor.deleteChar();
+        break;
+      case "newline_below":
+        this.editor.appendNewlineBelow();
+        break;
+      // ─── Extended normal-mode operators ───
+      case "undo":
+        if (!this.editor.undo()) this.setStatus("Nothing to undo.");
+        break;
+      case "delete_to_end_of_line":
+        this.editor.deleteToEndOfLine();
+        break;
+      case "delete_word":
+        this.editor.deleteWordForward();
+        break;
+      case "toggle_case":
+        this.editor.toggleCase();
+        break;
+      // ─── Change operators (host enters insert mode after) ───
+      case "change_line":
+        this.editor.changeLine();
+        break;
+      case "change_word":
+        this.editor.changeWord();
+        break;
+      // ─── Visual-mode selection operators ───
+      case "delete_selection":
+        if (anchor) this.editor.deleteSelection(anchor);
+        break;
+      case "yank_selection":
+        if (anchor) this.editor.yankSelection(anchor);
+        break;
+      case "delete_selection_lines":
+        if (anchor) this.editor.deleteSelectionLines(anchor);
+        break;
+      case "yank_selection_lines":
+        if (anchor) this.editor.yankSelectionLines(anchor);
+        break;
+      // ─── Text-object operators (diw, daw, ci", ca( etc.) ───
+      case "delete_text_object":
+        if (textObject) this.editor.deleteTextObject(textObject.modifier, textObject.target);
+        break;
+      case "yank_text_object":
+        if (textObject) this.editor.yankTextObject(textObject.modifier, textObject.target);
+        break;
+      case "change_text_object":
+        // Delete the text object content; host is already in insert mode (set by
+        // vimHandleKey), so subsequent typing fills the cleared region.
+        if (textObject) this.editor.deleteTextObject(textObject.modifier, textObject.target);
+        break;
+      // ─── High-frequency operations (P, O, J, e, r) ───
+      case "paste_before":
+        this.editor.pasteBefore();
+        break;
+      case "newline_above":
+        this.editor.newlineAbove();
+        break;
+      case "join_lines":
+        this.editor.joinLines();
+        break;
+      case "word_end_forward":
+        this.editor.wordEndForward();
+        break;
+      case "replace_char":
+        // Only replace when a replacement character was captured by the vim
+        // state machine (vim r{char}); otherwise treat as a no-op.
+        if (replaceChar !== undefined) this.editor.replaceChar(replaceChar);
+        break;
+      case "noop":
+        break;
+    }
   }
 
   /**
@@ -718,7 +1251,16 @@ export class FullScreenTui {
       this.editor.backspace();
     } else if (action === "delete_word") {
       this.cancelCompletion();
-      this.editor.deleteWord();
+      this.editor.deleteWordBackward();
+    } else if (action === "delete_char_forward") {
+      this.cancelCompletion();
+      this.editor.deleteCharForward();
+    } else if (action === "kill_word_forward") {
+      this.cancelCompletion();
+      this.editor.deleteWordForward();
+    } else if (action === "kill_to_start") {
+      this.cancelCompletion();
+      this.editor.killToStart();
     } else if (action === "undo") {
       this.cancelCompletion();
       if (!this.editor.undo()) this.setStatus("Nothing to undo.");
@@ -728,6 +1270,15 @@ export class FullScreenTui {
     } else if (action === "yank") {
       this.cancelCompletion();
       this.editor.yank();
+    } else if (action === "upcase_word") {
+      this.cancelCompletion();
+      this.editor.upcaseWord();
+    } else if (action === "downcase_word") {
+      this.cancelCompletion();
+      this.editor.downcaseWord();
+    } else if (action === "capitalize_word") {
+      this.cancelCompletion();
+      this.editor.capitalizeWord();
     } else if (action === "cursor_left") {
       this.cancelCompletion();
       this.editor.cursorLeft();
@@ -768,6 +1319,27 @@ export class FullScreenTui {
       );
     } else if (action === "toggle_reasoning") {
       this.reasoningExpanded = !this.reasoningExpanded;
+    } else if (action === "toggle_vim") {
+      this.setVimEnabled(!this.vimEnabled);
+      this.setStatus(this.vimEnabled ? "Vim mode on" : "Vim mode off");
+    } else if (action === "open_palette") {
+      this.openPalette();
+    } else if (action === "search_transcript") {
+      this.openSearch();
+    } else if (action === "cycle_layout") {
+      this.cycleLayoutMode();
+      this.setStatus("Layout: " + this.layout.mode);
+    } else if (action === "toggle_todo_panel") {
+      this.toggleTodoPanel();
+      this.setStatus(this.todoPanel.visible ? "Todo panel on" : "Todo panel off");
+    } else if (action === "spec_option_up") {
+      this.confirmSpecNavigation("option_up");
+    } else if (action === "spec_option_down") {
+      this.confirmSpecNavigation("option_down");
+    } else if (action === "spec_confirm") {
+      this.confirmSpecNavigation("confirm");
+    } else if (action === "spec_cancel") {
+      this.confirmSpecNavigation("cancel");
     }
   }
 

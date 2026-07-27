@@ -455,6 +455,21 @@ const PRESETS: Record<string, ProviderPreset> = {
       zaiToolStream: true,
     },
   },
+  ark: {
+    id: "ark",
+    protocol: "openai-chat",
+    baseUrl: "https://ark.cn-beijing.volces.com/api/plan/v3",
+    apiKeyEnv: "ARK_API_KEY",
+    defaultModel: "glm-5.2",
+    defaultContextWindow: 128_000,
+    defaultMaxOutputTokens: 8_192,
+    capabilities: { input: ["text"], reasoning: true, toolCalling: true },
+    compatibility: {
+      // ARK exposes a plain OpenAI-compatible surface (no zai thinking format).
+      thinkingFormat: "openai",
+      supportsReasoningEffort: false,
+    },
+  },
   "glm-cn": {
     id: "glm-cn",
     protocol: "openai-chat",
@@ -895,6 +910,7 @@ function inferProviderFromEnvironment(): string | undefined {
   if (process.env.KIMI_API_KEY) return "kimi-coding";
   if (process.env.MOONSHOT_API_KEY) return "kimi";
   if (process.env.ZAI_API_KEY) return "glm";
+  if (process.env.ARK_API_KEY) return "ark";
   if (process.env.MINIMAX_API_KEY) return "minimax";
   if (process.env.GEMINI_API_KEY) return "gemini";
   return undefined;

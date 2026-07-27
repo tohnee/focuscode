@@ -27,7 +27,7 @@ function stripSgr(value: string): string {
 describe("syntax.highlightCode", () => {
   it("returns sanitized text unchanged for unknown languages", () => {
     const code = "let x = 1;";
-    const out = highlightCode(code, "rust", THEME);
+    const out = highlightCode(code, "cobol", THEME);
     expect(out).toBe(code);
   });
 
@@ -134,8 +134,8 @@ describe("syntax.highlightCode", () => {
   });
 
   it("exposes the SupportedLang type surface at compile time", () => {
-    const langs: SupportedLang[] = ["ts", "js", "json", "bash", "markdown"];
-    expect(langs).toHaveLength(5);
+    const langs: SupportedLang[] = ["ts", "js", "json", "bash", "markdown", "python", "go", "rust"];
+    expect(langs).toHaveLength(8);
   });
 
   it("does not leak non-SGR ANSI escapes in any language branch", () => {
@@ -145,6 +145,9 @@ describe("syntax.highlightCode", () => {
       ['{"a":1}', "json"],
       ["echo hi", "bash"],
       ["# hi", "markdown"],
+      ["x = 1", "python"],
+      ["package main", "go"],
+      ["fn main() {}", "rust"],
     ];
     for (const [code, lang] of samples) {
       const out = highlightCode(code, lang, THEME);
@@ -153,5 +156,168 @@ describe("syntax.highlightCode", () => {
       const sgrOnly = out.replace(/\u001b\[[0-9;]*m/g, "");
       expect(sgrOnly).not.toMatch(forbidden);
     }
+  });
+});
+
+describe("syntax.highlightCode — Python", () => {
+  it("normalizes python/py aliases case-insensitively", () => {
+    const code = "def f():\n    return 1";
+    const a = highlightCode(code, "python", THEME);
+    const b = highlightCode(code, "py", THEME);
+    const c = highlightCode(code, "PYTHON", THEME);
+    expect(a).toBe(b);
+    expect(a).toBe(c);
+  });
+
+  it("highlights keywords with the accent color", () => {
+    const out = highlightCode("def f():\n    return None", "python", THEME);
+    expect(out).toContain(fg(THEME.accent, "def"));
+    expect(out).toContain(fg(THEME.accent, "return"));
+    expect(out).toContain(fg(THEME.danger, "None"));
+  });
+
+  it("highlights string literals (single, double, triple-quoted) with success color", () => {
+    const out = highlightCode('x = "hello"', "python", THEME);
+    expect(out).toContain(fg(THEME.success, '"hello"'));
+    const triple = highlightCode('x = """multi\nline"""', "python", THEME);
+    expect(triple).toContain(fg(THEME.success, '"""multi\nline"""'));
+  });
+
+  it("highlights comments starting with # in muted color", () => {
+    const out = highlightCode("x = 1  # set x", "python", THEME);
+    expect(out).toContain(fg(THEME.muted, "# set x"));
+  });
+
+  it("highlights numbers with warning color", () => {
+    const out = highlightCode("n = 42", "python", THEME);
+    expect(out).toContain(fg(THEME.warning, "42"));
+  });
+
+  it("highlights function-call identifiers with secondary color", () => {
+    const out = highlightCode("print(42)", "python", THEME);
+    expect(out).toContain(fg(THEME.secondary, "print"));
+  });
+
+  it("preserves plain content after stripping SGR", () => {
+    const code = "def f():\n    return 1";
+    const out = highlightCode(code, "python", THEME);
+    expect(stripSgr(out)).toBe(code);
+  });
+
+  it("strips non-SGR control characters from input", () => {
+    const dirty = "x =\u0007 1";
+    const out = highlightCode(dirty, "python", THEME);
+    expect(stripSgr(out)).toBe("x = 1");
+  });
+});
+
+describe("syntax.highlightCode — Go", () => {
+  it("normalizes go/golang aliases case-insensitively", () => {
+    const code = "package main";
+    const a = highlightCode(code, "go", THEME);
+    const b = highlightCode(code, "golang", THEME);
+    const c = highlightCode(code, "GO", THEME);
+    expect(a).toBe(b);
+    expect(a).toBe(c);
+  });
+
+  it("highlights package, func, return keywords with accent color", () => {
+    const out = highlightCode("package main\n\nfunc f() int { return 1 }", "go", THEME);
+    expect(out).toContain(fg(THEME.accent, "package"));
+    expect(out).toContain(fg(THEME.accent, "func"));
+    expect(out).toContain(fg(THEME.accent, "return"));
+  });
+
+  it("highlights string literals (interpreted and raw) with success color", () => {
+    const out = highlightCode('s := "hello"', "go", THEME);
+    expect(out).toContain(fg(THEME.success, '"hello"'));
+    const raw = highlightCode("s := `hello`", "go", THEME);
+    expect(raw).toContain(fg(THEME.success, "`hello`"));
+  });
+
+  it("highlights comments starting with // in muted color", () => {
+    const out = highlightCode("// comment\npackage main", "go", THEME);
+    expect(out).toContain(fg(THEME.muted, "// comment"));
+  });
+
+  it("highlights block comments /* */ in muted color", () => {
+    const out = highlightCode("/* a\nb */\npackage main", "go", THEME);
+    expect(out).toContain(fg(THEME.muted, "/* a\nb */"));
+  });
+
+  it("highlights numbers with warning color", () => {
+    const out = highlightCode("n := 42", "go", THEME);
+    expect(out).toContain(fg(THEME.warning, "42"));
+  });
+
+  it("highlights function-call identifiers with secondary color", () => {
+    const out = highlightCode("fmt.Println(42)", "go", THEME);
+    expect(out).toContain(fg(THEME.secondary, "Println"));
+  });
+
+  it("highlights true/false/nil as danger (constants) color", () => {
+    const out = highlightCode("x := true", "go", THEME);
+    expect(out).toContain(fg(THEME.danger, "true"));
+  });
+
+  it("preserves plain content after stripping SGR", () => {
+    const code = "package main";
+    const out = highlightCode(code, "go", THEME);
+    expect(stripSgr(out)).toBe(code);
+  });
+});
+
+describe("syntax.highlightCode — Rust", () => {
+  it("normalizes rust/rs aliases case-insensitively", () => {
+    const code = "fn main() {}";
+    const a = highlightCode(code, "rust", THEME);
+    const b = highlightCode(code, "rs", THEME);
+    const c = highlightCode(code, "RUST", THEME);
+    expect(a).toBe(b);
+    expect(a).toBe(c);
+  });
+
+  it("highlights fn, let, return, mut keywords with accent color", () => {
+    const out = highlightCode("fn f() -> i32 { let mut x = 1; return x; }", "rust", THEME);
+    expect(out).toContain(fg(THEME.accent, "fn"));
+    expect(out).toContain(fg(THEME.accent, "let"));
+    expect(out).toContain(fg(THEME.accent, "return"));
+    expect(out).toContain(fg(THEME.accent, "mut"));
+  });
+
+  it("highlights string literals with success color", () => {
+    const out = highlightCode('let s = "hello";', "rust", THEME);
+    expect(out).toContain(fg(THEME.success, '"hello"'));
+  });
+
+  it("highlights comments starting with // in muted color", () => {
+    const out = highlightCode("// comment\nfn main() {}", "rust", THEME);
+    expect(out).toContain(fg(THEME.muted, "// comment"));
+  });
+
+  it("highlights block comments /* */ in muted color", () => {
+    const out = highlightCode("/* a\nb */\nfn main() {}", "rust", THEME);
+    expect(out).toContain(fg(THEME.muted, "/* a\nb */"));
+  });
+
+  it("highlights numbers with warning color", () => {
+    const out = highlightCode("let n = 42;", "rust", THEME);
+    expect(out).toContain(fg(THEME.warning, "42"));
+  });
+
+  it("highlights function-call identifiers with secondary color", () => {
+    const out = highlightCode('println!("hi")', "rust", THEME);
+    expect(out).toContain(fg(THEME.secondary, "println"));
+  });
+
+  it("highlights true/false as danger (constants) color", () => {
+    const out = highlightCode("let x = true;", "rust", THEME);
+    expect(out).toContain(fg(THEME.danger, "true"));
+  });
+
+  it("preserves plain content after stripping SGR", () => {
+    const code = "fn main() {}";
+    const out = highlightCode(code, "rust", THEME);
+    expect(stripSgr(out)).toBe(code);
   });
 });

@@ -42,12 +42,15 @@ import {
   type CompanionState,
   type CompletionCandidate,
   type CompletionProvider,
+  type LayoutMode,
   type PickerProvider,
   type ReasoningEffort,
   type SpecDecisionView,
+  createInitialSpecPipeline,
   type TuiKeymap,
   type TuiMascot,
   type TuiTheme,
+  type VimState,
 } from "@focuscode/tui";
 
 /** Foxy 小福 · 编程配备鼓励师: rotating encouragement lines per agent moment. */
@@ -121,6 +124,17 @@ const TUI_SLASH_COMMANDS: Array<{ name: string; description: string }> = [
   { name: "todo", description: "Manage todos (add | done | clear | list)" },
   { name: "mcp", description: "Show configured MCP servers (list)" },
   { name: "diagnostics", description: "Toggle diagnostics (on | off)" },
+  { name: "vim", description: "Toggle vim modal editing" },
+  { name: "palette", description: "Open the command palette" },
+  { name: "search", description: "Open transcript search (optional query)" },
+  {
+    name: "layout",
+    description: "Switch pane layout (classic | split | focus | wide | cycle)",
+  },
+  {
+    name: "todopanel",
+    description: "Toggle todo sidebar panel (on | off | toggle)",
+  },
   { name: "exit", description: "Leave the TUI" },
   { name: "quit", description: "Leave the TUI" },
 ];
@@ -228,7 +242,7 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
     onAbort: () => {
       options.agent.abort();
     },
-    onCommand: async (command) => {
+    onCommand: async (command): Promise<string | void> => {
       const [rawName, ...parts] = command.slice(1).split(/\s+/);
       const name = rawName?.toLowerCase() ?? "";
       const args = parts.join(" ");
@@ -413,6 +427,27 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
         else diagnosticsEnabled = !diagnosticsEnabled;
         return "Diagnostics " + (diagnosticsEnabled ? "on" : "off") + ".";
       }
+      if (name === "vim") {
+        const state: VimState | undefined = tui.getVimState();
+        const enabled: boolean = state !== undefined;
+        tui.setVimEnabled(!enabled);
+        return enabled ? "Vim mode off." : "Vim mode on (NORMAL).";
+      }
+      if (name === "palette") {
+        tui.openPalette();
+        return;
+      }
+      if (name === "search") {
+        tui.openSearch();
+        if (args) tui.updateSearchQuery(args);
+        return;
+      }
+      if (name === "layout") {
+        return runLayoutSubcommand(tui, args);
+      }
+      if (name === "todopanel") {
+        return runTodoPanelSubcommand(tui, args);
+      }
       const prompt = options.resources.prompts.find((item) => item.name === name);
       if (prompt) {
         void tui.submitText(expandPromptTemplate(prompt, args));
@@ -521,12 +556,13 @@ export function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () 
     tui.setMood("oops");
     speak("oops");
   } else if (event.type === "spec_start") {
-    tui.setSpecProgress({
-      phase: "start",
-      trigger: event.trigger,
-      stages: [],
-      startTime: Date.now(),
-    });
+    // Phase 5 — preset the 5-stage pipeline so the user immediately sees
+    // the full SpecEngine flow as pending, rather than an empty stage list.
+    tui.setSpecProgress(createInitialSpecPipeline(event.trigger));
+    // Mark the first stage (classify) as running to give immediate visual
+    // feedback that the pipeline has started. Subsequent spec_stage events
+    // will update each stage to "done" and infer the next running stage.
+    tui.updateSpecStage("classify", { status: "running" });
     tui.setStatus("✦ Spec engine started (" + event.trigger + ")");
     speak("thinking");
   } else if (event.type === "spec_stage") {
@@ -536,6 +572,26 @@ export function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () 
       durationMs: event.durationMs,
       fellBack: event.fellBack,
     });
+    // Phase 5 — infer the next pending stage and mark it as running so the
+    // user sees live pipeline progression between spec_stage events. The
+    // canonical SpecEngine order is classify → explore → draft →
+    // detect-decisions → enhance.
+    const SPEC_STAGE_ORDER = [
+      "classify",
+      "explore",
+      "draft",
+      "detect-decisions",
+      "enhance",
+    ] as const;
+    const completedIdx = SPEC_STAGE_ORDER.indexOf(event.stage as (typeof SPEC_STAGE_ORDER)[number]);
+    if (completedIdx >= 0 && completedIdx < SPEC_STAGE_ORDER.length - 1) {
+      const nextName = SPEC_STAGE_ORDER[completedIdx + 1]!;
+      const current = tui.getSpecProgress();
+      const nextStage = current.stages.find((s) => s.name === nextName);
+      if (nextStage && nextStage.status === "pending") {
+        tui.updateSpecStage(nextName, { status: "running" });
+      }
+    }
     tui.setStatus(
       "✦ " + event.stage + (event.fellBack ? " (fallback)" : " ✓") + " " + event.durationMs + "ms",
     );
@@ -568,16 +624,28 @@ export function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () 
     tui.setMood("happy");
     tui.setStatus("✦ Spec confirmed");
   } else if (event.type === "spec_skipped") {
-    tui.setSpecProgress({ phase: "skipped", stages: [] });
+    // Phase 5 — preserve stage history and capture the skip reason so the
+    // renderer can show why the pipeline was short-circuited.
+    const prev = tui.getSpecProgress();
+    tui.setSpecProgress({
+      phase: "skipped",
+      stages: prev.stages,
+      ...(prev.startTime !== undefined ? { startTime: prev.startTime } : {}),
+      skipReason: event.reason,
+    });
     tui.setStatus("✦ Spec skipped: " + event.reason);
   } else if (event.type === "spec_completed") {
-    const startTime = tui.getSpecStartTime();
+    // Phase 5 — preserve stage history so the user can review each stage's
+    // duration / fallback status after the pipeline finishes.
+    const prev = tui.getSpecProgress();
+    const startTime = prev.startTime ?? tui.getSpecStartTime();
     const totalDuration = startTime ? Date.now() - startTime : undefined;
     tui.setSpecProgress({
       phase: "completed",
-      stages: [],
+      stages: prev.stages,
       ...(totalDuration !== undefined ? { totalDuration } : {}),
       ...(event.specId ? { specId: event.specId } : {}),
+      ...(prev.topic ? { topic: prev.topic } : {}),
     });
     tui.setMood("happy");
     tui.setStatus("✦ Spec completed · " + (totalDuration ?? 0) + "ms");
@@ -913,6 +981,39 @@ function formatSessionCost(
     "Note: USD pricing requires provider rate cards; this command shows token totals.",
   ];
   return lines.join("\n");
+}
+
+/** Run a /layout subcommand: switch or cycle pane layout mode. */
+export function runLayoutSubcommand(tui: FullScreenTui, args: string): string {
+  const arg = args.trim().toLowerCase();
+  if (arg === "" || arg === "cycle") {
+    tui.cycleLayoutMode();
+    return "Layout: " + tui.getLayoutState().mode + ".";
+  }
+  const modes: LayoutMode[] = ["classic", "split", "focus", "wide"];
+  if (modes.includes(arg as LayoutMode)) {
+    tui.setLayoutMode(arg as LayoutMode);
+    return "Layout: " + arg + ".";
+  }
+  return "Usage: /layout [classic | split | focus | wide | cycle]";
+}
+
+/** Run a /todopanel subcommand: toggle todo sidebar visibility. */
+export function runTodoPanelSubcommand(tui: FullScreenTui, args: string): string {
+  const arg = args.trim().toLowerCase();
+  if (arg === "" || arg === "toggle") {
+    tui.toggleTodoPanel();
+    return "Todo panel " + (tui.getTodoPanelState().visible ? "on" : "off") + ".";
+  }
+  if (arg === "on") {
+    if (!tui.getTodoPanelState().visible) tui.toggleTodoPanel();
+    return "Todo panel on.";
+  }
+  if (arg === "off") {
+    if (tui.getTodoPanelState().visible) tui.toggleTodoPanel();
+    return "Todo panel off.";
+  }
+  return "Usage: /todopanel [on | off | toggle]";
 }
 
 /** Run a /todo subcommand via the agent's todo tool when registered. */

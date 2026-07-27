@@ -1,4 +1,4 @@
-import type { TuiTheme } from "./themes.js";
+import { fg, type TuiTheme } from "./themes.js";
 import { sanitizeTerminalText } from "./width.js";
 
 /**
@@ -247,6 +247,8 @@ function truncatePlain(value: string, width: number): string {
   return clean.slice(0, Math.max(0, width - 1)) + "…";
 }
 
-function fg(color: number, text: string): string {
-  return "\u001b[38;5;" + color + "m" + text + "\u001b[39m";
+function _pickerUnusedFg(): void {
+  void fg;
 }
+// Note: `fg` is re-exported transitively via the import above; the helper
+// ensures the import is not tree-shaken in type-only consumers.

@@ -56,6 +56,25 @@ describe("renderEvent spec_start", () => {
     expect(snap.specProgress?.trigger).toBe("auto");
     expect(snap.specProgress?.startTime).toBeTypeOf("number");
   });
+
+  it("Phase 5 — presets the 5 canonical stages as pending and marks classify as running", () => {
+    const tui = createTui();
+    renderEvent(tui, { type: "spec_start", input: "test", trigger: "explicit" });
+    const snap = tui.snapshot();
+    expect(snap.specProgress?.stages.map((s) => s.name)).toEqual([
+      "classify",
+      "explore",
+      "draft",
+      "detect-decisions",
+      "enhance",
+    ]);
+    // classify is immediately promoted to running for visual feedback
+    expect(snap.specProgress?.stages[0]?.status).toBe("running");
+    // the rest remain pending
+    for (let i = 1; i < 5; i += 1) {
+      expect(snap.specProgress?.stages[i]?.status).toBe("pending");
+    }
+  });
 });
 
 describe("renderEvent spec_stage", () => {
@@ -71,16 +90,28 @@ describe("renderEvent spec_stage", () => {
       fellBack: false,
     });
     const snap = tui.snapshot();
-    expect(snap.specProgress?.stages).toHaveLength(1);
-    expect(snap.specProgress?.stages[0]?.name).toBe("classify");
-    expect(snap.specProgress?.stages[0]?.status).toBe("done");
-    expect(snap.specProgress?.stages[0]?.durationMs).toBe(500);
-    expect(snap.specProgress?.stages[0]?.model).toBe("glm-4");
+    // 5 preset stages; classify is now done, explore promoted to running
+    expect(snap.specProgress?.stages).toHaveLength(5);
+    const classify = snap.specProgress?.stages.find((s) => s.name === "classify");
+    expect(classify?.status).toBe("done");
+    expect(classify?.durationMs).toBe(500);
+    expect(classify?.model).toBe("glm-4");
+    // Phase 5 — explore auto-promoted to running
+    const explore = snap.specProgress?.stages.find((s) => s.name === "explore");
+    expect(explore?.status).toBe("running");
   });
 
   it("records fellBack flag", () => {
     const tui = createTui();
     renderEvent(tui, { type: "spec_start", input: "test", trigger: "explicit" });
+    // Run classify first so explore can be promoted to running before completing.
+    renderEvent(tui, {
+      type: "spec_stage",
+      stage: "classify",
+      model: "glm-4",
+      durationMs: 100,
+      fellBack: false,
+    });
     renderEvent(tui, {
       type: "spec_stage",
       stage: "explore",
@@ -89,7 +120,8 @@ describe("renderEvent spec_stage", () => {
       fellBack: true,
     });
     const snap = tui.snapshot();
-    expect(snap.specProgress?.stages[0]?.fellBack).toBe(true);
+    const explore = snap.specProgress?.stages.find((s) => s.name === "explore");
+    expect(explore?.fellBack).toBe(true);
   });
 });
 

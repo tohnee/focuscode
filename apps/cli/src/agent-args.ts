@@ -48,6 +48,19 @@ export interface AgentCliArgs {
   listSessions: boolean;
   cost: boolean;
   exportSession?: string;
+  // ─── Spec Engine ───────────────────────────────────────────────────────
+  /** Enable the SpecEngine preprocessing pipeline (/spec, /raw commands). */
+  specEngine: boolean;
+  /** Auto-trigger spec clarification on vague inputs (without /spec prefix). */
+  specAutoTrigger: boolean;
+  /** Directory for persisted spec documents (relative to cwd). */
+  specDirectory?: string;
+  /** Max read-only exploration rounds during the explore stage. */
+  specMaxExplorationRounds?: number;
+  /** Model spec ("provider/model") for classifier/detector stages (1B-2B). */
+  specClassifierModel?: string;
+  /** Model spec ("provider/model") for drafter/enhancer stages (3B-7B). */
+  specDrafterModel?: string;
   help: boolean;
   version: boolean;
 }
@@ -88,6 +101,10 @@ const VALUE_OPTIONS = new Set([
   "vm-identity",
   "mode",
   "export-session",
+  "spec-dir",
+  "spec-max-exploration-rounds",
+  "spec-classifier-model",
+  "spec-drafter-model",
 ]);
 
 const BOOLEAN_OPTIONS = new Set([
@@ -105,6 +122,8 @@ const BOOLEAN_OPTIONS = new Set([
   "help",
   "version",
   "allow-host-fallback",
+  "spec-engine",
+  "spec-auto-trigger",
 ]);
 
 export function parseAgentArgs(argv: string[]): AgentCliArgs {
@@ -255,6 +274,19 @@ export function parseAgentArgs(argv: string[]): AgentCliArgs {
     listSessions: booleans.has("list-sessions"),
     cost: booleans.has("cost"),
     ...(last(values, "export-session") ? { exportSession: last(values, "export-session")! } : {}),
+    // ─── Spec Engine ───
+    specEngine: booleans.has("spec-engine"),
+    specAutoTrigger: booleans.has("spec-auto-trigger"),
+    ...(last(values, "spec-dir") ? { specDirectory: last(values, "spec-dir")! } : {}),
+    ...(numberOption(values, "spec-max-exploration-rounds") !== undefined
+      ? { specMaxExplorationRounds: numberOption(values, "spec-max-exploration-rounds")! }
+      : {}),
+    ...(last(values, "spec-classifier-model")
+      ? { specClassifierModel: last(values, "spec-classifier-model")! }
+      : {}),
+    ...(last(values, "spec-drafter-model")
+      ? { specDrafterModel: last(values, "spec-drafter-model")! }
+      : {}),
     help: booleans.has("help"),
     version: booleans.has("version"),
   };

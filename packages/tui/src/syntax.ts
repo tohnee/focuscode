@@ -1,11 +1,11 @@
-import type { TuiTheme } from "./themes.js";
+import { fg, type TuiTheme } from "./themes.js";
 import { sanitizeTerminalText } from "./width.js";
 
 /**
  * Languages whose syntax we know how to colorize. Anything else is returned
  * sanitized but unstyled so unknown languages never leak ANSI from the source.
  */
-export type SupportedLang = "ts" | "js" | "json" | "bash" | "markdown";
+export type SupportedLang = "ts" | "js" | "json" | "bash" | "markdown" | "python" | "go" | "rust";
 
 const TS_KEYWORDS = new Set([
   "abstract",
@@ -157,6 +157,125 @@ const BASH_KEYWORDS = new Set([
   "test",
 ]);
 
+const PYTHON_KEYWORDS = new Set([
+  "and",
+  "as",
+  "assert",
+  "async",
+  "await",
+  "break",
+  "class",
+  "continue",
+  "def",
+  "del",
+  "elif",
+  "else",
+  "except",
+  "finally",
+  "for",
+  "from",
+  "global",
+  "if",
+  "import",
+  "in",
+  "is",
+  "lambda",
+  "nonlocal",
+  "not",
+  "or",
+  "pass",
+  "raise",
+  "return",
+  "try",
+  "while",
+  "with",
+  "yield",
+  "self",
+  "cls",
+]);
+
+const PYTHON_CONSTANTS = new Set([
+  "False",
+  "None",
+  "True",
+  "NotImplemented",
+  "Ellipsis",
+  "__debug__",
+]);
+
+const GO_KEYWORDS = new Set([
+  "break",
+  "case",
+  "chan",
+  "const",
+  "continue",
+  "default",
+  "defer",
+  "else",
+  "fallthrough",
+  "for",
+  "func",
+  "go",
+  "goto",
+  "if",
+  "import",
+  "interface",
+  "map",
+  "package",
+  "range",
+  "return",
+  "select",
+  "struct",
+  "switch",
+  "type",
+  "var",
+]);
+
+const GO_CONSTANTS = new Set(["true", "false", "nil", "iota"]);
+
+const RUST_KEYWORDS = new Set([
+  "as",
+  "async",
+  "await",
+  "break",
+  "const",
+  "continue",
+  "crate",
+  "dyn",
+  "else",
+  "enum",
+  "extern",
+  "fn",
+  "for",
+  "if",
+  "impl",
+  "in",
+  "let",
+  "loop",
+  "match",
+  "mod",
+  "move",
+  "mut",
+  "pub",
+  "ref",
+  "return",
+  "self",
+  "Self",
+  "static",
+  "struct",
+  "super",
+  "trait",
+  "type",
+  "unsafe",
+  "use",
+  "where",
+  "while",
+  "yield",
+  "try",
+]);
+
+const RUST_CONSTANTS = new Set(["true", "false"]);
+
 /**
  * Colorize a code block with 256-color SGR sequences. Colors come from the
  * supplied theme (no hardcoded palette). Input is sanitized first; the output
@@ -179,6 +298,12 @@ export function highlightCode(text: string, lang: string, theme: TuiTheme): stri
       return highlightBash(clean, theme);
     case "markdown":
       return highlightMarkdown(clean, theme);
+    case "python":
+      return highlightPython(clean, theme);
+    case "go":
+      return highlightGo(clean, theme);
+    case "rust":
+      return highlightRust(clean, theme);
     default:
       return clean;
   }
@@ -192,11 +317,10 @@ function normalizeLang(lang: string): SupportedLang | undefined {
   if (["json"].includes(lower)) return "json";
   if (["bash", "sh", "shell", "zsh"].includes(lower)) return "bash";
   if (["markdown", "md"].includes(lower)) return "markdown";
+  if (["python", "py"].includes(lower)) return "python";
+  if (["go", "golang"].includes(lower)) return "go";
+  if (["rust", "rs"].includes(lower)) return "rust";
   return undefined;
-}
-
-function fg(color: number, text: string): string {
-  return "\u001b[38;5;" + color + "m" + text + "\u001b[39m";
 }
 
 interface Rule {
@@ -221,6 +345,35 @@ const BASH_RULES: Rule[] = [
   { pattern: /'(?:[^'])*'/g, kind: "string" },
   { pattern: /\b\d+(?:\.\d+)?\b/g, kind: "number" },
   { pattern: /[a-zA-Z_][A-Za-z0-9_-]*/g, kind: "keyword" },
+];
+
+const PYTHON_RULES: Rule[] = [
+  // Triple-quoted strings must be matched before regular strings.
+  { pattern: /"""[\s\S]*?"""/g, kind: "string" },
+  { pattern: /'''[\s\S]*?'''/g, kind: "string" },
+  { pattern: /#[^\n]*/g, kind: "comment" },
+  { pattern: /"(?:\\.|[^"\\\n])*"/g, kind: "string" },
+  { pattern: /'(?:\\.|[^'\\\n])*'/g, kind: "string" },
+  { pattern: /\b\d[\d_]*(?:\.\d+(?:[eE][+-]?\d+)?)?\b/g, kind: "number" },
+  { pattern: /[A-Za-z_][A-Za-z0-9_]*/g, kind: "keyword" },
+];
+
+const GO_RULES: Rule[] = [
+  { pattern: /\/\/[^\n]*/g, kind: "comment" },
+  { pattern: /\/\*[\s\S]*?\*\//g, kind: "comment" },
+  // Raw strings (backtick) must be matched before interpreted strings.
+  { pattern: /`[^`]*`/g, kind: "string" },
+  { pattern: /"(?:\\.|[^"\\\n])*"/g, kind: "string" },
+  { pattern: /\b\d[\d_]*(?:\.\d+)?\b/g, kind: "number" },
+  { pattern: /[A-Za-z_][A-Za-z0-9_]*/g, kind: "keyword" },
+];
+
+const RUST_RULES: Rule[] = [
+  { pattern: /\/\/[^\n]*/g, kind: "comment" },
+  { pattern: /\/\*[\s\S]*?\*\//g, kind: "comment" },
+  { pattern: /"(?:\\.|[^"\\\n])*"/g, kind: "string" },
+  { pattern: /\b\d[\d_]*(?:\.\d+)?\b/g, kind: "number" },
+  { pattern: /[A-Za-z_][A-Za-z0-9_]*/g, kind: "keyword" },
 ];
 
 function highlightTsLike(
@@ -269,6 +422,65 @@ function highlightBash(text: string, theme: TuiTheme): string {
       return token.text;
     })
     .join("");
+}
+
+interface StructuredOptions {
+  rules: Rule[];
+  keywords: Set<string>;
+  constants: Set<string>;
+  /** Characters that, when immediately following an identifier, mark it as a call. */
+  callChars?: string;
+}
+
+/**
+ * Generic structural highlighter used by Python/Go/Rust. Constants (true,
+ * false, nil, None, ...) win over keywords; identifiers followed by a call
+ * character (`(` for calls, `!` for Rust macros) get the secondary color.
+ */
+function highlightStructured(text: string, theme: TuiTheme, opts: StructuredOptions): string {
+  const callChars = opts.callChars ?? "(";
+  const tokens = tokenize(text, opts.rules);
+  return tokens
+    .map((token) => {
+      if (token.kind === "plain") return token.text;
+      if (token.kind === "comment") return fg(theme.muted, token.text);
+      if (token.kind === "string") return fg(theme.success, token.text);
+      if (token.kind === "number") return fg(theme.warning, token.text);
+      if (token.kind === "punct") return fg(theme.muted, token.text);
+      if (token.kind === "type") return token.text;
+      if (opts.constants.has(token.text)) return fg(theme.danger, token.text);
+      if (opts.keywords.has(token.text)) return fg(theme.accent, token.text);
+      const next = token.nextChar;
+      if (next && callChars.includes(next)) return fg(theme.secondary, token.text);
+      return token.text;
+    })
+    .join("");
+}
+
+function highlightPython(text: string, theme: TuiTheme): string {
+  return highlightStructured(text, theme, {
+    rules: PYTHON_RULES,
+    keywords: PYTHON_KEYWORDS,
+    constants: PYTHON_CONSTANTS,
+  });
+}
+
+function highlightGo(text: string, theme: TuiTheme): string {
+  return highlightStructured(text, theme, {
+    rules: GO_RULES,
+    keywords: GO_KEYWORDS,
+    constants: GO_CONSTANTS,
+  });
+}
+
+function highlightRust(text: string, theme: TuiTheme): string {
+  // Rust macros are called with `ident!`, so `!` also marks a call.
+  return highlightStructured(text, theme, {
+    rules: RUST_RULES,
+    keywords: RUST_KEYWORDS,
+    constants: RUST_CONSTANTS,
+    callChars: "(!",
+  });
 }
 
 function highlightJson(text: string, theme: TuiTheme): string {

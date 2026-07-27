@@ -3,6 +3,7 @@ import {
   advanceConfirmation,
   collectChoices,
   createInitialSpecProgress,
+  createInitialSpecPipeline,
   createSpecConfirmation,
   renderSpecConfirmation,
   renderSpecProgress,
@@ -10,6 +11,7 @@ import {
   type SpecProgressState,
 } from "../src/spec-progress.js";
 import { TUI_THEMES } from "../src/themes.js";
+import { stripAnsi } from "../src/width.js";
 
 const theme = TUI_THEMES[0]!;
 
@@ -162,5 +164,125 @@ describe("collectChoices", () => {
     const next = advanceConfirmation(state, "option_down"); // d1 → User path
     const choices = collectChoices(next);
     expect(choices["d1"]).toBe("User path");
+  });
+});
+
+// ─── Phase 5 — SpecEngine integration depth refinements ──────────────────────
+
+describe("createInitialSpecPipeline (Phase 5 — pipeline preset)", () => {
+  it("returns start phase with 5 pending stages in canonical order", () => {
+    const state = createInitialSpecPipeline("auto");
+    expect(state.phase).toBe("start");
+    expect(state.trigger).toBe("auto");
+    expect(state.stages.map((s) => s.name)).toEqual([
+      "classify",
+      "explore",
+      "draft",
+      "detect-decisions",
+      "enhance",
+    ]);
+    for (const stage of state.stages) {
+      expect(stage.status).toBe("pending");
+    }
+  });
+
+  it("startTime is set to a fresh timestamp", () => {
+    const before = Date.now();
+    const state = createInitialSpecPipeline("explicit");
+    const after = Date.now();
+    expect(state.startTime).toBeDefined();
+    expect(state.startTime!).toBeGreaterThanOrEqual(before);
+    expect(state.startTime!).toBeLessThanOrEqual(after);
+    expect(state.trigger).toBe("explicit");
+  });
+});
+
+describe("renderSpecProgress — Phase 5 refinements", () => {
+  it("running stage spinner rotates with tick (4-frame cycle)", () => {
+    const state: SpecProgressState = {
+      phase: "draft",
+      stages: [{ name: "draft", status: "running" }],
+    };
+    const frames: string[] = [];
+    for (let tick = 0; tick < 4; tick += 1) {
+      const lines = renderSpecProgress(state, 40, theme, { tick });
+      frames.push(stripAnsi(lines.join("\n")));
+    }
+    // 4 distinct frames means rotation is alive
+    const unique = new Set(frames);
+    expect(unique.size).toBeGreaterThan(1);
+  });
+
+  it("skipped phase renders the reason when provided", () => {
+    const state: SpecProgressState = {
+      phase: "skipped",
+      stages: [],
+      topic: undefined,
+    };
+    const lines = renderSpecProgress(state, 60, theme, { reason: "classifier: trivial" });
+    const text = stripAnsi(lines.join("\n"));
+    expect(text).toContain("Spec skipped");
+    expect(text).toContain("classifier: trivial");
+  });
+
+  it("completed phase renders specId when provided", () => {
+    const state: SpecProgressState = {
+      phase: "completed",
+      stages: [],
+      totalDuration: 4200,
+      specId: "spec_abc123",
+    };
+    const lines = renderSpecProgress(state, 60, theme);
+    const text = stripAnsi(lines.join("\n"));
+    expect(text).toContain("Spec completed");
+    expect(text).toContain("spec_abc123");
+    expect(text).toContain("4.2s");
+  });
+
+  it("preserves stage history when phase transitions to completed", () => {
+    const state: SpecProgressState = {
+      phase: "completed",
+      stages: [
+        { name: "classify", status: "done", durationMs: 500 },
+        { name: "explore", status: "done", durationMs: 1200 },
+      ],
+      totalDuration: 1700,
+    };
+    const lines = renderSpecProgress(state, 60, theme);
+    const text = stripAnsi(lines.join("\n"));
+    expect(text).toContain("classify");
+    expect(text).toContain("explore");
+    expect(text).toContain("Total");
+  });
+});
+
+describe("renderSpecConfirmation — Phase 5 width-adaptive layout", () => {
+  it("border fills adapt to width param (narrow vs wide)", () => {
+    const state = createSpecConfirmation("spec_xyz", sampleDecisions);
+    const narrow = renderSpecConfirmation(state, 40, theme).map(stripAnsi);
+    const wide = renderSpecConfirmation(state, 80, theme).map(stripAnsi);
+    const narrowTop = narrow.find((l) => l.startsWith("╭")) ?? "";
+    const wideTop = wide.find((l) => l.startsWith("╭")) ?? "";
+    expect(wideTop.length).toBeGreaterThan(narrowTop.length);
+    // Both should end with a closing ╮
+    expect(wideTop.endsWith("╮")).toBe(true);
+    expect(narrowTop.endsWith("╮")).toBe(true);
+  });
+
+  it("shows decision progress (current/total) and severity label", () => {
+    const state = createSpecConfirmation("spec_xyz", sampleDecisions);
+    const lines = renderSpecConfirmation(state, 60, theme);
+    const text = stripAnsi(lines.join("\n"));
+    expect(text).toContain("1/2");
+    expect(text).toContain("critical");
+  });
+
+  it("keybind hint line is present", () => {
+    const state = createSpecConfirmation("spec_xyz", sampleDecisions);
+    const lines = renderSpecConfirmation(state, 60, theme);
+    const text = stripAnsi(lines.join("\n"));
+    expect(text).toContain("↑↓");
+    expect(text).toContain("Enter");
+    expect(text).toContain("Esc");
   });
 });

@@ -31,6 +31,7 @@ const PROVIDERS: LiveProvider[] = [
   { provider: "kimi", envKey: "MOONSHOT_API_KEY", hasDefaultModel: true },
   { provider: "kimi-coding", envKey: "KIMI_API_KEY", hasDefaultModel: true },
   { provider: "glm", envKey: "ZAI_API_KEY", hasDefaultModel: true },
+  { provider: "ark", envKey: "ARK_API_KEY", hasDefaultModel: true },
   { provider: "minimax", envKey: "MINIMAX_API_KEY", hasDefaultModel: true },
 ];
 

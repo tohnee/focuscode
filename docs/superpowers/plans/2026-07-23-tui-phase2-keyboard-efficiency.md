@@ -48,10 +48,12 @@
 ## Task 1: search.ts — Transcript 搜索纯函数模块
 
 **Files:**
+
 - Create: `packages/tui/src/search.ts`
 - Test: `packages/tui/test/search.test.ts`
 
 **Interfaces:**
+
 - Consumes: `TuiTranscriptLine` from `./renderer.js`、`TuiTheme` from `./themes.js`、`fg` from `./themes.js`、`stringWidth` from `./width.js`
 - Produces: `SearchState`、`createSearchState`、`searchTranscript`、`advanceSearch`、`closeSearch`、`renderSearchBar`
 
@@ -254,7 +256,7 @@ export function searchTranscript(transcript: TuiTranscriptLine[], query: string)
 export function advanceSearch(state: SearchState, delta: number): SearchState {
   if (state.matches.length === 0) return state;
   const len = state.matches.length;
-  const next = ((state.currentIndex + delta) % len + len) % len;
+  const next = (((state.currentIndex + delta) % len) + len) % len;
   return { ...state, currentIndex: next };
 }
 
@@ -310,10 +312,12 @@ git commit -m "feat(tui): add transcript search pure-function module"
 ## Task 2: command-palette.ts — 命令面板纯函数模块
 
 **Files:**
+
 - Create: `packages/tui/src/command-palette.ts`
 - Test: `packages/tui/test/command-palette.test.ts`
 
 **Interfaces:**
+
 - Consumes: `fg` from `./themes.js`、`stringWidth` from `./width.js`、`TuiTheme` from `./themes.js`
 - Produces: `PaletteCommand`、`PaletteCategory`、`PaletteState`、`BUILTIN_COMMANDS`、`createPaletteState`、`updatePaletteQuery`、`movePaletteCursor`、`confirmPalette`、`closePalette`、`renderPalette`
 
@@ -499,13 +503,7 @@ Expected: FAIL with "Cannot find module '../src/command-palette.js'"
 import { fg, type TuiTheme } from "./themes.js";
 import { stringWidth } from "./width.js";
 
-export type PaletteCategory =
-  | "navigation"
-  | "editing"
-  | "view"
-  | "spec"
-  | "model"
-  | "session";
+export type PaletteCategory = "navigation" | "editing" | "view" | "spec" | "model" | "session";
 
 export interface PaletteCommand {
   id: string;
@@ -623,7 +621,7 @@ export function updatePaletteQuery(state: PaletteState, query: string): PaletteS
 export function movePaletteCursor(state: PaletteState, delta: number): PaletteState {
   if (state.filtered.length === 0) return { ...state, selectedIndex: 0 };
   const len = state.filtered.length;
-  const next = ((state.selectedIndex + delta) % len + len) % len;
+  const next = (((state.selectedIndex + delta) % len) + len) % len;
   return { ...state, selectedIndex: next };
 }
 
@@ -668,7 +666,10 @@ export function renderPalette(
     const marker = selected ? ">" : " ";
     const shortcut = cmd.shortcut ? fg(theme.muted, " [" + cmd.shortcut + "]") : "";
     const labelWidth = Math.max(0, width - 2 - stringWidth(shortcut));
-    const label = cmd.label.length > labelWidth ? cmd.label.slice(0, Math.max(0, labelWidth - 1)) + "…" : cmd.label;
+    const label =
+      cmd.label.length > labelWidth
+        ? cmd.label.slice(0, Math.max(0, labelWidth - 1)) + "…"
+        : cmd.label;
     const paddedLabel = label + " ".repeat(Math.max(0, labelWidth - stringWidth(label)));
     const line = marker + " " + (selected ? fg(theme.accent, paddedLabel) : paddedLabel) + shortcut;
     lines.push(line);
@@ -702,14 +703,17 @@ git commit -m "feat(tui): add command palette pure-function module"
 ## Task 3: vim.ts — Vim 模式状态机纯函数模块
 
 **Files:**
+
 - Create: `packages/tui/src/vim.ts`
 - Test: `packages/tui/test/vim.test.ts`
 
 **Interfaces:**
+
 - Consumes: 无(纯状态机)
 - Produces: `VimMode`、`VimState`、`VimAction`、`createVimState`、`vimHandleKey`、`renderVimIndicator`
 
 **Vim 设计说明:**
+
 - 只实现 normal + insert 模式(visual 留待将来)
 - normal 模式:hjkl/w/b/0/$/gg/G/dd/yy/p/x/i/a/o/Esc/数字前缀(可选,先不做 count)
 - insert 模式:Esc 返回 normal;其他字符由 app.ts 的 feedInput 正常处理(不经过 vim 状态机)
@@ -721,12 +725,7 @@ git commit -m "feat(tui): add command palette pure-function module"
 
 ```typescript
 import { describe, expect, it } from "vitest";
-import {
-  createVimState,
-  renderVimIndicator,
-  vimHandleKey,
-  type VimState,
-} from "../src/vim.js";
+import { createVimState, renderVimIndicator, vimHandleKey, type VimState } from "../src/vim.js";
 import { TUI_THEMES } from "../src/themes.js";
 
 const theme = TUI_THEMES[0]!;
@@ -1049,10 +1048,12 @@ git commit -m "feat(tui): add vim mode state machine (normal + insert)"
 ## Task 4: keymap.ts 扩展 — 新增 3 个 action
 
 **Files:**
+
 - Modify: `packages/tui/src/keymap.ts`
 - Test: `packages/tui/test/keymap.test.ts`
 
 **Interfaces:**
+
 - Consumes: 现有 `TuiAction`、`DEFAULT_KEYMAP`、`VALID_ACTIONS`、`mergeKeymap`
 - Produces: 扩展后的 `TuiAction`(新增 `toggle_vim` | `open_palette` | `search_transcript`)、扩展后的 `DEFAULT_KEYMAP`(新增 ctrl+v / ctrl+p / ctrl+f 绑定)
 
@@ -1194,10 +1195,12 @@ git commit -m "feat(tui): add toggle_vim, open_palette, search_transcript action
 ## Task 5: editor.ts 扩展 — vim 所需行级操作
 
 **Files:**
+
 - Modify: `packages/tui/src/editor.ts`
 - Test: `packages/tui/test/editor.test.ts` (新建)
 
 **Interfaces:**
+
 - Consumes: 现有 `EditorBuffer`、`EditorCursor`、`segmentGraphemes`
 - Produces: `EditorBuffer` 新增方法 `deleteLine()`、`yankLine()`、`pasteAfter()`、`deleteChar()`、`getLineText(row)`、`setLineText(row, text)`、`gotoTop()`、`gotoBottom()`
 
@@ -1466,10 +1469,12 @@ git commit -m "feat(tui): add vim line-level operations to EditorBuffer"
 ## Task 6: renderer.ts 扩展 — 渲染 search/palette/vim
 
 **Files:**
+
 - Modify: `packages/tui/src/renderer.ts`
 - Test: `packages/tui/test/renderer.test.ts`
 
 **Interfaces:**
+
 - Consumes: `SearchState` + `renderSearchBar` from `./search.js`、`PaletteState` + `renderPalette` from `./command-palette.js`、`VimState` + `renderVimIndicator` from `./vim.js`
 - Produces: `TuiRenderState` 新增 `search?`、`palette?`、`vim?` 字段;`renderTui` 渲染 search bar、palette overlay、vim 指示器
 
@@ -1597,16 +1602,16 @@ import { renderVimIndicator, type VimState } from "./vim.js";
 在 `renderTui` 函数中,在渲染 footer 之前(或 footer 内),新增 search bar 和 palette overlay 渲染。找到 footer 渲染部分(通常在函数末尾构建 bottom 区域附近),在 footer 行之前插入:
 
 ```typescript
-  // Search bar (above footer, below body)
-  const searchLines: string[] = state.search ? renderSearchBar(state.search, width, theme) : [];
+// Search bar (above footer, below body)
+const searchLines: string[] = state.search ? renderSearchBar(state.search, width, theme) : [];
 
-  // Command palette overlay (takes priority over body when visible)
-  const paletteLines: string[] = state.palette
-    ? renderPalette(state.palette, width, Math.max(4, Math.floor(height / 2)), theme)
-    : [];
+// Command palette overlay (takes priority over body when visible)
+const paletteLines: string[] = state.palette
+  ? renderPalette(state.palette, width, Math.max(4, Math.floor(height / 2)), theme)
+  : [];
 
-  // Vim mode indicator (appended to footer)
-  const vimIndicator = state.vim ? renderVimIndicator(state.vim, theme) : "";
+// Vim mode indicator (appended to footer)
+const vimIndicator = state.vim ? renderVimIndicator(state.vim, theme) : "";
 ```
 
 然后在构建 body 区域时,将 `paletteLines` 和 `searchLines` 插入到 body 与 footer 之间。具体实现取决于 renderer.ts 的现有结构 — 将 palette overlay 放在 body 区域顶部(覆盖 body),search bar 放在 body 底部(footer 之前)。
@@ -1614,12 +1619,13 @@ import { renderVimIndicator, type VimState } from "./vim.js";
 在 footer 行构建处,追加 vim indicator:
 
 ```typescript
-  // 在 footer 行中追加 vim indicator
-  const footerParts: string[] = [/* existing footer content */];
-  if (vimIndicator) footerParts.push(vimIndicator);
+// 在 footer 行中追加 vim indicator
+const footerParts: string[] = [/* existing footer content */];
+if (vimIndicator) footerParts.push(vimIndicator);
 ```
 
 **注意**:具体插入位置需根据 renderer.ts 现有结构调整。核心原则:
+
 1. palette overlay 覆盖 body 区域(类似 picker)
 2. search bar 在 body 底部、footer 之前
 3. vim indicator 在 footer 末尾
@@ -1646,10 +1652,12 @@ git commit -m "feat(tui): render search bar, palette overlay, vim indicator"
 ## Task 7: app.ts 集成 — 搜索状态管理 + 输入拦截
 
 **Files:**
+
 - Modify: `packages/tui/src/app.ts`
 - Test: `packages/tui/test/app.test.ts`
 
 **Interfaces:**
+
 - Consumes: `SearchState`、`createSearchState`、`searchTranscript`、`advanceSearch`、`closeSearch` from `./search.js`;`TuiTranscriptLine` from `./renderer.js`
 - Produces: `FullScreenTui` 新增 `openSearch()`、`closeSearch()`、`updateSearchQuery()` 方法;`buildState()` 输出 `search` 字段
 
@@ -1717,12 +1725,7 @@ Expected: FAIL — "tui.openSearch is not a function"
 在文件顶部新增 import:
 
 ```typescript
-import {
-  closeSearch,
-  createSearchState,
-  searchTranscript,
-  type SearchState,
-} from "./search.js";
+import { closeSearch, createSearchState, searchTranscript, type SearchState } from "./search.js";
 ```
 
 在 `FullScreenTui` 类中(在 `private contextUsage` 字段后)新增:
@@ -1782,10 +1785,10 @@ import {
 在 `onData` 方法中,在 `if (this.specConfirmation)` 之后、`if (value.startsWith("\u001bm"))` 之前,新增 search 拦截:
 
 ```typescript
-    if (this.search.visible) {
-      this.handleSearchInput(value);
-      return;
-    }
+if (this.search.visible) {
+  this.handleSearchInput(value);
+  return;
+}
 ```
 
 新增 `handleSearchInput` 私有方法(在 `handleSpecConfirmationInput` 后):
@@ -1877,11 +1880,13 @@ git commit -m "feat(tui): integrate transcript search into FullScreenTui"
 ## Task 8: app.ts 集成 — 命令面板状态管理 + 输入拦截
 
 **Files:**
+
 - Modify: `packages/tui/src/app.ts`
 - Modify: `packages/tui/src/app.ts` (FullScreenTuiOptions)
 - Test: `packages/tui/test/app.test.ts`
 
 **Interfaces:**
+
 - Consumes: `PaletteState`、`createPaletteState`、`updatePaletteQuery`、`movePaletteCursor`、`confirmPalette`、`closePalette` from `./command-palette.js`
 - Produces: `FullScreenTuiOptions` 新增 `onPaletteCommand?`;`FullScreenTui` 新增 `openPalette()`、`closePalette()`、`updatePaletteQuery()`、`confirmPaletteSelection()` 方法;`buildState()` 输出 `palette` 字段
 
@@ -1922,7 +1927,11 @@ describe("FullScreenTui — command palette integration", () => {
 
   it("confirmPaletteSelection triggers onPaletteCommand callback", () => {
     let receivedCommand: string | undefined;
-    const tui = createTestTui({ onPaletteCommand: (cmd) => { receivedCommand = cmd; } });
+    const tui = createTestTui({
+      onPaletteCommand: (cmd) => {
+        receivedCommand = cmd;
+      },
+    });
     tui.openPalette();
     tui.updatePaletteQuery("vim");
     tui.confirmPaletteSelection();
@@ -2020,10 +2029,10 @@ import {
 在 `onData` 方法中,在 `if (this.search.visible)` 之前,新增 palette 拦截(palette 优先级高于 search):
 
 ```typescript
-    if (this.palette.visible) {
-      this.handlePaletteInput(value);
-      return;
-    }
+if (this.palette.visible) {
+  this.handlePaletteInput(value);
+  return;
+}
 ```
 
 新增 `handlePaletteInput` 私有方法(在 `handleSearchInput` 后):
@@ -2127,10 +2136,12 @@ git commit -m "feat(tui): integrate command palette into FullScreenTui"
 ## Task 9: app.ts 集成 — Vim 模式状态管理
 
 **Files:**
+
 - Modify: `packages/tui/src/app.ts`
 - Test: `packages/tui/test/app.test.ts`
 
 **Interfaces:**
+
 - Consumes: `VimState`、`createVimState`、`vimHandleKey`、`VimAction` from `./vim.js`;EditorBuffer 新增方法(Task 5)
 - Produces: `FullScreenTui` 新增 `setVimEnabled()`、`getVimState()` 方法;`feedInput` 分流 vim normal 模式;`buildState()` 输出 `vim` 字段
 
@@ -2245,12 +2256,7 @@ Expected: FAIL — "tui.setVimEnabled is not a function"
 在文件顶部新增 import:
 
 ```typescript
-import {
-  createVimState,
-  vimHandleKey,
-  type VimAction,
-  type VimState,
-} from "./vim.js";
+import { createVimState, vimHandleKey, type VimAction, type VimState } from "./vim.js";
 ```
 
 在 `FullScreenTui` 类中(在 `private palette` 字段后)新增:
@@ -2466,12 +2472,14 @@ git commit -m "feat(tui): integrate vim mode into FullScreenTui"
 ## Task 10: index.ts 导出 + apps/cli/src/tui.ts 集成
 
 **Files:**
+
 - Modify: `packages/tui/src/index.ts`
 - Modify: `apps/cli/src/tui.ts`
 - Test: `packages/tui/test/index.test.ts`
 - Test: `apps/cli/test/tui-keyboard.test.ts` (新建)
 
 **Interfaces:**
+
 - Consumes: `search`、`command-palette`、`vim` 模块的导出;`FullScreenTui` 的 vim/palette/search 方法;`FullScreenAgentOptions` 现有结构
 - Produces: `index.ts` 导出新模块;`apps/cli/src/tui.ts` 添加 `/vim`、`/palette`、`/search` 命令;`FullScreenAgentOptions` 新增 `onPaletteCommand?`
 
@@ -2614,32 +2622,32 @@ export const TUI_SLASH_COMMANDS: Array<{ name: string; description: string }> = 
 在 `runFullScreenAgent` 函数中,创建 `FullScreenTui` 时传递 `onPaletteCommand`:
 
 ```typescript
-  const tui = new FullScreenTui({
-    // ...existing...
-    onSpecConfirm: options.onSpecConfirm,
-    onSpecDecline: options.onSpecDecline,
-    onPaletteCommand: options.onPaletteCommand,
-    // ...existing...
-  });
+const tui = new FullScreenTui({
+  // ...existing...
+  onSpecConfirm: options.onSpecConfirm,
+  onSpecDecline: options.onSpecDecline,
+  onPaletteCommand: options.onPaletteCommand,
+  // ...existing...
+});
 ```
 
 在 `onCommand` 处理逻辑中,新增 3 个命令处理(在 `if (name === "cheer")` 附近或合适位置):
 
 ```typescript
-      if (name === "vim") {
-        if (args === "on") tui.setVimEnabled(true);
-        else if (args === "off") tui.setVimEnabled(false);
-        else tui.setVimEnabled(!tui.getVimState());
-        return tui.getVimState() ? "Vim mode: ON" : "Vim mode: OFF";
-      }
-      if (name === "palette") {
-        tui.openPalette();
-        return;
-      }
-      if (name === "search") {
-        tui.openSearch();
-        return;
-      }
+if (name === "vim") {
+  if (args === "on") tui.setVimEnabled(true);
+  else if (args === "off") tui.setVimEnabled(false);
+  else tui.setVimEnabled(!tui.getVimState());
+  return tui.getVimState() ? "Vim mode: ON" : "Vim mode: OFF";
+}
+if (name === "palette") {
+  tui.openPalette();
+  return;
+}
+if (name === "search") {
+  tui.openSearch();
+  return;
+}
 ```
 
 **注意**:`tui.getVimState()` 返回 `VimState | undefined`,用于判断是否启用。`tui.setVimEnabled`、`tui.openPalette`、`tui.openSearch` 是 Task 7-9 新增的方法。
@@ -2666,6 +2674,7 @@ git commit -m "feat(tui): export new modules and wire /vim /palette /search comm
 ## Task 11: 全套测试 + 边界检查 + prettier
 
 **Files:**
+
 - 无修改(验证任务)
 
 - [ ] **Step 1: 完整构建**
@@ -2705,6 +2714,7 @@ git commit -m "chore(tui): format and verify Phase 2 keyboard efficiency"
 ## Self-Review 检查清单
 
 **1. Spec coverage(对照设计文档第 5 节"键盘效率提升"):**
+
 - ✅ 5.1 Vim 模式(normal + insert)→ Task 3 + Task 5 + Task 9
 - ⚠️ 5.1 Visual 模式 → 故意省略(YAGNI,文档说明留待将来)
 - ✅ 5.2 命令面板 → Task 2 + Task 8 + Task 10
@@ -2715,6 +2725,7 @@ git commit -m "chore(tui): format and verify Phase 2 keyboard efficiency"
 **2. Placeholder scan:** 无 TBD/TODO/"implement later",所有步骤含完整代码。
 
 **3. Type consistency:**
+
 - `SearchState` 在 Task 1 定义,Task 6/7 使用 — 一致 ✓
 - `PaletteState` 在 Task 2 定义,Task 6/8 使用 — 一致 ✓
 - `VimState`、`VimAction` 在 Task 3 定义,Task 9 使用 — 一致 ✓

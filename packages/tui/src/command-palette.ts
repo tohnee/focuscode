@@ -25,6 +25,30 @@ export const BUILTIN_COMMANDS: readonly PaletteCommand[] = [
     category: "view",
   },
   {
+    id: "layout:focus",
+    label: "Focus Layout",
+    description: "Hide mascot, full-width transcript",
+    category: "view",
+  },
+  {
+    id: "layout:wide",
+    label: "Wide Layout",
+    description: "Wider sidebar for todo/spec/context",
+    category: "view",
+  },
+  {
+    id: "layout:cycle",
+    label: "Cycle Layout",
+    description: "Advance to the next layout mode",
+    category: "view",
+  },
+  {
+    id: "todo:toggle_panel",
+    label: "Toggle Todo Panel",
+    description: "Show or hide the todo sidebar",
+    category: "view",
+  },
+  {
     id: "vim:toggle",
     label: "Toggle Vim Mode",
     description: "Enable or disable modal editing",

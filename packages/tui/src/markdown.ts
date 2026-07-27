@@ -1,12 +1,12 @@
 import { highlightCode } from "./syntax.js";
-import { type TuiTheme } from "./themes.js";
+import { bg, fg, type ColorValue, type TuiTheme } from "./themes.js";
 import { sanitizeTerminalText, stringWidth, takeWidth } from "./width.js";
 
 interface MdStyle {
   bold?: boolean;
   italic?: boolean;
-  color?: number;
-  background?: number;
+  color?: ColorValue;
+  background?: ColorValue;
 }
 
 interface MdToken {
@@ -18,28 +18,34 @@ const INLINE_PATTERN = /(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\*[^*\n]+\*)|(_[^_\n]+_)/
 
 /**
  * Render a small, safe Markdown subset into ANSI-styled lines that each fit `width`
- * display columns: headings, **bold** / *italic*, `inline code`, fenced code blocks
- * and unordered/ordered lists. Input is sanitized before any styling so no control
- * sequences from the raw text can leak into the output.
+ * display columns: headings, **bold** / *italic*, `inline code`, fenced code blocks,
+ * unordered/ordered lists, blockquotes (`>`) and GFM tables. Input is sanitized
+ * before any styling so no control sequences from the raw text can leak into
+ * the output.
  */
 export function renderMarkdownTranscript(text: string, width: number, theme: TuiTheme): string[] {
   const columns = Math.max(10, width);
   const rendered: string[] = [];
   let inFence = false;
   let fenceLang = "";
-  for (const rawLine of sanitizeTerminalText(text).split("\n")) {
+  const lines = sanitizeTerminalText(text).split("\n");
+  let i = 0;
+  while (i < lines.length) {
+    const rawLine = lines[i]!;
     const trimmed = rawLine.trimStart();
     if (trimmed.startsWith("```")) {
       if (!inFence) fenceLang = trimmed.slice(3).trim();
       inFence = !inFence;
+      i += 1;
       continue;
     }
     if (inFence) {
       const body = takeWidth(rawLine.replaceAll("\t", "  "), columns);
       const highlighted = highlightCode(body, fenceLang, theme);
       const padding = " ".repeat(Math.max(0, columns - stringWidth(body)));
-      const block = "\u001b[48;5;" + theme.muted + "m" + highlighted + padding + "\u001b[49m";
+      const block = bg(theme.muted, highlighted + padding);
       rendered.push(block);
+      i += 1;
       continue;
     }
     const heading = /^#{1,6}\s+(.*)$/.exec(trimmed);
@@ -47,10 +53,69 @@ export function renderMarkdownTranscript(text: string, width: number, theme: Tui
       rendered.push(
         ...flow([{ text: heading[1]!, style: { bold: true, color: theme.accent } }], columns),
       );
+      i += 1;
+      continue;
+    }
+    // Blockquote: line starts with `>` (optionally followed by a space).
+    const blockquoteMatch = /^>\s?(.*)$/.exec(rawLine);
+    if (blockquoteMatch) {
+      const blockLines: string[] = [blockquoteMatch[1]!];
+      let j = i + 1;
+      while (j < lines.length) {
+        const next = lines[j]!;
+        const nextTrim = next.trimStart();
+        if (nextTrim === "") break;
+        const bq = /^>\s?(.*)$/.exec(next);
+        if (bq) {
+          blockLines.push(bq[1]!);
+          j += 1;
+          continue;
+        }
+        // Lazy continuation: a plain non-empty line that is not another block
+        // starter (heading, list, table, fence) continues the blockquote.
+        if (/^#{1,6}\s/.test(nextTrim)) break;
+        if (/^(\s*)([-*+]|\d+[.)])\s/.test(next)) break;
+        if (nextTrim.startsWith("|")) break;
+        if (nextTrim.startsWith("```")) break;
+        blockLines.push(next);
+        j += 1;
+      }
+      const marker = "▌ ";
+      const indent = " ".repeat(stringWidth(marker));
+      for (let k = 0; k < blockLines.length; k++) {
+        const tokens = parseBlockquoteInline(blockLines[k]!, theme);
+        rendered.push(...flow(tokens, columns, marker, indent));
+      }
+      i = j;
+      continue;
+    }
+    // GFM table: header row starting with `|`, next line is a separator.
+    if (trimmed.startsWith("|") && i + 1 < lines.length && isTableSeparator(lines[i + 1]!)) {
+      const rows: string[][] = [];
+      let j = i;
+      while (j < lines.length && lines[j]!.trimStart().startsWith("|")) {
+        rows.push(parseTableRow(lines[j]!));
+        j += 1;
+      }
+      for (let r = 0; r < rows.length; r++) {
+        if (r === 1) continue; // skip separator row
+        const isHeader = r === 0;
+        const cells = rows[r]!;
+        const styledCells = cells.map((cell) => {
+          const tokens = parseInline(cell, theme);
+          const styled = tokens.map((t) =>
+            applyStyle(t.text, isHeader ? { ...t.style, bold: true } : t.style),
+          );
+          return styled.join("");
+        });
+        rendered.push(styledCells.join(" │ "));
+      }
+      i = j;
       continue;
     }
     if (!trimmed) {
       rendered.push("");
+      i += 1;
       continue;
     }
     const list = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/.exec(rawLine);
@@ -60,11 +125,43 @@ export function renderMarkdownTranscript(text: string, width: number, theme: Tui
       const prefix = indent + marker + " ";
       const tokens = parseInline(list[3]!, theme);
       rendered.push(...flow(tokens, columns, prefix, " ".repeat(stringWidth(prefix))));
+      i += 1;
       continue;
     }
     rendered.push(...flow(parseInline(rawLine, theme), columns));
+    i += 1;
   }
   return rendered;
+}
+
+/**
+ * Parse inline markdown tokens then recolor non-code, non-bold runs with the
+ * theme's muted color so the entire blockquote reads as quoted material. Inline
+ * code keeps its warning color; bold keeps its bold attribute but uses muted.
+ */
+function parseBlockquoteInline(text: string, theme: TuiTheme): MdToken[] {
+  const tokens = parseInline(text, theme);
+  return tokens.map((t) => {
+    // Inline code retains its warning color.
+    if (t.style.color === theme.warning) return t;
+    // Everything else is muted.
+    return { ...t, style: { ...t.style, color: theme.muted } };
+  });
+}
+
+/** Match a GFM table separator row like `| --- | :---: | ---: |`. */
+function isTableSeparator(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed.includes("-")) return false;
+  // Allow optional leading/trailing pipe; cells are dashes with optional colons.
+  const cellPattern = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/;
+  return cellPattern.test(trimmed);
+}
+
+/** Split a table row into trimmed cells (leading/trailing pipes stripped). */
+function parseTableRow(line: string): string[] {
+  const stripped = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  return stripped.split("|").map((c) => c.trim());
 }
 
 function parseInline(text: string, theme: TuiTheme): MdToken[] {
@@ -132,7 +229,13 @@ function applyStyle(text: string, style: MdStyle): string {
   let open = "";
   if (style.bold) open += "\u001b[1m";
   if (style.italic) open += "\u001b[3m";
-  if (style.color !== undefined) open += "\u001b[38;5;" + style.color + "m";
-  if (style.background !== undefined) open += "\u001b[48;5;" + style.background + "m";
+  if (style.color !== undefined) {
+    // Extract just the open sequence — `fg` returns open+text+close, we
+    // strip the close and the text to reuse only the opening SGR.
+    open += fg(style.color, "").slice(0, -"\u001b[39m".length);
+  }
+  if (style.background !== undefined) {
+    open += bg(style.background, "").slice(0, -"\u001b[49m".length);
+  }
   return open ? open + text + "\u001b[0m" : text;
 }

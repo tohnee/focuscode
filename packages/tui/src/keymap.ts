@@ -6,6 +6,9 @@ export type TuiAction =
   | "clear"
   | "backspace"
   | "delete_word"
+  | "delete_char_forward"
+  | "kill_word_forward"
+  | "kill_to_start"
   | "cursor_left"
   | "cursor_right"
   | "home"
@@ -22,7 +25,20 @@ export type TuiAction =
   | "scroll_down"
   | "cycle_theme"
   | "cycle_mascot"
-  | "toggle_reasoning";
+  | "toggle_reasoning"
+  | "toggle_vim"
+  | "open_palette"
+  | "search_transcript"
+  | "cycle_layout"
+  | "toggle_todo_panel"
+  | "upcase_word"
+  | "downcase_word"
+  | "capitalize_word"
+  // ─── Spec decision keys (active during specConfirmation overlay) ───
+  | "spec_option_up"
+  | "spec_option_down"
+  | "spec_confirm"
+  | "spec_cancel";
 
 export type TuiKeymap = Record<string, TuiAction>;
 
@@ -34,6 +50,12 @@ export const DEFAULT_KEYMAP: TuiKeymap = {
   "ctrl+l": "clear",
   backspace: "backspace",
   "ctrl+w": "delete_word",
+  "ctrl+u": "kill_to_start",
+  delete: "delete_char_forward",
+  "alt+d": "kill_word_forward",
+  "alt+u": "upcase_word",
+  "alt+l": "cycle_layout",
+  "alt+c": "capitalize_word",
   left: "cursor_left",
   right: "cursor_right",
   home: "home",
@@ -52,6 +74,10 @@ export const DEFAULT_KEYMAP: TuiKeymap = {
   pagedown: "scroll_down",
   "ctrl+t": "cycle_theme",
   "ctrl+g": "cycle_mascot",
+  "ctrl+v": "toggle_vim",
+  "ctrl+p": "open_palette",
+  "ctrl+f": "search_transcript",
+  "alt+t": "toggle_todo_panel",
 };
 
 export type ParsedKey = { type: "action"; action: TuiAction } | { type: "text"; text: string };
@@ -88,10 +114,16 @@ const TERMINAL_SEQUENCES: Array<[string, string]> = [
   ["\u001b[F", "end"],
   ["\u001b[1~", "home"],
   ["\u001b[4~", "end"],
+  ["\u001b[3~", "delete"],
   ["\u001bOH", "home"],
   ["\u001bOF", "end"],
   ["\u001bb", "alt+b"],
   ["\u001bf", "alt+f"],
+  ["\u001bd", "alt+d"],
+  ["\u001bu", "alt+u"],
+  ["\u001bc", "alt+c"],
+  ["\u001bl", "alt+l"],
+  ["\u001bt", "alt+t"],
   ["\r", "enter"],
   ["\n", "enter"],
   ["\t", "tab"],
@@ -146,6 +178,9 @@ const VALID_ACTIONS: readonly TuiAction[] = [
   "clear",
   "backspace",
   "delete_word",
+  "delete_char_forward",
+  "kill_word_forward",
+  "kill_to_start",
   "cursor_left",
   "cursor_right",
   "home",
@@ -163,6 +198,18 @@ const VALID_ACTIONS: readonly TuiAction[] = [
   "cycle_theme",
   "cycle_mascot",
   "toggle_reasoning",
+  "toggle_vim",
+  "open_palette",
+  "search_transcript",
+  "cycle_layout",
+  "toggle_todo_panel",
+  "upcase_word",
+  "downcase_word",
+  "capitalize_word",
+  "spec_option_up",
+  "spec_option_down",
+  "spec_confirm",
+  "spec_cancel",
 ];
 
 export function mergeKeymap(overrides: Partial<TuiKeymap> = {}): TuiKeymap {
@@ -192,7 +239,7 @@ function terminalKeyAt(value: string, index: number): { key: string; length: num
 }
 
 function validKey(value: string): boolean {
-  return /^(ctrl\+[a-z]|alt\+[a-z]|enter|backspace|tab|home|end|left|right|up|down|pageup|pagedown)$/.test(
+  return /^(ctrl\+[a-z]|alt\+[a-z]|enter|backspace|tab|home|end|left|right|up|down|pageup|pagedown|delete)$/.test(
     value,
   );
 }

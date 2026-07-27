@@ -42,9 +42,11 @@ describe("updatePaletteQuery", () => {
 
   it("matches on category field too", () => {
     const state = createPaletteState();
-    const updated = updatePaletteQuery(state, "spec");
+    // 使用 "navigation" 作为查询：该词仅出现在 search:transcript 的 category 中，
+    // 不出现在任何命令的 label 或 description 里，可独立验证 category 匹配路径。
+    const updated = updatePaletteQuery(state, "navigation");
     expect(updated.filtered.length).toBeGreaterThan(0);
-    expect(updated.filtered.every((c) => c.category === "spec")).toBe(true);
+    expect(updated.filtered.every((c) => c.category === "navigation")).toBe(true);
   });
 });
 
@@ -158,5 +160,59 @@ describe("renderPalette", () => {
     const lines = renderPalette(state, 60, 10, theme);
     expect(lines.length).toBeGreaterThan(3);
     expect(lines[2]).toContain(">");
+  });
+});
+
+describe("BUILTIN_COMMANDS layout & todo coverage", () => {
+  it("includes layout:classic command", () => {
+    const cmd = BUILTIN_COMMANDS.find((c) => c.id === "layout:classic");
+    expect(cmd).toBeDefined();
+    expect(cmd?.category).toBe("view");
+  });
+
+  it("includes layout:split command", () => {
+    const cmd = BUILTIN_COMMANDS.find((c) => c.id === "layout:split");
+    expect(cmd).toBeDefined();
+    expect(cmd?.category).toBe("view");
+  });
+
+  it("includes layout:focus command", () => {
+    const cmd = BUILTIN_COMMANDS.find((c) => c.id === "layout:focus");
+    expect(cmd).toBeDefined();
+    expect(cmd?.category).toBe("view");
+  });
+
+  it("includes layout:wide command", () => {
+    const cmd = BUILTIN_COMMANDS.find((c) => c.id === "layout:wide");
+    expect(cmd).toBeDefined();
+    expect(cmd?.category).toBe("view");
+  });
+
+  it("includes layout:cycle command", () => {
+    const cmd = BUILTIN_COMMANDS.find((c) => c.id === "layout:cycle");
+    expect(cmd).toBeDefined();
+    expect(cmd?.category).toBe("view");
+  });
+
+  it("includes todo:toggle_panel command", () => {
+    const cmd = BUILTIN_COMMANDS.find((c) => c.id === "todo:toggle_panel");
+    expect(cmd).toBeDefined();
+    expect(cmd?.category).toBe("view");
+  });
+
+  it("searching 'layout' returns all 5 layout commands", () => {
+    const state = createPaletteState();
+    const updated = updatePaletteQuery(state, "layout");
+    const layoutIds = updated.filtered.filter((c) => c.id.startsWith("layout:")).map((c) => c.id);
+    expect(layoutIds.sort()).toEqual(
+      ["layout:classic", "layout:cycle", "layout:focus", "layout:split", "layout:wide"].sort(),
+    );
+  });
+
+  it("searching 'todo' returns the toggle_panel command", () => {
+    const state = createPaletteState();
+    const updated = updatePaletteQuery(state, "todo");
+    const todoIds = updated.filtered.filter((c) => c.id.startsWith("todo:")).map((c) => c.id);
+    expect(todoIds).toContain("todo:toggle_panel");
   });
 });

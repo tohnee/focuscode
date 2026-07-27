@@ -10,7 +10,12 @@ import {
   type SpecProgressState,
 } from "./spec-progress.js";
 import { renderContextBar, type ContextUsageState } from "./context-bar.js";
-import { bg, fg, type TuiTheme } from "./themes.js";
+import { renderPalette, type PaletteState } from "./command-palette.js";
+import { renderSearchBar, type SearchState } from "./search.js";
+import { renderVimIndicator, type VimState } from "./vim.js";
+import { computeLayout, type ComputedLayout, type LayoutState, type PaneId } from "./layout.js";
+import { renderTodoPanel, type TodoPanelState } from "./todo-panel.js";
+import { bg, fg, type ColorValue, type TuiTheme } from "./themes.js";
 import {
   charWidth,
   sanitizeTerminalText,
@@ -80,6 +85,16 @@ export interface TuiRenderState {
   reasoningExpanded?: boolean;
   /** Context window 使用量;存在时在 footer 显示进度条。 */
   contextUsage?: ContextUsageState;
+  /** Transcript 搜索状态;visible 时在底部渲染搜索栏。 */
+  search?: SearchState;
+  /** 命令面板状态;visible 时渲染 overlay。 */
+  palette?: PaletteState;
+  /** Vim 模式状态;存在时在 footer 渲染模式指示器。 */
+  vim?: VimState;
+  /** Pane 布局状态;缺省时使用 classic 模式(向后兼容)。 */
+  layout?: LayoutState;
+  /** Todo 侧栏面板状态;仅在 split/wide 布局且有 todo 项时渲染。 */
+  todoPanel?: TodoPanelState;
 }
 
 const MAX_INPUT_ROWS = 5;
@@ -111,10 +126,39 @@ export function renderTui(state: TuiRenderState): string {
   const width = Math.max(40, state.width);
   const height = Math.max(12, state.height);
   const theme = state.theme;
-  const top = fg(theme.accent, "╭" + "─".repeat(width - 2) + "╮");
-  const bottom = fg(theme.accent, "╰" + "─".repeat(width - 2) + "╯");
+
+  // Layout dispatch: non-classic modes (split/focus/wide) use layout-aware rendering.
+  // Overlays (picker/palette) always use classic rendering since they take over the full screen.
+  if (state.layout && !state.picker && !state.palette?.visible) {
+    const computed = computeLayout(state.layout, width, height);
+    if (computed.mode !== "classic") {
+      return renderWithLayout(state, width, height, theme, computed);
+    }
+  }
+
+  return renderClassicFrame(state, width, height, theme);
+}
+
+/**
+ * Classic single-pane rendering — the original golden path, unchanged for backward compat.
+ * Called when no layout is set, layout mode is classic, or width/height force fallback.
+ */
+function renderClassicFrame(
+  state: TuiRenderState,
+  width: number,
+  height: number,
+  theme: TuiTheme,
+): string {
+  const border = theme.border;
+  const top = fg(theme.accent, "╭" + border.repeat(width - 2) + "╮");
+  const bottom = fg(theme.accent, "╰" + border.repeat(width - 2) + "╯");
   const glyph = state.mascot.id === "foxy" ? "🦊 " : "";
+  // Status indicator: ● when busy (danger), ○ when idle (muted).
+  const statusColor = state.busy ? theme.danger : theme.muted;
+  const statusDot = fg(statusColor, state.busy ? "●" : "○");
   const headerText =
+    " " +
+    statusDot +
     " " +
     glyph +
     sanitizeTerminalText(state.title) +
@@ -143,12 +187,12 @@ export function renderTui(state: TuiRenderState): string {
     if (art !== undefined) {
       mascotCell = fg(theme.secondary, padVisible(" " + art, mascotWidth));
     } else if (row === mascot.length && speechLines.length) {
-      mascotCell = fg(theme.accent, padVisible(" ╭" + "─".repeat(mascotWidth - 2), mascotWidth));
+      mascotCell = fg(theme.accent, padVisible(" ╭" + border.repeat(mascotWidth - 2), mascotWidth));
     } else if (bubble !== undefined) {
       mascotCell =
         fg(theme.accent, "│") + italic(fg(theme.secondary, padVisible(bubble, mascotWidth - 1)));
     } else if (speechLines.length && row === mascot.length + speechLines.length + 1) {
-      mascotCell = fg(theme.accent, padVisible(" ╰" + "─".repeat(mascotWidth - 2), mascotWidth));
+      mascotCell = fg(theme.accent, padVisible(" ╰" + border.repeat(mascotWidth - 2), mascotWidth));
     } else {
       mascotCell = padVisible("", mascotWidth);
     }
@@ -161,11 +205,13 @@ export function renderTui(state: TuiRenderState): string {
         fg(theme.accent, "│"),
     );
   }
-  const separator = fg(theme.muted, "├" + "─".repeat(width - 2) + "┤");
+  const separator = fg(theme.muted, "├" + border.repeat(width - 2) + "┤");
   // SpecEngine progress widget (shown when phase !== idle)
   const specLines: string[] = [];
   if (state.specProgress && state.specProgress.phase !== "idle") {
-    const rendered = renderSpecProgress(state.specProgress, bodyWidth, theme);
+    const rendered = renderSpecProgress(state.specProgress, bodyWidth, theme, {
+      tick: state.tick,
+    });
     for (const line of rendered) {
       specLines.push(line);
     }
@@ -194,7 +240,10 @@ export function renderTui(state: TuiRenderState): string {
       ? renderCostBadge(state.sessionCost, state.sessionBudget, theme)
       : "";
   const contextBadge = state.contextUsage ? renderContextBar(state.contextUsage, 30, theme) : "";
-  const footerExtras = [companionBadge, costBadge, contextBadge].filter(Boolean).join(" · ");
+  const vimIndicator = state.vim ? renderVimIndicator(state.vim, theme) : "";
+  const footerExtras = [companionBadge, costBadge, contextBadge, vimIndicator]
+    .filter(Boolean)
+    .join(" · ");
   const footerText =
     " " +
     sanitizeTerminalText(state.mascot.name) +
@@ -218,9 +267,23 @@ export function renderTui(state: TuiRenderState): string {
     ) +
     fg(theme.accent, "│");
   const reasoningRows: string[] = reasoningLine ? [reasoningLine] : [];
+  const searchLines: string[] = state.search?.visible
+    ? renderSearchBar(state.search, width - 2, theme).map(
+        (line) => fg(theme.accent, "│") + padVisible(line, width - 2) + fg(theme.accent, "│"),
+      )
+    : [];
   if (state.picker) {
     const overlay = renderPickerOverlay(state.picker, width, height, theme);
     return bg(theme.background, [top, header, ...overlay, footer, bottom].join("\n"));
+  }
+  if (state.palette?.visible) {
+    const paletteLines = renderPalette(
+      state.palette,
+      width - 2,
+      Math.max(4, Math.floor(height / 2)),
+      theme,
+    ).map((line) => fg(theme.accent, "│") + padVisible(line, width - 2) + fg(theme.accent, "│"));
+    return bg(theme.background, [top, header, ...paletteLines, footer, bottom].join("\n"));
   }
   return bg(
     theme.background,
@@ -230,6 +293,222 @@ export function renderTui(state: TuiRenderState): string {
       ...body,
       ...specLines,
       ...reasoningRows,
+      ...searchLines,
+      separator,
+      ...completionRows,
+      ...inputRows,
+      footer,
+      bottom,
+    ].join("\n"),
+  );
+}
+
+/**
+ * Layout-aware rendering for split/focus/wide modes.
+ * Renders main pane (mascot + transcript) and optional sidebar (todo panel).
+ * Only called when computed.mode !== "classic" (i.e. width >= 100 && height >= 20).
+ */
+function renderWithLayout(
+  state: TuiRenderState,
+  width: number,
+  height: number,
+  theme: TuiTheme,
+  computed: ComputedLayout,
+): string {
+  const border = theme.border;
+  const top = fg(theme.accent, "╭" + border.repeat(width - 2) + "╮");
+  const bottom = fg(theme.accent, "╰" + border.repeat(width - 2) + "╯");
+  // Header: hide mascot glyph in focus mode
+  const glyph = computed.hideMascot ? "" : state.mascot.id === "foxy" ? "🦊 " : "";
+  // Status indicator: ● when busy (danger), ○ when idle (muted).
+  const statusColor = state.busy ? theme.danger : theme.muted;
+  const statusDot = fg(statusColor, state.busy ? "●" : "○");
+  const headerText =
+    " " +
+    statusDot +
+    " " +
+    glyph +
+    sanitizeTerminalText(state.title) +
+    " · " +
+    sanitizeTerminalText(state.model) +
+    " ";
+  const header =
+    fg(theme.accent, "│") +
+    bold(fg(theme.accent, padVisible(headerText, width - 2))) +
+    fg(theme.accent, "│");
+
+  // Mascot (hidden in focus mode)
+  const mascot = computed.hideMascot ? [] : mascotFrame(state.mascot, state.mood, state.tick);
+  const mascotWidth = computed.hideMascot
+    ? 0
+    : Math.min(24, Math.max(...mascot.map(visibleLength), 0) + 2);
+  const speechLines = computed.hideMascot ? [] : wrapSpeech(state.speech, mascotWidth - 1);
+
+  const sidebarWidth = computed.sidebar?.width ?? 0;
+  const hasSidebar = computed.sidebar !== undefined && sidebarWidth > 0;
+  const transcriptWidth = computed.hideMascot
+    ? width - 2
+    : hasSidebar
+      ? width - mascotWidth - sidebarWidth - 4
+      : width - mascotWidth - 3;
+
+  const inputRows = renderInputRows(state, width);
+  const completionRows = renderCompletionRows(state, width);
+  const bodyHeight = Math.max(6, height - 5 - inputRows.length - completionRows.length);
+
+  // Main transcript lines
+  const lines = wrapTranscript(state.transcript, transcriptWidth, theme, state.mascot);
+  const end = Math.max(0, lines.length - state.scrollOffset);
+  const visible = lines.slice(Math.max(0, end - bodyHeight), end);
+
+  // Sidebar panes: render todo/spec/context stacked when in split/wide mode
+  let sidebarLines: string[] = [];
+  if (hasSidebar) {
+    const panes = computed.sidebarPanes;
+    if (panes.length > 0) {
+      sidebarLines = renderSidebarPanes(panes, state, sidebarWidth, bodyHeight, theme);
+    } else if (state.todoPanel) {
+      // Fallback: no computed panes but todo panel exists (e.g. legacy layout)
+      sidebarLines = renderTodoPanel(state.todoPanel, sidebarWidth - 1, bodyHeight, theme);
+    }
+  }
+
+  const body: string[] = [];
+  for (let row = 0; row < bodyHeight; row += 1) {
+    let line: string;
+    if (computed.hideMascot) {
+      // Focus mode: no mascot column, full-width transcript
+      const transcript = visible[row] ?? "";
+      line = fg(theme.accent, "│") + padVisible(" " + transcript, transcriptWidth);
+    } else {
+      const art = mascot[row];
+      const bubble = speechLines[row - mascot.length - 1];
+      let mascotCell: string;
+      if (art !== undefined) {
+        mascotCell = fg(theme.secondary, padVisible(" " + art, mascotWidth));
+      } else if (row === mascot.length && speechLines.length) {
+        mascotCell = fg(
+          theme.accent,
+          padVisible(" ╭" + border.repeat(mascotWidth - 2), mascotWidth),
+        );
+      } else if (bubble !== undefined) {
+        mascotCell =
+          fg(theme.accent, "│") + italic(fg(theme.secondary, padVisible(bubble, mascotWidth - 1)));
+      } else if (speechLines.length && row === mascot.length + speechLines.length + 1) {
+        mascotCell = fg(
+          theme.accent,
+          padVisible(" ╰" + border.repeat(mascotWidth - 2), mascotWidth),
+        );
+      } else {
+        mascotCell = padVisible("", mascotWidth);
+      }
+      const transcript = visible[row] ?? "";
+      line =
+        fg(theme.accent, "│") +
+        mascotCell +
+        fg(theme.muted, "│") +
+        padVisible(" " + transcript, transcriptWidth);
+    }
+
+    if (hasSidebar) {
+      const sidebarContent = sidebarLines[row] ?? "";
+      line +=
+        fg(theme.muted, "│") +
+        padVisible(" " + sidebarContent, sidebarWidth - 1) +
+        fg(theme.accent, "│");
+    } else {
+      line += fg(theme.accent, "│");
+    }
+    body.push(line);
+  }
+
+  // SpecEngine progress widget — only render in main area for classic/focus
+  // mode. In split/wide mode, spec progress is rendered in the sidebar.
+  const specLines: string[] = [];
+  const specInSidebar = hasSidebar && computed.sidebarPanes.includes("spec");
+  if (!specInSidebar && state.specProgress && state.specProgress.phase !== "idle") {
+    const rendered = renderSpecProgress(state.specProgress, transcriptWidth, theme, {
+      tick: state.tick,
+    });
+    for (const line of rendered) {
+      specLines.push(line);
+    }
+  }
+  if (state.specConfirmation) {
+    const confirmLines = renderSpecConfirmation(state.specConfirmation, width, theme);
+    specLines.push(...confirmLines);
+  }
+
+  // Reasoning indicator
+  let reasoningLine = "";
+  if (state.reasoning) {
+    if (state.reasoningExpanded) {
+      const text = state.reasoning.replaceAll(/\r?\n/g, " ");
+      const truncated =
+        text.length > transcriptWidth - 4 ? text.slice(0, transcriptWidth - 5) + "…" : text;
+      reasoningLine = "💭 " + truncated;
+    } else {
+      reasoningLine = "💭 thinking...";
+    }
+  }
+  const reasoningRows: string[] = reasoningLine ? [reasoningLine] : [];
+
+  // Search bar
+  const searchLines: string[] = state.search?.visible
+    ? renderSearchBar(state.search, width - 2, theme).map(
+        (line) => fg(theme.accent, "│") + padVisible(line, width - 2) + fg(theme.accent, "│"),
+      )
+    : [];
+
+  // Separator + footer (same as classic)
+  const separator = fg(theme.muted, "├" + border.repeat(width - 2) + "┤");
+  const queue = state.queued ? " · queued " + state.queued : "";
+  const spinner = state.busy ? SPINNER[state.tick % SPINNER.length]! + " " : "";
+  const companionBadge = state.companion ? renderCompanionBadge(state.companion, theme) : "";
+  const costBadge =
+    state.sessionCost !== undefined
+      ? renderCostBadge(state.sessionCost, state.sessionBudget, theme)
+      : "";
+  // Context bar: render in footer only when not already in sidebar
+  const contextInSidebar = hasSidebar && computed.sidebarPanes.includes("context");
+  const contextBadge =
+    state.contextUsage && !contextInSidebar ? renderContextBar(state.contextUsage, 30, theme) : "";
+  const vimIndicator = state.vim ? renderVimIndicator(state.vim, theme) : "";
+  const footerExtras = [companionBadge, costBadge, contextBadge, vimIndicator]
+    .filter(Boolean)
+    .join(" · ");
+  const footerText =
+    " " +
+    sanitizeTerminalText(state.mascot.name) +
+    " · " +
+    state.approval +
+    " · " +
+    state.sandbox +
+    queue +
+    (footerExtras ? " · " + footerExtras : "") +
+    " · Tab complete · Ctrl+O newline · Ctrl+G mascot · Ctrl+T theme ";
+  const footer =
+    fg(theme.accent, "│") +
+    fg(
+      theme.muted,
+      padVisible(
+        state.status
+          ? " " + spinner + sanitizeTerminalText(state.status).replaceAll(/\r?\n/g, " ") + " "
+          : footerText,
+        width - 2,
+      ),
+    ) +
+    fg(theme.accent, "│");
+
+  return bg(
+    theme.background,
+    [
+      top,
+      header,
+      ...body,
+      ...specLines,
+      ...reasoningRows,
+      ...searchLines,
       separator,
       ...completionRows,
       ...inputRows,
@@ -251,6 +530,47 @@ function renderCostBadge(spent: number, budget: number | undefined, theme: TuiTh
   const ratio = Math.min(1, spent / budget);
   const color = ratio >= 0.9 ? theme.danger : ratio >= 0.5 ? theme.warning : theme.success;
   return fg(color, "$" + spent.toFixed(4) + "/$" + budget.toFixed(2));
+}
+
+/**
+ * Render multiple panes (todo/spec/context) stacked vertically in the sidebar.
+ * Each pane is rendered by its dedicated renderer; panes are separated by a
+ * thin muted line. The result is truncated to `bodyHeight` lines.
+ */
+function renderSidebarPanes(
+  panes: PaneId[],
+  state: TuiRenderState,
+  sidebarWidth: number,
+  bodyHeight: number,
+  theme: TuiTheme,
+): string[] {
+  const paneWidth = Math.max(8, sidebarWidth - 2);
+  const lines: string[] = [];
+  const separator = fg(theme.muted, "─".repeat(Math.max(1, paneWidth)));
+
+  for (const paneId of panes) {
+    let paneLines: string[] = [];
+
+    if (paneId === "todo" && state.todoPanel) {
+      paneLines = renderTodoPanel(state.todoPanel, paneWidth, bodyHeight, theme);
+    } else if (paneId === "spec" && state.specProgress && state.specProgress.phase !== "idle") {
+      paneLines = renderSpecProgress(state.specProgress, paneWidth, theme, {
+        tick: state.tick,
+      });
+    } else if (paneId === "context" && state.contextUsage) {
+      const bar = renderContextBar(state.contextUsage, paneWidth, theme);
+      paneLines = [fg(theme.accent, "⚙ Context"), bar];
+    }
+
+    if (paneLines.length === 0) continue;
+
+    if (lines.length > 0) {
+      lines.push(separator);
+    }
+    lines.push(...paneLines);
+  }
+
+  return lines.slice(0, bodyHeight);
 }
 
 function renderPickerOverlay(
@@ -337,7 +657,7 @@ function wrapTranscript(
   theme: TuiTheme,
   mascot: TuiMascot,
 ): string[] {
-  const colors: Record<TuiTranscriptLine["role"], number> = {
+  const colors: Record<TuiTranscriptLine["role"], ColorValue> = {
     user: theme.secondary,
     assistant: theme.foreground,
     tool: theme.warning,

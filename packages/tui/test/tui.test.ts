@@ -260,11 +260,11 @@ describe("EditorBuffer", () => {
   it("deletes words and joins lines like readline ctrl+w", () => {
     const editor = new EditorBuffer();
     editor.insertText("foo bar\nbaz qux");
-    editor.deleteWord();
+    editor.deleteWordBackward();
     expect(editor.getText()).toBe("foo bar\nbaz ");
-    editor.deleteWord();
+    editor.deleteWordBackward();
     expect(editor.getText()).toBe("foo bar\n");
-    editor.deleteWord(); // at line start: joins the line, then kills the previous word
+    editor.deleteWordBackward(); // at line start: joins the line, then kills the previous word
     expect(editor.getText()).toBe("foo ");
   });
 
