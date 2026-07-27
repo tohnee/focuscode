@@ -1,6 +1,6 @@
 import type { ApprovalMode, ModelProfile } from "@focuscode/agent-runtime";
 
-export type CliMode = "tui" | "interactive" | "print" | "json" | "rpc";
+export type CliMode = "tui" | "interactive" | "print" | "json" | "rpc" | "acp";
 
 export interface AgentCliArgs {
   mode: CliMode;
@@ -61,6 +61,8 @@ export interface AgentCliArgs {
   specClassifierModel?: string;
   /** Model spec ("provider/model") for drafter/enhancer stages (3B-7B). */
   specDrafterModel?: string;
+  /** Path to a JSON file with CommandPrefixRule[] for the prefix rule engine. */
+  commandRulesPath?: string;
   help: boolean;
   version: boolean;
 }
@@ -105,6 +107,7 @@ const VALUE_OPTIONS = new Set([
   "spec-max-exploration-rounds",
   "spec-classifier-model",
   "spec-drafter-model",
+  "command-rules",
 ]);
 
 const BOOLEAN_OPTIONS = new Set([
@@ -287,13 +290,14 @@ export function parseAgentArgs(argv: string[]): AgentCliArgs {
     ...(last(values, "spec-drafter-model")
       ? { specDrafterModel: last(values, "spec-drafter-model")! }
       : {}),
+    ...(last(values, "command-rules") ? { commandRulesPath: last(values, "command-rules")! } : {}),
     help: booleans.has("help"),
     version: booleans.has("version"),
   };
 }
 
 function parseMode(value: string): CliMode {
-  if (["tui", "interactive", "print", "json", "rpc"].includes(value)) {
+  if (["tui", "interactive", "print", "json", "rpc", "acp"].includes(value)) {
     return value as CliMode;
   }
   throw new Error(`Unsupported mode: ${value}`);

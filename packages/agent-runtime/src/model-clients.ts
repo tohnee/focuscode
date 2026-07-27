@@ -173,7 +173,7 @@ export class AnthropicMessagesClient implements ModelClient {
           },
           body: JSON.stringify({
             model: request.model,
-            system: request.systemPrompt,
+            system: anthropicSystemField(request),
             messages: toAnthropicMessages(request.messages),
             tools: request.tools.map((tool) => ({
               name: tool.name,
@@ -702,6 +702,26 @@ function toOpenAIMessages(
       return { role: message.role, content: toOpenAIContent(message) };
     }),
   ];
+}
+
+/**
+ * Build the Anthropic Messages API `system` field. When `systemPromptParts`
+ * is provided, the stable prefix gets an `ephemeral` cache breakpoint so the
+ * Provider caches the stable portion across rounds. When absent, the plain
+ * `systemPrompt` string is returned (backward compatible).
+ */
+function anthropicSystemField(
+  request: ModelRequest,
+): string | Array<{ type: "text"; text: string; cache_control?: { type: "ephemeral" } }> {
+  const parts = request.systemPromptParts;
+  if (!parts) return request.systemPrompt;
+  const blocks: Array<{ type: "text"; text: string; cache_control?: { type: "ephemeral" } }> = [
+    { type: "text", text: parts.stable, cache_control: { type: "ephemeral" } },
+  ];
+  if (parts.dynamic) {
+    blocks.push({ type: "text", text: parts.dynamic });
+  }
+  return blocks;
 }
 
 function toAnthropicMessages(messages: AgentMessage[]): unknown[] {

@@ -1,6 +1,6 @@
 {
   "name": "@focuscode/sandbox",
-  "version": "0.4.0-beta.2",
+  "version": "0.5.0",
   "description": "Docker, gVisor and SSH microVM command isolation for FocusCode",
   "type": "module",
   "main": "./dist/index.js",

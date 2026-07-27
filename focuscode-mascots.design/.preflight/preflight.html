@@ -1,345 +1,651 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh" class="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Preflight</title>
     <style id="theme-vars">
-/* FocusCode Mascot Design - Foxglow Terminal Theme */
-/* Brand: Fox orange (#ff8700), dark terminal background */
+      /* FocusCode Mascot Design - Foxglow Terminal Theme */
+      /* Brand: Fox orange (#ff8700), dark terminal background */
 
-:root {
-  /* Brand single hue - foxglow orange */
-  --brand: #ff8700;
-  --brand-50: #fff7ed;
-  --brand-100: #ffedd5;
-  --brand-200: #fed7aa;
-  --brand-300: #fdba74;
-  --brand-400: #fb923c;
-  --brand-500: #ff8700;
-  --brand-600: #ea6c00;
-  --brand-700: #c25000;
-  --brand-ink: #1a0a00;
+      :root {
+        /* Brand single hue - foxglow orange */
+        --brand: #ff8700;
+        --brand-50: #fff7ed;
+        --brand-100: #ffedd5;
+        --brand-200: #fed7aa;
+        --brand-300: #fdba74;
+        --brand-400: #fb923c;
+        --brand-500: #ff8700;
+        --brand-600: #ea6c00;
+        --brand-700: #c25000;
+        --brand-ink: #1a0a00;
 
-  /* Surfaces - dark terminal */
-  --bg: #0d0d12;
-  --surface: #151520;
-  --surface-2: #1e1e2e;
-  --surface-3: #2a2a3e;
+        /* Surfaces - dark terminal */
+        --bg: #0d0d12;
+        --surface: #151520;
+        --surface-2: #1e1e2e;
+        --surface-3: #2a2a3e;
 
-  /* Text */
-  --ink: #e8e6e3;
-  --ink-2: #a8a39b;
-  --ink-3: #6b6560;
+        /* Text */
+        --ink: #e8e6e3;
+        --ink-2: #a8a39b;
+        --ink-3: #6b6560;
 
-  /* Borders & lines */
-  --line: #2a2a3a;
+        /* Borders & lines */
+        --line: #2a2a3a;
 
-  /* Semantic state colors */
-  --state-success: #5fd75f;
-  --state-warning: #ffaf00;
-  --state-error: #d75f5f;
-  --state-info: #87afd7;
+        /* Semantic state colors */
+        --state-success: #5fd75f;
+        --state-warning: #ffaf00;
+        --state-error: #d75f5f;
+        --state-info: #87afd7;
 
-  /* Radius */
-  --r-xs: 2px;
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 12px;
+        /* Radius */
+        --r-xs: 2px;
+        --r-sm: 4px;
+        --r-md: 8px;
+        --r-lg: 12px;
 
-  /* Shadows */
-  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
-  --shadow-2: 0 8px 24px -8px rgba(0,0,0,.5);
+        /* Shadows */
+        --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
 
-  /* Semantic aliases for head contract */
-  --focuscode-background: var(--bg);
-  --focuscode-foreground: var(--ink);
-  --focuscode-card: var(--surface);
-  --focuscode-card-foreground: var(--ink);
-  --focuscode-popover: var(--surface-2);
-  --focuscode-popover-foreground: var(--ink);
-  --focuscode-primary: var(--brand);
-  --focuscode-primary-foreground: var(--brand-ink);
-  --focuscode-muted: var(--surface-2);
-  --focuscode-muted-foreground: var(--ink-3);
-  --focuscode-border: var(--line);
-  --focuscode-input: var(--surface-3);
-  --focuscode-ring: var(--brand);
-  --focuscode-radius-sm: var(--r-sm);
-  --focuscode-radius-md: var(--r-md);
-  --focuscode-radius-lg: var(--r-lg);
-}
+        /* Semantic aliases for head contract */
+        --focuscode-background: var(--bg);
+        --focuscode-foreground: var(--ink);
+        --focuscode-card: var(--surface);
+        --focuscode-card-foreground: var(--ink);
+        --focuscode-popover: var(--surface-2);
+        --focuscode-popover-foreground: var(--ink);
+        --focuscode-primary: var(--brand);
+        --focuscode-primary-foreground: var(--brand-ink);
+        --focuscode-muted: var(--surface-2);
+        --focuscode-muted-foreground: var(--ink-3);
+        --focuscode-border: var(--line);
+        --focuscode-input: var(--surface-3);
+        --focuscode-ring: var(--brand);
+        --focuscode-radius-sm: var(--r-sm);
+        --focuscode-radius-md: var(--r-md);
+        --focuscode-radius-lg: var(--r-lg);
+      }
 
-@theme inline {
-  --color-brand: var(--brand);
-  --color-brand-50: var(--brand-50);
-  --color-brand-100: var(--brand-100);
-  --color-brand-200: var(--brand-200);
-  --color-brand-300: var(--brand-300);
-  --color-brand-400: var(--brand-400);
-  --color-brand-500: var(--brand-500);
-  --color-brand-600: var(--brand-600);
-  --color-brand-700: var(--brand-700);
+      @theme inline {
+        --color-brand: var(--brand);
+        --color-brand-50: var(--brand-50);
+        --color-brand-100: var(--brand-100);
+        --color-brand-200: var(--brand-200);
+        --color-brand-300: var(--brand-300);
+        --color-brand-400: var(--brand-400);
+        --color-brand-500: var(--brand-500);
+        --color-brand-600: var(--brand-600);
+        --color-brand-700: var(--brand-700);
 
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-surface-3: var(--surface-3);
-  --color-ink: var(--ink);
-  --color-ink-2: var(--ink-2);
-  --color-ink-3: var(--ink-3);
-  --color-line: var(--line);
+        --color-bg: var(--bg);
+        --color-surface: var(--surface);
+        --color-surface-2: var(--surface-2);
+        --color-surface-3: var(--surface-3);
+        --color-ink: var(--ink);
+        --color-ink-2: var(--ink-2);
+        --color-ink-3: var(--ink-3);
+        --color-line: var(--line);
 
-  --color-state-success: var(--state-success);
-  --color-state-warning: var(--state-warning);
-  --color-state-error: var(--state-error);
-  --color-state-info: var(--state-info);
-}
+        --color-state-success: var(--state-success);
+        --color-state-warning: var(--state-warning);
+        --color-state-error: var(--state-error);
+        --color-state-info: var(--state-info);
+      }
 
-/* Terminal font stack */
-.font-mono {
-  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
-}
+      /* Terminal font stack */
+      .font-mono {
+        font-family:
+          "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+      }
 
-/* ASCII art uses mono */
-.mascot-art {
-  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
-  font-size: 14px;
-  line-height: 1.3;
-  white-space: pre;
-  letter-spacing: 0;
-  tab-size: 4;
-}
+      /* ASCII art uses mono */
+      .mascot-art {
+        font-family:
+          "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+        font-size: 14px;
+        line-height: 1.3;
+        white-space: pre;
+        letter-spacing: 0;
+        tab-size: 4;
+      }
 
-/* Subtle glow for evolution stages */
-@keyframes tailGlow {
-  0%, 100% { text-shadow: 0 0 4px currentColor; }
-  50% { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
-}
+      /* Subtle glow for evolution stages */
+      @keyframes tailGlow {
+        0%,
+        100% {
+          text-shadow: 0 0 4px currentColor;
+        }
+        50% {
+          text-shadow:
+            0 0 12px currentColor,
+            0 0 24px currentColor;
+        }
+      }
 
-@keyframes blink {
-  0%, 90%, 100% { opacity: 1; }
-  95% { opacity: 0; }
-}
+      @keyframes blink {
+        0%,
+        90%,
+        100% {
+          opacity: 1;
+        }
+        95% {
+          opacity: 0;
+        }
+      }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+      }
 
-.glow-pulse {
-  animation: tailGlow 2s ease-in-out infinite;
-}
+      .glow-pulse {
+        animation: tailGlow 2s ease-in-out infinite;
+      }
 
-.float-gentle {
-  animation: float 3s ease-in-out infinite;
-}
+      .float-gentle {
+        animation: float 3s ease-in-out infinite;
+      }
 
-/* Scrollbar for terminal feel */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--surface-3);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--brand);
-}
-
+      /* Scrollbar for terminal feel */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--surface-3);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--brand);
+      }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
     <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
     <style type="text/tailwindcss">
-  @theme inline {
-    --color-brand: var(--brand);
-    --color-brand-50: var(--brand-50);
-    --color-brand-100: var(--brand-100);
-    --color-brand-200: var(--brand-200);
-    --color-brand-300: var(--brand-300);
-    --color-brand-400: var(--brand-400);
-    --color-brand-500: var(--brand-500);
-    --color-brand-600: var(--brand-600);
-    --color-brand-700: var(--brand-700);
-    --color-bg: var(--bg);
-    --color-surface: var(--surface);
-    --color-surface-2: var(--surface-2);
-    --color-surface-3: var(--surface-3);
-    --color-ink: var(--ink);
-    --color-ink-2: var(--ink-2);
-    --color-ink-3: var(--ink-3);
-    --color-line: var(--line);
-    --color-state-success: var(--state-success);
-    --color-state-warning: var(--state-warning);
-    --color-state-error: var(--state-error);
-    --color-state-info: var(--state-info);
-    --color-background: var(--focuscode-background);
-    --color-foreground: var(--focuscode-foreground);
-    --color-card: var(--focuscode-card);
-    --color-card-foreground: var(--focuscode-card-foreground);
-    --color-popover: var(--focuscode-popover);
-    --color-popover-foreground: var(--focuscode-popover-foreground);
-    --color-primary: var(--focuscode-primary);
-    --color-primary-foreground: var(--focuscode-primary-foreground);
-    --color-muted: var(--focuscode-muted);
-    --color-muted-foreground: var(--focuscode-muted-foreground);
-    --color-border: var(--focuscode-border);
-    --color-input: var(--focuscode-input);
-    --color-ring: var(--focuscode-ring);
-    --radius-sm: var(--focuscode-radius-sm);
-    --radius-md: var(--focuscode-radius-md);
-    --radius-lg: var(--focuscode-radius-lg);
-  }
-  @layer base {
-    body { background: var(--focuscode-background); color: var(--focuscode-foreground); }
-    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
-    th { @apply whitespace-nowrap; }
-  }
+      @theme inline {
+        --color-brand: var(--brand);
+        --color-brand-50: var(--brand-50);
+        --color-brand-100: var(--brand-100);
+        --color-brand-200: var(--brand-200);
+        --color-brand-300: var(--brand-300);
+        --color-brand-400: var(--brand-400);
+        --color-brand-500: var(--brand-500);
+        --color-brand-600: var(--brand-600);
+        --color-brand-700: var(--brand-700);
+        --color-bg: var(--bg);
+        --color-surface: var(--surface);
+        --color-surface-2: var(--surface-2);
+        --color-surface-3: var(--surface-3);
+        --color-ink: var(--ink);
+        --color-ink-2: var(--ink-2);
+        --color-ink-3: var(--ink-3);
+        --color-line: var(--line);
+        --color-state-success: var(--state-success);
+        --color-state-warning: var(--state-warning);
+        --color-state-error: var(--state-error);
+        --color-state-info: var(--state-info);
+        --color-background: var(--focuscode-background);
+        --color-foreground: var(--focuscode-foreground);
+        --color-card: var(--focuscode-card);
+        --color-card-foreground: var(--focuscode-card-foreground);
+        --color-popover: var(--focuscode-popover);
+        --color-popover-foreground: var(--focuscode-popover-foreground);
+        --color-primary: var(--focuscode-primary);
+        --color-primary-foreground: var(--focuscode-primary-foreground);
+        --color-muted: var(--focuscode-muted);
+        --color-muted-foreground: var(--focuscode-muted-foreground);
+        --color-border: var(--focuscode-border);
+        --color-input: var(--focuscode-input);
+        --color-ring: var(--focuscode-ring);
+        --radius-sm: var(--focuscode-radius-sm);
+        --radius-md: var(--focuscode-radius-md);
+        --radius-lg: var(--focuscode-radius-lg);
+      }
+      @layer base {
+        body {
+          background: var(--focuscode-background);
+          color: var(--focuscode-foreground);
+        }
+        td,
+        th {
+          @apply break-words;
+          word-break: break-all;
+          word-break: auto-phrase;
+        }
+        th {
+          @apply whitespace-nowrap;
+        }
+      }
     </style>
     <style id="semantic-token-fallback">
-      .bg-brand { background-color: var(--brand); }
-      .text-brand { color: var(--brand); }
-      .border-brand { border-color: var(--brand); }
-      .ring-brand { --tw-ring-color: var(--brand); }
-      .bg-brand-50 { background-color: var(--brand-50); }
-      .text-brand-50 { color: var(--brand-50); }
-      .border-brand-50 { border-color: var(--brand-50); }
-      .ring-brand-50 { --tw-ring-color: var(--brand-50); }
-      .bg-brand-100 { background-color: var(--brand-100); }
-      .text-brand-100 { color: var(--brand-100); }
-      .border-brand-100 { border-color: var(--brand-100); }
-      .ring-brand-100 { --tw-ring-color: var(--brand-100); }
-      .bg-brand-200 { background-color: var(--brand-200); }
-      .text-brand-200 { color: var(--brand-200); }
-      .border-brand-200 { border-color: var(--brand-200); }
-      .ring-brand-200 { --tw-ring-color: var(--brand-200); }
-      .bg-brand-300 { background-color: var(--brand-300); }
-      .text-brand-300 { color: var(--brand-300); }
-      .border-brand-300 { border-color: var(--brand-300); }
-      .ring-brand-300 { --tw-ring-color: var(--brand-300); }
-      .bg-brand-400 { background-color: var(--brand-400); }
-      .text-brand-400 { color: var(--brand-400); }
-      .border-brand-400 { border-color: var(--brand-400); }
-      .ring-brand-400 { --tw-ring-color: var(--brand-400); }
-      .bg-brand-500 { background-color: var(--brand-500); }
-      .text-brand-500 { color: var(--brand-500); }
-      .border-brand-500 { border-color: var(--brand-500); }
-      .ring-brand-500 { --tw-ring-color: var(--brand-500); }
-      .bg-brand-600 { background-color: var(--brand-600); }
-      .text-brand-600 { color: var(--brand-600); }
-      .border-brand-600 { border-color: var(--brand-600); }
-      .ring-brand-600 { --tw-ring-color: var(--brand-600); }
-      .bg-brand-700 { background-color: var(--brand-700); }
-      .text-brand-700 { color: var(--brand-700); }
-      .border-brand-700 { border-color: var(--brand-700); }
-      .ring-brand-700 { --tw-ring-color: var(--brand-700); }
-      .bg-bg { background-color: var(--bg); }
-      .text-bg { color: var(--bg); }
-      .border-bg { border-color: var(--bg); }
-      .ring-bg { --tw-ring-color: var(--bg); }
-      .bg-surface { background-color: var(--surface); }
-      .text-surface { color: var(--surface); }
-      .border-surface { border-color: var(--surface); }
-      .ring-surface { --tw-ring-color: var(--surface); }
-      .bg-surface-2 { background-color: var(--surface-2); }
-      .text-surface-2 { color: var(--surface-2); }
-      .border-surface-2 { border-color: var(--surface-2); }
-      .ring-surface-2 { --tw-ring-color: var(--surface-2); }
-      .bg-surface-3 { background-color: var(--surface-3); }
-      .text-surface-3 { color: var(--surface-3); }
-      .border-surface-3 { border-color: var(--surface-3); }
-      .ring-surface-3 { --tw-ring-color: var(--surface-3); }
-      .bg-ink { background-color: var(--ink); }
-      .text-ink { color: var(--ink); }
-      .border-ink { border-color: var(--ink); }
-      .ring-ink { --tw-ring-color: var(--ink); }
-      .bg-ink-2 { background-color: var(--ink-2); }
-      .text-ink-2 { color: var(--ink-2); }
-      .border-ink-2 { border-color: var(--ink-2); }
-      .ring-ink-2 { --tw-ring-color: var(--ink-2); }
-      .bg-ink-3 { background-color: var(--ink-3); }
-      .text-ink-3 { color: var(--ink-3); }
-      .border-ink-3 { border-color: var(--ink-3); }
-      .ring-ink-3 { --tw-ring-color: var(--ink-3); }
-      .bg-line { background-color: var(--line); }
-      .text-line { color: var(--line); }
-      .border-line { border-color: var(--line); }
-      .ring-line { --tw-ring-color: var(--line); }
-      .bg-state-success { background-color: var(--state-success); }
-      .text-state-success { color: var(--state-success); }
-      .border-state-success { border-color: var(--state-success); }
-      .ring-state-success { --tw-ring-color: var(--state-success); }
-      .bg-state-warning { background-color: var(--state-warning); }
-      .text-state-warning { color: var(--state-warning); }
-      .border-state-warning { border-color: var(--state-warning); }
-      .ring-state-warning { --tw-ring-color: var(--state-warning); }
-      .bg-state-error { background-color: var(--state-error); }
-      .text-state-error { color: var(--state-error); }
-      .border-state-error { border-color: var(--state-error); }
-      .ring-state-error { --tw-ring-color: var(--state-error); }
-      .bg-state-info { background-color: var(--state-info); }
-      .text-state-info { color: var(--state-info); }
-      .border-state-info { border-color: var(--state-info); }
-      .ring-state-info { --tw-ring-color: var(--state-info); }
-      .bg-background { background-color: var(--focuscode-background); }
-      .text-background { color: var(--focuscode-background); }
-      .border-background { border-color: var(--focuscode-background); }
-      .ring-background { --tw-ring-color: var(--focuscode-background); }
-      .bg-foreground { background-color: var(--focuscode-foreground); }
-      .text-foreground { color: var(--focuscode-foreground); }
-      .border-foreground { border-color: var(--focuscode-foreground); }
-      .ring-foreground { --tw-ring-color: var(--focuscode-foreground); }
-      .bg-card { background-color: var(--focuscode-card); }
-      .text-card { color: var(--focuscode-card); }
-      .border-card { border-color: var(--focuscode-card); }
-      .ring-card { --tw-ring-color: var(--focuscode-card); }
-      .bg-card-foreground { background-color: var(--focuscode-card-foreground); }
-      .text-card-foreground { color: var(--focuscode-card-foreground); }
-      .border-card-foreground { border-color: var(--focuscode-card-foreground); }
-      .ring-card-foreground { --tw-ring-color: var(--focuscode-card-foreground); }
-      .bg-popover { background-color: var(--focuscode-popover); }
-      .text-popover { color: var(--focuscode-popover); }
-      .border-popover { border-color: var(--focuscode-popover); }
-      .ring-popover { --tw-ring-color: var(--focuscode-popover); }
-      .bg-popover-foreground { background-color: var(--focuscode-popover-foreground); }
-      .text-popover-foreground { color: var(--focuscode-popover-foreground); }
-      .border-popover-foreground { border-color: var(--focuscode-popover-foreground); }
-      .ring-popover-foreground { --tw-ring-color: var(--focuscode-popover-foreground); }
-      .bg-primary { background-color: var(--focuscode-primary); }
-      .text-primary { color: var(--focuscode-primary); }
-      .border-primary { border-color: var(--focuscode-primary); }
-      .ring-primary { --tw-ring-color: var(--focuscode-primary); }
-      .bg-primary-foreground { background-color: var(--focuscode-primary-foreground); }
-      .text-primary-foreground { color: var(--focuscode-primary-foreground); }
-      .border-primary-foreground { border-color: var(--focuscode-primary-foreground); }
-      .ring-primary-foreground { --tw-ring-color: var(--focuscode-primary-foreground); }
-      .bg-muted { background-color: var(--focuscode-muted); }
-      .text-muted { color: var(--focuscode-muted); }
-      .border-muted { border-color: var(--focuscode-muted); }
-      .ring-muted { --tw-ring-color: var(--focuscode-muted); }
-      .bg-muted-foreground { background-color: var(--focuscode-muted-foreground); }
-      .text-muted-foreground { color: var(--focuscode-muted-foreground); }
-      .border-muted-foreground { border-color: var(--focuscode-muted-foreground); }
-      .ring-muted-foreground { --tw-ring-color: var(--focuscode-muted-foreground); }
-      .bg-border { background-color: var(--focuscode-border); }
-      .text-border { color: var(--focuscode-border); }
-      .border-border { border-color: var(--focuscode-border); }
-      .ring-border { --tw-ring-color: var(--focuscode-border); }
-      .bg-input { background-color: var(--focuscode-input); }
-      .text-input { color: var(--focuscode-input); }
-      .border-input { border-color: var(--focuscode-input); }
-      .ring-input { --tw-ring-color: var(--focuscode-input); }
-      .bg-ring { background-color: var(--focuscode-ring); }
-      .text-ring { color: var(--focuscode-ring); }
-      .border-ring { border-color: var(--focuscode-ring); }
-      .ring-ring { --tw-ring-color: var(--focuscode-ring); }
+      .bg-brand {
+        background-color: var(--brand);
+      }
+      .text-brand {
+        color: var(--brand);
+      }
+      .border-brand {
+        border-color: var(--brand);
+      }
+      .ring-brand {
+        --tw-ring-color: var(--brand);
+      }
+      .bg-brand-50 {
+        background-color: var(--brand-50);
+      }
+      .text-brand-50 {
+        color: var(--brand-50);
+      }
+      .border-brand-50 {
+        border-color: var(--brand-50);
+      }
+      .ring-brand-50 {
+        --tw-ring-color: var(--brand-50);
+      }
+      .bg-brand-100 {
+        background-color: var(--brand-100);
+      }
+      .text-brand-100 {
+        color: var(--brand-100);
+      }
+      .border-brand-100 {
+        border-color: var(--brand-100);
+      }
+      .ring-brand-100 {
+        --tw-ring-color: var(--brand-100);
+      }
+      .bg-brand-200 {
+        background-color: var(--brand-200);
+      }
+      .text-brand-200 {
+        color: var(--brand-200);
+      }
+      .border-brand-200 {
+        border-color: var(--brand-200);
+      }
+      .ring-brand-200 {
+        --tw-ring-color: var(--brand-200);
+      }
+      .bg-brand-300 {
+        background-color: var(--brand-300);
+      }
+      .text-brand-300 {
+        color: var(--brand-300);
+      }
+      .border-brand-300 {
+        border-color: var(--brand-300);
+      }
+      .ring-brand-300 {
+        --tw-ring-color: var(--brand-300);
+      }
+      .bg-brand-400 {
+        background-color: var(--brand-400);
+      }
+      .text-brand-400 {
+        color: var(--brand-400);
+      }
+      .border-brand-400 {
+        border-color: var(--brand-400);
+      }
+      .ring-brand-400 {
+        --tw-ring-color: var(--brand-400);
+      }
+      .bg-brand-500 {
+        background-color: var(--brand-500);
+      }
+      .text-brand-500 {
+        color: var(--brand-500);
+      }
+      .border-brand-500 {
+        border-color: var(--brand-500);
+      }
+      .ring-brand-500 {
+        --tw-ring-color: var(--brand-500);
+      }
+      .bg-brand-600 {
+        background-color: var(--brand-600);
+      }
+      .text-brand-600 {
+        color: var(--brand-600);
+      }
+      .border-brand-600 {
+        border-color: var(--brand-600);
+      }
+      .ring-brand-600 {
+        --tw-ring-color: var(--brand-600);
+      }
+      .bg-brand-700 {
+        background-color: var(--brand-700);
+      }
+      .text-brand-700 {
+        color: var(--brand-700);
+      }
+      .border-brand-700 {
+        border-color: var(--brand-700);
+      }
+      .ring-brand-700 {
+        --tw-ring-color: var(--brand-700);
+      }
+      .bg-bg {
+        background-color: var(--bg);
+      }
+      .text-bg {
+        color: var(--bg);
+      }
+      .border-bg {
+        border-color: var(--bg);
+      }
+      .ring-bg {
+        --tw-ring-color: var(--bg);
+      }
+      .bg-surface {
+        background-color: var(--surface);
+      }
+      .text-surface {
+        color: var(--surface);
+      }
+      .border-surface {
+        border-color: var(--surface);
+      }
+      .ring-surface {
+        --tw-ring-color: var(--surface);
+      }
+      .bg-surface-2 {
+        background-color: var(--surface-2);
+      }
+      .text-surface-2 {
+        color: var(--surface-2);
+      }
+      .border-surface-2 {
+        border-color: var(--surface-2);
+      }
+      .ring-surface-2 {
+        --tw-ring-color: var(--surface-2);
+      }
+      .bg-surface-3 {
+        background-color: var(--surface-3);
+      }
+      .text-surface-3 {
+        color: var(--surface-3);
+      }
+      .border-surface-3 {
+        border-color: var(--surface-3);
+      }
+      .ring-surface-3 {
+        --tw-ring-color: var(--surface-3);
+      }
+      .bg-ink {
+        background-color: var(--ink);
+      }
+      .text-ink {
+        color: var(--ink);
+      }
+      .border-ink {
+        border-color: var(--ink);
+      }
+      .ring-ink {
+        --tw-ring-color: var(--ink);
+      }
+      .bg-ink-2 {
+        background-color: var(--ink-2);
+      }
+      .text-ink-2 {
+        color: var(--ink-2);
+      }
+      .border-ink-2 {
+        border-color: var(--ink-2);
+      }
+      .ring-ink-2 {
+        --tw-ring-color: var(--ink-2);
+      }
+      .bg-ink-3 {
+        background-color: var(--ink-3);
+      }
+      .text-ink-3 {
+        color: var(--ink-3);
+      }
+      .border-ink-3 {
+        border-color: var(--ink-3);
+      }
+      .ring-ink-3 {
+        --tw-ring-color: var(--ink-3);
+      }
+      .bg-line {
+        background-color: var(--line);
+      }
+      .text-line {
+        color: var(--line);
+      }
+      .border-line {
+        border-color: var(--line);
+      }
+      .ring-line {
+        --tw-ring-color: var(--line);
+      }
+      .bg-state-success {
+        background-color: var(--state-success);
+      }
+      .text-state-success {
+        color: var(--state-success);
+      }
+      .border-state-success {
+        border-color: var(--state-success);
+      }
+      .ring-state-success {
+        --tw-ring-color: var(--state-success);
+      }
+      .bg-state-warning {
+        background-color: var(--state-warning);
+      }
+      .text-state-warning {
+        color: var(--state-warning);
+      }
+      .border-state-warning {
+        border-color: var(--state-warning);
+      }
+      .ring-state-warning {
+        --tw-ring-color: var(--state-warning);
+      }
+      .bg-state-error {
+        background-color: var(--state-error);
+      }
+      .text-state-error {
+        color: var(--state-error);
+      }
+      .border-state-error {
+        border-color: var(--state-error);
+      }
+      .ring-state-error {
+        --tw-ring-color: var(--state-error);
+      }
+      .bg-state-info {
+        background-color: var(--state-info);
+      }
+      .text-state-info {
+        color: var(--state-info);
+      }
+      .border-state-info {
+        border-color: var(--state-info);
+      }
+      .ring-state-info {
+        --tw-ring-color: var(--state-info);
+      }
+      .bg-background {
+        background-color: var(--focuscode-background);
+      }
+      .text-background {
+        color: var(--focuscode-background);
+      }
+      .border-background {
+        border-color: var(--focuscode-background);
+      }
+      .ring-background {
+        --tw-ring-color: var(--focuscode-background);
+      }
+      .bg-foreground {
+        background-color: var(--focuscode-foreground);
+      }
+      .text-foreground {
+        color: var(--focuscode-foreground);
+      }
+      .border-foreground {
+        border-color: var(--focuscode-foreground);
+      }
+      .ring-foreground {
+        --tw-ring-color: var(--focuscode-foreground);
+      }
+      .bg-card {
+        background-color: var(--focuscode-card);
+      }
+      .text-card {
+        color: var(--focuscode-card);
+      }
+      .border-card {
+        border-color: var(--focuscode-card);
+      }
+      .ring-card {
+        --tw-ring-color: var(--focuscode-card);
+      }
+      .bg-card-foreground {
+        background-color: var(--focuscode-card-foreground);
+      }
+      .text-card-foreground {
+        color: var(--focuscode-card-foreground);
+      }
+      .border-card-foreground {
+        border-color: var(--focuscode-card-foreground);
+      }
+      .ring-card-foreground {
+        --tw-ring-color: var(--focuscode-card-foreground);
+      }
+      .bg-popover {
+        background-color: var(--focuscode-popover);
+      }
+      .text-popover {
+        color: var(--focuscode-popover);
+      }
+      .border-popover {
+        border-color: var(--focuscode-popover);
+      }
+      .ring-popover {
+        --tw-ring-color: var(--focuscode-popover);
+      }
+      .bg-popover-foreground {
+        background-color: var(--focuscode-popover-foreground);
+      }
+      .text-popover-foreground {
+        color: var(--focuscode-popover-foreground);
+      }
+      .border-popover-foreground {
+        border-color: var(--focuscode-popover-foreground);
+      }
+      .ring-popover-foreground {
+        --tw-ring-color: var(--focuscode-popover-foreground);
+      }
+      .bg-primary {
+        background-color: var(--focuscode-primary);
+      }
+      .text-primary {
+        color: var(--focuscode-primary);
+      }
+      .border-primary {
+        border-color: var(--focuscode-primary);
+      }
+      .ring-primary {
+        --tw-ring-color: var(--focuscode-primary);
+      }
+      .bg-primary-foreground {
+        background-color: var(--focuscode-primary-foreground);
+      }
+      .text-primary-foreground {
+        color: var(--focuscode-primary-foreground);
+      }
+      .border-primary-foreground {
+        border-color: var(--focuscode-primary-foreground);
+      }
+      .ring-primary-foreground {
+        --tw-ring-color: var(--focuscode-primary-foreground);
+      }
+      .bg-muted {
+        background-color: var(--focuscode-muted);
+      }
+      .text-muted {
+        color: var(--focuscode-muted);
+      }
+      .border-muted {
+        border-color: var(--focuscode-muted);
+      }
+      .ring-muted {
+        --tw-ring-color: var(--focuscode-muted);
+      }
+      .bg-muted-foreground {
+        background-color: var(--focuscode-muted-foreground);
+      }
+      .text-muted-foreground {
+        color: var(--focuscode-muted-foreground);
+      }
+      .border-muted-foreground {
+        border-color: var(--focuscode-muted-foreground);
+      }
+      .ring-muted-foreground {
+        --tw-ring-color: var(--focuscode-muted-foreground);
+      }
+      .bg-border {
+        background-color: var(--focuscode-border);
+      }
+      .text-border {
+        color: var(--focuscode-border);
+      }
+      .border-border {
+        border-color: var(--focuscode-border);
+      }
+      .ring-border {
+        --tw-ring-color: var(--focuscode-border);
+      }
+      .bg-input {
+        background-color: var(--focuscode-input);
+      }
+      .text-input {
+        color: var(--focuscode-input);
+      }
+      .border-input {
+        border-color: var(--focuscode-input);
+      }
+      .ring-input {
+        --tw-ring-color: var(--focuscode-input);
+      }
+      .bg-ring {
+        background-color: var(--focuscode-ring);
+      }
+      .text-ring {
+        color: var(--focuscode-ring);
+      }
+      .border-ring {
+        border-color: var(--focuscode-ring);
+      }
+      .ring-ring {
+        --tw-ring-color: var(--focuscode-ring);
+      }
     </style>
     <style>
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
       [data-icon] {
         display: inline-flex;
         align-items: center;
@@ -353,10 +659,11 @@
         background-color: currentColor;
       }
     </style>
-</head>
-<body class="min-h-screen font-sans antialiased">
-    <main>
-    </main>
-    <script>lucide.createIcons();</script>
-</body>
+  </head>
+  <body class="min-h-screen font-sans antialiased">
+    <main></main>
+    <script>
+      lucide.createIcons();
+    </script>
+  </body>
 </html>

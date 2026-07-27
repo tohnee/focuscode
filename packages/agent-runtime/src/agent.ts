@@ -138,6 +138,10 @@ export class CodingAgent {
   private currentSkillPrompt = "";
   private specEngine: SpecEngine | undefined;
   private currentSpecId: string | undefined;
+  // Doom-loop detection: tracks consecutive identical failed tool call rounds.
+  private doomLoopFingerprint = "";
+  private doomLoopCount = 0;
+  private static readonly DOOM_LOOP_THRESHOLD = 3;
 
   private constructor(private readonly options: CodingAgentOptions) {
     if (options.effectPort && !options.effectContext) {
@@ -319,6 +323,9 @@ export class CodingAgent {
     }
     if (this.running) throw new Error("Agent is already processing a prompt");
     this.running = true;
+    // Reset doom-loop detection for the new turn.
+    this.doomLoopFingerprint = "";
+    this.doomLoopCount = 0;
     // Select declarative skills whose trigger keywords match the user input.
     // The prompt is rebuilt per submit() so different turns activate different
     // skills; unmatched turns inject no skill prompt.
@@ -356,6 +363,7 @@ export class CodingAgent {
         await this.autoCompact();
         const compiled = this.context.compile(this.session, this.toolSchemaChars());
         const systemPrompt = this.systemPrompt(compiled.summary);
+        const systemPromptParts = this.systemPromptParts(compiled.summary);
         const modelTools =
           this.model.toolMode === "prompt-json" || this.model.capabilities?.toolCalling === false
             ? []
@@ -370,6 +378,7 @@ export class CodingAgent {
             {
               model: this.model.model,
               systemPrompt,
+              systemPromptParts,
               messages: compiled.messages,
               tools: modelTools,
               temperature: this.model.temperature,
@@ -465,6 +474,34 @@ export class CodingAgent {
           await this.finish(result, turnUsage);
           return result;
         }
+
+        // Truncation rejection: when the model output is cut off by
+        // max_tokens (stopReason === "length"), tool call arguments may be
+        // incomplete. Executing partially-generated arguments is dangerous
+        // (partial file paths, truncated commands). Instead, reject all tool
+        // calls from this response and append error results so the model
+        // retries with shorter output. The truncated assistant message is
+        // already stored above for audit.
+        if (stopped === "length" && calls.length > 0) {
+          await this.emit({
+            type: "error",
+            message: `Output truncated (stopReason=length) — ${calls.length} tool call(s) rejected to avoid partial execution.`,
+          });
+          for (const call of calls) {
+            const entry = await this.options.sessionStore.appendMessage(this.sessionId, {
+              role: "tool",
+              content:
+                "Error: The model output was truncated before this tool call could be fully generated. " +
+                "Please retry with a more concise response or fewer tool calls per turn.",
+              toolCallId: call.id,
+              toolName: call.name,
+            });
+            lastEntryId = entry.entryId;
+          }
+          await this.refresh();
+          continue;
+        }
+
         toolCalls += calls.length;
         const results = await this.executeCalls(calls, controller.signal);
         for (const [index, result] of results.entries()) {
@@ -477,6 +514,37 @@ export class CodingAgent {
           });
           lastEntryId = entry.entryId;
         }
+
+        // Doom-loop detection: if all tool calls in this round failed and the
+        // fingerprint matches the previous failed round, increment a counter.
+        // When the counter reaches the threshold, stop the loop to prevent
+        // the model from burning tokens repeating the same failed action.
+        const allFailed = results.length > 0 && results.every((r) => r.isError === true);
+        if (allFailed) {
+          const fingerprint = calls
+            .map((c) => `${c.name}:${JSON.stringify(c.arguments)}`)
+            .sort()
+            .join("|");
+          if (fingerprint === this.doomLoopFingerprint) {
+            this.doomLoopCount += 1;
+          } else {
+            this.doomLoopFingerprint = fingerprint;
+            this.doomLoopCount = 1;
+          }
+          if (this.doomLoopCount >= CodingAgent.DOOM_LOOP_THRESHOLD) {
+            await this.emit({
+              type: "error",
+              message: `Doom-loop detected: same tool call(s) failed ${this.doomLoopCount} consecutive times. Stopping.`,
+            });
+            stopped = "error";
+            lastContent = `Stopped: doom-loop detected - the same tool call(s) failed ${this.doomLoopCount} consecutive times. Try a different approach.`;
+            break;
+          }
+        } else {
+          this.doomLoopFingerprint = "";
+          this.doomLoopCount = 0;
+        }
+
         await this.refresh();
       }
 
@@ -839,6 +907,22 @@ export class CodingAgent {
       await this.emit({ type: "tool_end", call, result, durationMs: 0 });
       return result;
     }
+    // Extension beforeTool hooks: allow extensions to veto tool execution.
+    // The first hook to return {allow:false} wins; buggy hooks fail-open.
+    const veto = await this.options.extensionHost?.checkBeforeTool?.({
+      toolName: call.name,
+      arguments: call.arguments,
+      cwd: this.options.cwd,
+    });
+    if (veto && !veto.allow) {
+      const result = {
+        content: `Blocked by extension hook: ${veto.reason ?? "no reason provided"}`,
+        isError: true,
+      };
+      await this.emit({ type: "tool_start", call });
+      await this.emit({ type: "tool_end", call, result, durationMs: 0 });
+      return result;
+    }
     await this.emit({ type: "tool_start", call });
     const started = Date.now();
     let result: ToolExecutionResult;
@@ -955,7 +1039,12 @@ export class CodingAgent {
     const extensionPrompt = this.options.extensionHost?.systemPrompt() ?? "";
     const todos = this.todoState.list();
     const todoPrompt = todos.length ? `## Current task list\n${renderTodoItems(todos)}` : "";
+    // Order matters for prompt-cache friendliness: static/stable content
+    // first (cacheable prefix), dynamic per-turn content last (cache-miss
+    // suffix).  Do not insert dynamic sections before the tool definitions
+    // or instructions - that would break the cache prefix on every turn.
     return [
+      // ── Stable prefix (cacheable) ──────────────────────────────
       this.options.systemPrompt ?? CORE_SYSTEM_PROMPT,
       `Workspace: ${resolve(this.options.cwd)}\nModel profile: ${this.model.provider}/${this.model.model}`,
       toolFallback,
@@ -964,12 +1053,52 @@ export class CodingAgent {
         : "",
       instructions,
       extensionPrompt,
+      // ── Dynamic suffix (per-turn / per-compaction) ────────────
       this.currentSkillPrompt,
       todoPrompt,
       summary ? `Session summary of compacted history:\n${summary}` : "",
     ]
       .filter(Boolean)
       .join("\n\n");
+  }
+
+  /**
+   * Same content as {@link systemPrompt} but split into stable/dynamic
+   * segments for Provider prefix-cache optimization. Providers that support
+   * cache breakpoints (e.g. Anthropic) cache the stable prefix across rounds.
+   */
+  private systemPromptParts(summary?: string): { stable: string; dynamic: string } {
+    const toolFallback =
+      this.model.toolMode === "native"
+        ? ""
+        : `If native tool calling is unavailable, you may output exactly one JSON object shaped as {"tool_calls":[{"name":"tool_name","arguments":{...}}]}. Do not wrap that object in explanatory prose.`;
+    const instructions = (this.options.instructions ?? []).filter(Boolean).join("\n\n");
+    const extensionPrompt = this.options.extensionHost?.systemPrompt() ?? "";
+    const todos = this.todoState.list();
+    const todoPrompt = todos.length ? `## Current task list\n${renderTodoItems(todos)}` : "";
+
+    const stable = [
+      this.options.systemPrompt ?? CORE_SYSTEM_PROMPT,
+      `Workspace: ${resolve(this.options.cwd)}\nModel profile: ${this.model.provider}/${this.model.model}`,
+      toolFallback,
+      this.model.toolMode === "prompt-json"
+        ? `Available tool definitions:\n${JSON.stringify(this.registry.definitions())}`
+        : "",
+      instructions,
+      extensionPrompt,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    const dynamic = [
+      this.currentSkillPrompt,
+      todoPrompt,
+      summary ? `Session summary of compacted history:\n${summary}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    return { stable, dynamic };
   }
 
   private toolSchemaChars(): number {

@@ -6,3 +6,4 @@ apps/cli/bundle
 .focuscode-state
 .tmp
 pnpm-lock.yaml
+docs/compare

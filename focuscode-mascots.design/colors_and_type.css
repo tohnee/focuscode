@@ -41,8 +41,8 @@
   --r-lg: 12px;
 
   /* Shadows */
-  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
-  --shadow-2: 0 8px 24px -8px rgba(0,0,0,.5);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
 
   /* Semantic aliases for head contract */
   --focuscode-background: var(--bg);
@@ -91,12 +91,14 @@
 
 /* Terminal font stack */
 .font-mono {
-  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+  font-family:
+    "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
 }
 
 /* ASCII art uses mono */
 .mascot-art {
-  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+  font-family:
+    "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
   font-size: 14px;
   line-height: 1.3;
   white-space: pre;
@@ -106,18 +108,36 @@
 
 /* Subtle glow for evolution stages */
 @keyframes tailGlow {
-  0%, 100% { text-shadow: 0 0 4px currentColor; }
-  50% { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+  0%,
+  100% {
+    text-shadow: 0 0 4px currentColor;
+  }
+  50% {
+    text-shadow:
+      0 0 12px currentColor,
+      0 0 24px currentColor;
+  }
 }
 
 @keyframes blink {
-  0%, 90%, 100% { opacity: 1; }
-  95% { opacity: 0; }
+  0%,
+  90%,
+  100% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 .glow-pulse {

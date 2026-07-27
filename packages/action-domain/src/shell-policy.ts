@@ -445,3 +445,116 @@ export function extractApplyPatchPaths(patch: string): string[] {
     normalizeRelativePath(match[1]!),
   );
 }
+
+// ─── Execpolicy-style prefix rules with load-time self-test ───────────
+
+export interface CommandPrefixRule {
+  /** Command prefix to match (e.g., "git push", "npm publish"). Split on whitespace. */
+  prefix: string;
+  /** Allow or deny matching commands. */
+  effect: "allow" | "deny";
+  /** Human-readable reason. */
+  reason: string;
+  /** Examples that MUST match this rule (verified at load time). */
+  match?: string[];
+  /** Examples that MUST NOT match this rule (verified at load time). */
+  notMatch?: string[];
+}
+
+export interface PrefixRuleCheckResult {
+  effect: "allow" | "deny";
+  reason: string;
+  rule: CommandPrefixRule;
+}
+
+/**
+ * Default prefix rules mirroring the high-risk shell patterns already encoded
+ * in PolicyEngine, exposed as user-editable starting point. The engine's
+ * constructor runs the self-test on these just like on user-supplied rules.
+ */
+export const DEFAULT_PREFIX_RULES: CommandPrefixRule[] = [
+  {
+    prefix: "git push --force",
+    effect: "deny",
+    reason: "Force push is destructive and can overwrite remote history",
+    match: ["git push --force origin main", "git push --force"],
+    notMatch: ["git push", "git status"],
+  },
+  {
+    prefix: "git push --force-with-lease",
+    effect: "allow",
+    reason: "Force push with lease is safer (checks remote ref)",
+    match: ["git push --force-with-lease origin main"],
+    notMatch: ["git push --force"],
+  },
+  {
+    prefix: "npm publish",
+    effect: "deny",
+    reason: "Package publication is irreversible",
+    match: ["npm publish", "npm publish --access public"],
+    notMatch: ["npm install", "npm test"],
+  },
+];
+
+/**
+ * User-configurable command prefix rule engine with load-time self-test.
+ * Rules are evaluated in declaration order; the first match wins. If a rule's
+ * `match` / `notMatch` examples contradict its prefix, the constructor throws
+ * immediately — rules that are wrong should explode at load time, not silently
+ * misfire at execution time.
+ */
+export class PrefixRuleEngine {
+  private readonly rules: CommandPrefixRule[];
+
+  constructor(rules: CommandPrefixRule[]) {
+    this.rules = rules;
+    for (const rule of rules) {
+      const prefixWords = rule.prefix.trim().split(/\s+/);
+      for (const example of rule.match ?? []) {
+        if (!this.matchesPrefix(example, prefixWords)) {
+          throw new Error(
+            `Prefix rule self-test failed: rule "${rule.prefix}" should match "${example}" but does not.`,
+          );
+        }
+      }
+      for (const example of rule.notMatch ?? []) {
+        if (this.matchesPrefix(example, prefixWords)) {
+          throw new Error(
+            `Prefix rule self-test failed: rule "${rule.prefix}" should NOT match "${example}" but does.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Check a command against all rules. Returns the first matching rule's
+   * result, or undefined if no rule matches. Rules are evaluated in order;
+   * the first match wins (deny-first ordering is the caller's responsibility).
+   */
+  check(command: string): PrefixRuleCheckResult | undefined {
+    for (const rule of this.rules) {
+      const prefixWords = rule.prefix.trim().split(/\s+/);
+      if (this.matchesPrefix(command, prefixWords)) {
+        return { effect: rule.effect, reason: rule.reason, rule };
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Prefix matching: the command's first N words must equal the prefix words.
+   * This is argv-prefix matching, NOT substring matching — "git" matches
+   * "git status" but not "gitter". Option flags between the command and the
+   * prefix are NOT skipped (unlike Codex's execpolicy which uses argv arrays);
+   * this is a simpler text-word approach.
+   */
+  private matchesPrefix(command: string, prefixWords: string[]): boolean {
+    const commandWords = command.trim().split(/\s+/);
+    if (commandWords.length < prefixWords.length) return false;
+    for (let i = 0; i < prefixWords.length; i++) {
+      if (commandWords[i] !== prefixWords[i]) return false;
+    }
+    return true;
+  }
+}

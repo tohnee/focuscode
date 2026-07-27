@@ -115,7 +115,7 @@ export function printBanner(status: {
 }): void {
   const color = Boolean(process.stdout.isTTY && !process.env.NO_COLOR);
   process.stdout.write(
-    `${bold("FocusCode", color)} ${dim("CLI Coding Agent 0.4.0-beta.2", color)}\n` +
+    `${bold("FocusCode", color)} ${dim("CLI Coding Agent 0.5.0", color)}\n` +
       `${dim(`${terminalSafe(status.provider)}/${terminalSafe(status.model)} · ${status.approval} · ${status.projectTrusted ? "project trusted" : "project config ignored"}`, color)}\n` +
       `${dim(`${terminalSafe(status.cwd)} · session ${shortId(status.sessionId)}`, color)}\n` +
       `${dim("Type /help for commands; !command runs a permission-gated shell command.", color)}\n\n`,

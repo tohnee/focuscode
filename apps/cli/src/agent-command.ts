@@ -35,6 +35,7 @@ import {
 import { ExtensionPackageManager } from "@focuscode/ecosystem";
 import { createSandbox } from "@focuscode/sandbox";
 import { createSessionEffectSpine } from "@focuscode/sdk";
+import type { CommandPrefixRule } from "@focuscode/action-domain";
 import { parseAgentArgs, type AgentCliArgs } from "./agent-args.js";
 import { oauthAccessTokenProvider } from "./auth-command.js";
 import { HumanEventRenderer, jsonEventWriter, promptApproval, shortId } from "./agent-output.js";
@@ -44,8 +45,9 @@ import { buildModelClientChain } from "./model-client-wiring.js";
 import { rpcEventSink, runRpc } from "./rpc.js";
 import { defaultExtensionDirectory } from "./platform-command.js";
 import { runFullScreenAgent } from "./tui.js";
+import { runAcpServer } from "./acp-server.js";
 
-export const CLI_VERSION = "0.4.0-beta.2";
+export const CLI_VERSION = "0.5.0";
 
 export function isAgentInvocation(argv: string[]): boolean {
   const first = argv[0];
@@ -265,6 +267,12 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
   // The spine bridge fires approvals during tool execution, i.e. after the
   // agent exists, so the deferred reference is always set when it runs.
   let agent: CodingAgent | undefined;
+  // Load user-configurable command prefix rules from a JSON file. The
+  // PrefixRuleEngine constructor runs a self-test that throws on any
+  // mismatched match/notMatch example, so bad rules fail at startup.
+  const prefixRules = args.commandRulesPath
+    ? (JSON.parse(await readFile(resolve(args.commandRulesPath), "utf8")) as CommandPrefixRule[])
+    : undefined;
   const spine = config.agent.effectSpine
     ? createSessionEffectSpine({
         cwd,
@@ -303,6 +311,7 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
       projectTrusted: config.projectTrusted,
       protectedPaths: config.protectedPaths,
       ...(approve ? { approve } : {}),
+      ...(prefixRules ? { prefixRules } : {}),
     },
     sessionStore: sessions,
     ...(sessionId ? { sessionId } : {}),
@@ -412,6 +421,10 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
     if (mode === "rpc") {
       if (initialPrompt) await agent.submit(initialPrompt);
       await runRpc(agent, sessions);
+      return;
+    }
+    if (mode === "acp") {
+      await runAcpServer(args, configOverrides(args, modelSpec));
       return;
     }
     if (!initialPrompt) throw new Error(`${mode} mode requires a prompt or piped stdin`);
@@ -812,7 +825,7 @@ Model:
 
 Execution:
   -p, --print                 Run once and exit
-  --mode MODE                 tui | interactive | print | json | rpc
+  --mode MODE                 tui | interactive | print | json | rpc | acp
   -i, --image PATH_OR_URL     Attach an image; repeat for multiple images
   --theme ID                  foxglow | aurora | candy | forest | midnight | mono
   --mascot ID                 foxy | mochi | byte | nori | pico | bubu | kumo
@@ -823,6 +836,7 @@ Execution:
   --exclude-tools LIST        Tool denylist
   --max-rounds N              Maximum model/tool rounds per user turn
   -e, --extension PATH        Load an explicit JavaScript extension
+  --command-rules PATH        JSON file with command prefix rules (allow/deny)
 
 Isolation:
   --sandbox KIND              host | docker | gvisor | vm | seatbelt | auto

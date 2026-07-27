@@ -160,7 +160,7 @@ export class McpStdioClient {
         {
           protocolVersion: "2024-11-05",
           capabilities: {},
-          clientInfo: { name: "focuscode", version: "0.4.0-beta.2" },
+          clientInfo: { name: "focuscode", version: "0.5.0" },
         },
         this.startupTimeoutMs,
       )) as { serverInfo?: { name?: string; version?: string }; capabilities?: unknown };

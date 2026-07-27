@@ -1,345 +1,651 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FocusCode 伙伴图鉴</title>
     <style id="theme-vars">
-/* FocusCode Mascot Design - Foxglow Terminal Theme */
-/* Brand: Fox orange (#ff8700), dark terminal background */
+      /* FocusCode Mascot Design - Foxglow Terminal Theme */
+      /* Brand: Fox orange (#ff8700), dark terminal background */
 
-:root {
-  /* Brand single hue - foxglow orange */
-  --brand: #ff8700;
-  --brand-50: #fff7ed;
-  --brand-100: #ffedd5;
-  --brand-200: #fed7aa;
-  --brand-300: #fdba74;
-  --brand-400: #fb923c;
-  --brand-500: #ff8700;
-  --brand-600: #ea6c00;
-  --brand-700: #c25000;
-  --brand-ink: #1a0a00;
+      :root {
+        /* Brand single hue - foxglow orange */
+        --brand: #ff8700;
+        --brand-50: #fff7ed;
+        --brand-100: #ffedd5;
+        --brand-200: #fed7aa;
+        --brand-300: #fdba74;
+        --brand-400: #fb923c;
+        --brand-500: #ff8700;
+        --brand-600: #ea6c00;
+        --brand-700: #c25000;
+        --brand-ink: #1a0a00;
 
-  /* Surfaces - dark terminal */
-  --bg: #0d0d12;
-  --surface: #151520;
-  --surface-2: #1e1e2e;
-  --surface-3: #2a2a3e;
+        /* Surfaces - dark terminal */
+        --bg: #0d0d12;
+        --surface: #151520;
+        --surface-2: #1e1e2e;
+        --surface-3: #2a2a3e;
 
-  /* Text */
-  --ink: #e8e6e3;
-  --ink-2: #a8a39b;
-  --ink-3: #6b6560;
+        /* Text */
+        --ink: #e8e6e3;
+        --ink-2: #a8a39b;
+        --ink-3: #6b6560;
 
-  /* Borders & lines */
-  --line: #2a2a3a;
+        /* Borders & lines */
+        --line: #2a2a3a;
 
-  /* Semantic state colors */
-  --state-success: #5fd75f;
-  --state-warning: #ffaf00;
-  --state-error: #d75f5f;
-  --state-info: #87afd7;
+        /* Semantic state colors */
+        --state-success: #5fd75f;
+        --state-warning: #ffaf00;
+        --state-error: #d75f5f;
+        --state-info: #87afd7;
 
-  /* Radius */
-  --r-xs: 2px;
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 12px;
+        /* Radius */
+        --r-xs: 2px;
+        --r-sm: 4px;
+        --r-md: 8px;
+        --r-lg: 12px;
 
-  /* Shadows */
-  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
-  --shadow-2: 0 8px 24px -8px rgba(0,0,0,.5);
+        /* Shadows */
+        --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
 
-  /* Semantic aliases for head contract */
-  --focuscode-background: var(--bg);
-  --focuscode-foreground: var(--ink);
-  --focuscode-card: var(--surface);
-  --focuscode-card-foreground: var(--ink);
-  --focuscode-popover: var(--surface-2);
-  --focuscode-popover-foreground: var(--ink);
-  --focuscode-primary: var(--brand);
-  --focuscode-primary-foreground: var(--brand-ink);
-  --focuscode-muted: var(--surface-2);
-  --focuscode-muted-foreground: var(--ink-3);
-  --focuscode-border: var(--line);
-  --focuscode-input: var(--surface-3);
-  --focuscode-ring: var(--brand);
-  --focuscode-radius-sm: var(--r-sm);
-  --focuscode-radius-md: var(--r-md);
-  --focuscode-radius-lg: var(--r-lg);
-}
+        /* Semantic aliases for head contract */
+        --focuscode-background: var(--bg);
+        --focuscode-foreground: var(--ink);
+        --focuscode-card: var(--surface);
+        --focuscode-card-foreground: var(--ink);
+        --focuscode-popover: var(--surface-2);
+        --focuscode-popover-foreground: var(--ink);
+        --focuscode-primary: var(--brand);
+        --focuscode-primary-foreground: var(--brand-ink);
+        --focuscode-muted: var(--surface-2);
+        --focuscode-muted-foreground: var(--ink-3);
+        --focuscode-border: var(--line);
+        --focuscode-input: var(--surface-3);
+        --focuscode-ring: var(--brand);
+        --focuscode-radius-sm: var(--r-sm);
+        --focuscode-radius-md: var(--r-md);
+        --focuscode-radius-lg: var(--r-lg);
+      }
 
-@theme inline {
-  --color-brand: var(--brand);
-  --color-brand-50: var(--brand-50);
-  --color-brand-100: var(--brand-100);
-  --color-brand-200: var(--brand-200);
-  --color-brand-300: var(--brand-300);
-  --color-brand-400: var(--brand-400);
-  --color-brand-500: var(--brand-500);
-  --color-brand-600: var(--brand-600);
-  --color-brand-700: var(--brand-700);
+      @theme inline {
+        --color-brand: var(--brand);
+        --color-brand-50: var(--brand-50);
+        --color-brand-100: var(--brand-100);
+        --color-brand-200: var(--brand-200);
+        --color-brand-300: var(--brand-300);
+        --color-brand-400: var(--brand-400);
+        --color-brand-500: var(--brand-500);
+        --color-brand-600: var(--brand-600);
+        --color-brand-700: var(--brand-700);
 
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-surface-3: var(--surface-3);
-  --color-ink: var(--ink);
-  --color-ink-2: var(--ink-2);
-  --color-ink-3: var(--ink-3);
-  --color-line: var(--line);
+        --color-bg: var(--bg);
+        --color-surface: var(--surface);
+        --color-surface-2: var(--surface-2);
+        --color-surface-3: var(--surface-3);
+        --color-ink: var(--ink);
+        --color-ink-2: var(--ink-2);
+        --color-ink-3: var(--ink-3);
+        --color-line: var(--line);
 
-  --color-state-success: var(--state-success);
-  --color-state-warning: var(--state-warning);
-  --color-state-error: var(--state-error);
-  --color-state-info: var(--state-info);
-}
+        --color-state-success: var(--state-success);
+        --color-state-warning: var(--state-warning);
+        --color-state-error: var(--state-error);
+        --color-state-info: var(--state-info);
+      }
 
-/* Terminal font stack */
-.font-mono {
-  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
-}
+      /* Terminal font stack */
+      .font-mono {
+        font-family:
+          "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+      }
 
-/* ASCII art uses mono */
-.mascot-art {
-  font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
-  font-size: 14px;
-  line-height: 1.3;
-  white-space: pre;
-  letter-spacing: 0;
-  tab-size: 4;
-}
+      /* ASCII art uses mono */
+      .mascot-art {
+        font-family:
+          "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+        font-size: 14px;
+        line-height: 1.3;
+        white-space: pre;
+        letter-spacing: 0;
+        tab-size: 4;
+      }
 
-/* Subtle glow for evolution stages */
-@keyframes tailGlow {
-  0%, 100% { text-shadow: 0 0 4px currentColor; }
-  50% { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
-}
+      /* Subtle glow for evolution stages */
+      @keyframes tailGlow {
+        0%,
+        100% {
+          text-shadow: 0 0 4px currentColor;
+        }
+        50% {
+          text-shadow:
+            0 0 12px currentColor,
+            0 0 24px currentColor;
+        }
+      }
 
-@keyframes blink {
-  0%, 90%, 100% { opacity: 1; }
-  95% { opacity: 0; }
-}
+      @keyframes blink {
+        0%,
+        90%,
+        100% {
+          opacity: 1;
+        }
+        95% {
+          opacity: 0;
+        }
+      }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+      }
 
-.glow-pulse {
-  animation: tailGlow 2s ease-in-out infinite;
-}
+      .glow-pulse {
+        animation: tailGlow 2s ease-in-out infinite;
+      }
 
-.float-gentle {
-  animation: float 3s ease-in-out infinite;
-}
+      .float-gentle {
+        animation: float 3s ease-in-out infinite;
+      }
 
-/* Scrollbar for terminal feel */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--surface-3);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--brand);
-}
-
+      /* Scrollbar for terminal feel */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--surface-3);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--brand);
+      }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
     <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
     <style type="text/tailwindcss">
-  @theme inline {
-    --color-brand: var(--brand);
-    --color-brand-50: var(--brand-50);
-    --color-brand-100: var(--brand-100);
-    --color-brand-200: var(--brand-200);
-    --color-brand-300: var(--brand-300);
-    --color-brand-400: var(--brand-400);
-    --color-brand-500: var(--brand-500);
-    --color-brand-600: var(--brand-600);
-    --color-brand-700: var(--brand-700);
-    --color-bg: var(--bg);
-    --color-surface: var(--surface);
-    --color-surface-2: var(--surface-2);
-    --color-surface-3: var(--surface-3);
-    --color-ink: var(--ink);
-    --color-ink-2: var(--ink-2);
-    --color-ink-3: var(--ink-3);
-    --color-line: var(--line);
-    --color-state-success: var(--state-success);
-    --color-state-warning: var(--state-warning);
-    --color-state-error: var(--state-error);
-    --color-state-info: var(--state-info);
-    --color-background: var(--focuscode-background);
-    --color-foreground: var(--focuscode-foreground);
-    --color-card: var(--focuscode-card);
-    --color-card-foreground: var(--focuscode-card-foreground);
-    --color-popover: var(--focuscode-popover);
-    --color-popover-foreground: var(--focuscode-popover-foreground);
-    --color-primary: var(--focuscode-primary);
-    --color-primary-foreground: var(--focuscode-primary-foreground);
-    --color-muted: var(--focuscode-muted);
-    --color-muted-foreground: var(--focuscode-muted-foreground);
-    --color-border: var(--focuscode-border);
-    --color-input: var(--focuscode-input);
-    --color-ring: var(--focuscode-ring);
-    --radius-sm: var(--focuscode-radius-sm);
-    --radius-md: var(--focuscode-radius-md);
-    --radius-lg: var(--focuscode-radius-lg);
-  }
-  @layer base {
-    body { background: var(--focuscode-background); color: var(--focuscode-foreground); }
-    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
-    th { @apply whitespace-nowrap; }
-  }
+      @theme inline {
+        --color-brand: var(--brand);
+        --color-brand-50: var(--brand-50);
+        --color-brand-100: var(--brand-100);
+        --color-brand-200: var(--brand-200);
+        --color-brand-300: var(--brand-300);
+        --color-brand-400: var(--brand-400);
+        --color-brand-500: var(--brand-500);
+        --color-brand-600: var(--brand-600);
+        --color-brand-700: var(--brand-700);
+        --color-bg: var(--bg);
+        --color-surface: var(--surface);
+        --color-surface-2: var(--surface-2);
+        --color-surface-3: var(--surface-3);
+        --color-ink: var(--ink);
+        --color-ink-2: var(--ink-2);
+        --color-ink-3: var(--ink-3);
+        --color-line: var(--line);
+        --color-state-success: var(--state-success);
+        --color-state-warning: var(--state-warning);
+        --color-state-error: var(--state-error);
+        --color-state-info: var(--state-info);
+        --color-background: var(--focuscode-background);
+        --color-foreground: var(--focuscode-foreground);
+        --color-card: var(--focuscode-card);
+        --color-card-foreground: var(--focuscode-card-foreground);
+        --color-popover: var(--focuscode-popover);
+        --color-popover-foreground: var(--focuscode-popover-foreground);
+        --color-primary: var(--focuscode-primary);
+        --color-primary-foreground: var(--focuscode-primary-foreground);
+        --color-muted: var(--focuscode-muted);
+        --color-muted-foreground: var(--focuscode-muted-foreground);
+        --color-border: var(--focuscode-border);
+        --color-input: var(--focuscode-input);
+        --color-ring: var(--focuscode-ring);
+        --radius-sm: var(--focuscode-radius-sm);
+        --radius-md: var(--focuscode-radius-md);
+        --radius-lg: var(--focuscode-radius-lg);
+      }
+      @layer base {
+        body {
+          background: var(--focuscode-background);
+          color: var(--focuscode-foreground);
+        }
+        td,
+        th {
+          @apply break-words;
+          word-break: break-all;
+          word-break: auto-phrase;
+        }
+        th {
+          @apply whitespace-nowrap;
+        }
+      }
     </style>
     <style id="semantic-token-fallback">
-      .bg-brand { background-color: var(--brand); }
-      .text-brand { color: var(--brand); }
-      .border-brand { border-color: var(--brand); }
-      .ring-brand { --tw-ring-color: var(--brand); }
-      .bg-brand-50 { background-color: var(--brand-50); }
-      .text-brand-50 { color: var(--brand-50); }
-      .border-brand-50 { border-color: var(--brand-50); }
-      .ring-brand-50 { --tw-ring-color: var(--brand-50); }
-      .bg-brand-100 { background-color: var(--brand-100); }
-      .text-brand-100 { color: var(--brand-100); }
-      .border-brand-100 { border-color: var(--brand-100); }
-      .ring-brand-100 { --tw-ring-color: var(--brand-100); }
-      .bg-brand-200 { background-color: var(--brand-200); }
-      .text-brand-200 { color: var(--brand-200); }
-      .border-brand-200 { border-color: var(--brand-200); }
-      .ring-brand-200 { --tw-ring-color: var(--brand-200); }
-      .bg-brand-300 { background-color: var(--brand-300); }
-      .text-brand-300 { color: var(--brand-300); }
-      .border-brand-300 { border-color: var(--brand-300); }
-      .ring-brand-300 { --tw-ring-color: var(--brand-300); }
-      .bg-brand-400 { background-color: var(--brand-400); }
-      .text-brand-400 { color: var(--brand-400); }
-      .border-brand-400 { border-color: var(--brand-400); }
-      .ring-brand-400 { --tw-ring-color: var(--brand-400); }
-      .bg-brand-500 { background-color: var(--brand-500); }
-      .text-brand-500 { color: var(--brand-500); }
-      .border-brand-500 { border-color: var(--brand-500); }
-      .ring-brand-500 { --tw-ring-color: var(--brand-500); }
-      .bg-brand-600 { background-color: var(--brand-600); }
-      .text-brand-600 { color: var(--brand-600); }
-      .border-brand-600 { border-color: var(--brand-600); }
-      .ring-brand-600 { --tw-ring-color: var(--brand-600); }
-      .bg-brand-700 { background-color: var(--brand-700); }
-      .text-brand-700 { color: var(--brand-700); }
-      .border-brand-700 { border-color: var(--brand-700); }
-      .ring-brand-700 { --tw-ring-color: var(--brand-700); }
-      .bg-bg { background-color: var(--bg); }
-      .text-bg { color: var(--bg); }
-      .border-bg { border-color: var(--bg); }
-      .ring-bg { --tw-ring-color: var(--bg); }
-      .bg-surface { background-color: var(--surface); }
-      .text-surface { color: var(--surface); }
-      .border-surface { border-color: var(--surface); }
-      .ring-surface { --tw-ring-color: var(--surface); }
-      .bg-surface-2 { background-color: var(--surface-2); }
-      .text-surface-2 { color: var(--surface-2); }
-      .border-surface-2 { border-color: var(--surface-2); }
-      .ring-surface-2 { --tw-ring-color: var(--surface-2); }
-      .bg-surface-3 { background-color: var(--surface-3); }
-      .text-surface-3 { color: var(--surface-3); }
-      .border-surface-3 { border-color: var(--surface-3); }
-      .ring-surface-3 { --tw-ring-color: var(--surface-3); }
-      .bg-ink { background-color: var(--ink); }
-      .text-ink { color: var(--ink); }
-      .border-ink { border-color: var(--ink); }
-      .ring-ink { --tw-ring-color: var(--ink); }
-      .bg-ink-2 { background-color: var(--ink-2); }
-      .text-ink-2 { color: var(--ink-2); }
-      .border-ink-2 { border-color: var(--ink-2); }
-      .ring-ink-2 { --tw-ring-color: var(--ink-2); }
-      .bg-ink-3 { background-color: var(--ink-3); }
-      .text-ink-3 { color: var(--ink-3); }
-      .border-ink-3 { border-color: var(--ink-3); }
-      .ring-ink-3 { --tw-ring-color: var(--ink-3); }
-      .bg-line { background-color: var(--line); }
-      .text-line { color: var(--line); }
-      .border-line { border-color: var(--line); }
-      .ring-line { --tw-ring-color: var(--line); }
-      .bg-state-success { background-color: var(--state-success); }
-      .text-state-success { color: var(--state-success); }
-      .border-state-success { border-color: var(--state-success); }
-      .ring-state-success { --tw-ring-color: var(--state-success); }
-      .bg-state-warning { background-color: var(--state-warning); }
-      .text-state-warning { color: var(--state-warning); }
-      .border-state-warning { border-color: var(--state-warning); }
-      .ring-state-warning { --tw-ring-color: var(--state-warning); }
-      .bg-state-error { background-color: var(--state-error); }
-      .text-state-error { color: var(--state-error); }
-      .border-state-error { border-color: var(--state-error); }
-      .ring-state-error { --tw-ring-color: var(--state-error); }
-      .bg-state-info { background-color: var(--state-info); }
-      .text-state-info { color: var(--state-info); }
-      .border-state-info { border-color: var(--state-info); }
-      .ring-state-info { --tw-ring-color: var(--state-info); }
-      .bg-background { background-color: var(--focuscode-background); }
-      .text-background { color: var(--focuscode-background); }
-      .border-background { border-color: var(--focuscode-background); }
-      .ring-background { --tw-ring-color: var(--focuscode-background); }
-      .bg-foreground { background-color: var(--focuscode-foreground); }
-      .text-foreground { color: var(--focuscode-foreground); }
-      .border-foreground { border-color: var(--focuscode-foreground); }
-      .ring-foreground { --tw-ring-color: var(--focuscode-foreground); }
-      .bg-card { background-color: var(--focuscode-card); }
-      .text-card { color: var(--focuscode-card); }
-      .border-card { border-color: var(--focuscode-card); }
-      .ring-card { --tw-ring-color: var(--focuscode-card); }
-      .bg-card-foreground { background-color: var(--focuscode-card-foreground); }
-      .text-card-foreground { color: var(--focuscode-card-foreground); }
-      .border-card-foreground { border-color: var(--focuscode-card-foreground); }
-      .ring-card-foreground { --tw-ring-color: var(--focuscode-card-foreground); }
-      .bg-popover { background-color: var(--focuscode-popover); }
-      .text-popover { color: var(--focuscode-popover); }
-      .border-popover { border-color: var(--focuscode-popover); }
-      .ring-popover { --tw-ring-color: var(--focuscode-popover); }
-      .bg-popover-foreground { background-color: var(--focuscode-popover-foreground); }
-      .text-popover-foreground { color: var(--focuscode-popover-foreground); }
-      .border-popover-foreground { border-color: var(--focuscode-popover-foreground); }
-      .ring-popover-foreground { --tw-ring-color: var(--focuscode-popover-foreground); }
-      .bg-primary { background-color: var(--focuscode-primary); }
-      .text-primary { color: var(--focuscode-primary); }
-      .border-primary { border-color: var(--focuscode-primary); }
-      .ring-primary { --tw-ring-color: var(--focuscode-primary); }
-      .bg-primary-foreground { background-color: var(--focuscode-primary-foreground); }
-      .text-primary-foreground { color: var(--focuscode-primary-foreground); }
-      .border-primary-foreground { border-color: var(--focuscode-primary-foreground); }
-      .ring-primary-foreground { --tw-ring-color: var(--focuscode-primary-foreground); }
-      .bg-muted { background-color: var(--focuscode-muted); }
-      .text-muted { color: var(--focuscode-muted); }
-      .border-muted { border-color: var(--focuscode-muted); }
-      .ring-muted { --tw-ring-color: var(--focuscode-muted); }
-      .bg-muted-foreground { background-color: var(--focuscode-muted-foreground); }
-      .text-muted-foreground { color: var(--focuscode-muted-foreground); }
-      .border-muted-foreground { border-color: var(--focuscode-muted-foreground); }
-      .ring-muted-foreground { --tw-ring-color: var(--focuscode-muted-foreground); }
-      .bg-border { background-color: var(--focuscode-border); }
-      .text-border { color: var(--focuscode-border); }
-      .border-border { border-color: var(--focuscode-border); }
-      .ring-border { --tw-ring-color: var(--focuscode-border); }
-      .bg-input { background-color: var(--focuscode-input); }
-      .text-input { color: var(--focuscode-input); }
-      .border-input { border-color: var(--focuscode-input); }
-      .ring-input { --tw-ring-color: var(--focuscode-input); }
-      .bg-ring { background-color: var(--focuscode-ring); }
-      .text-ring { color: var(--focuscode-ring); }
-      .border-ring { border-color: var(--focuscode-ring); }
-      .ring-ring { --tw-ring-color: var(--focuscode-ring); }
+      .bg-brand {
+        background-color: var(--brand);
+      }
+      .text-brand {
+        color: var(--brand);
+      }
+      .border-brand {
+        border-color: var(--brand);
+      }
+      .ring-brand {
+        --tw-ring-color: var(--brand);
+      }
+      .bg-brand-50 {
+        background-color: var(--brand-50);
+      }
+      .text-brand-50 {
+        color: var(--brand-50);
+      }
+      .border-brand-50 {
+        border-color: var(--brand-50);
+      }
+      .ring-brand-50 {
+        --tw-ring-color: var(--brand-50);
+      }
+      .bg-brand-100 {
+        background-color: var(--brand-100);
+      }
+      .text-brand-100 {
+        color: var(--brand-100);
+      }
+      .border-brand-100 {
+        border-color: var(--brand-100);
+      }
+      .ring-brand-100 {
+        --tw-ring-color: var(--brand-100);
+      }
+      .bg-brand-200 {
+        background-color: var(--brand-200);
+      }
+      .text-brand-200 {
+        color: var(--brand-200);
+      }
+      .border-brand-200 {
+        border-color: var(--brand-200);
+      }
+      .ring-brand-200 {
+        --tw-ring-color: var(--brand-200);
+      }
+      .bg-brand-300 {
+        background-color: var(--brand-300);
+      }
+      .text-brand-300 {
+        color: var(--brand-300);
+      }
+      .border-brand-300 {
+        border-color: var(--brand-300);
+      }
+      .ring-brand-300 {
+        --tw-ring-color: var(--brand-300);
+      }
+      .bg-brand-400 {
+        background-color: var(--brand-400);
+      }
+      .text-brand-400 {
+        color: var(--brand-400);
+      }
+      .border-brand-400 {
+        border-color: var(--brand-400);
+      }
+      .ring-brand-400 {
+        --tw-ring-color: var(--brand-400);
+      }
+      .bg-brand-500 {
+        background-color: var(--brand-500);
+      }
+      .text-brand-500 {
+        color: var(--brand-500);
+      }
+      .border-brand-500 {
+        border-color: var(--brand-500);
+      }
+      .ring-brand-500 {
+        --tw-ring-color: var(--brand-500);
+      }
+      .bg-brand-600 {
+        background-color: var(--brand-600);
+      }
+      .text-brand-600 {
+        color: var(--brand-600);
+      }
+      .border-brand-600 {
+        border-color: var(--brand-600);
+      }
+      .ring-brand-600 {
+        --tw-ring-color: var(--brand-600);
+      }
+      .bg-brand-700 {
+        background-color: var(--brand-700);
+      }
+      .text-brand-700 {
+        color: var(--brand-700);
+      }
+      .border-brand-700 {
+        border-color: var(--brand-700);
+      }
+      .ring-brand-700 {
+        --tw-ring-color: var(--brand-700);
+      }
+      .bg-bg {
+        background-color: var(--bg);
+      }
+      .text-bg {
+        color: var(--bg);
+      }
+      .border-bg {
+        border-color: var(--bg);
+      }
+      .ring-bg {
+        --tw-ring-color: var(--bg);
+      }
+      .bg-surface {
+        background-color: var(--surface);
+      }
+      .text-surface {
+        color: var(--surface);
+      }
+      .border-surface {
+        border-color: var(--surface);
+      }
+      .ring-surface {
+        --tw-ring-color: var(--surface);
+      }
+      .bg-surface-2 {
+        background-color: var(--surface-2);
+      }
+      .text-surface-2 {
+        color: var(--surface-2);
+      }
+      .border-surface-2 {
+        border-color: var(--surface-2);
+      }
+      .ring-surface-2 {
+        --tw-ring-color: var(--surface-2);
+      }
+      .bg-surface-3 {
+        background-color: var(--surface-3);
+      }
+      .text-surface-3 {
+        color: var(--surface-3);
+      }
+      .border-surface-3 {
+        border-color: var(--surface-3);
+      }
+      .ring-surface-3 {
+        --tw-ring-color: var(--surface-3);
+      }
+      .bg-ink {
+        background-color: var(--ink);
+      }
+      .text-ink {
+        color: var(--ink);
+      }
+      .border-ink {
+        border-color: var(--ink);
+      }
+      .ring-ink {
+        --tw-ring-color: var(--ink);
+      }
+      .bg-ink-2 {
+        background-color: var(--ink-2);
+      }
+      .text-ink-2 {
+        color: var(--ink-2);
+      }
+      .border-ink-2 {
+        border-color: var(--ink-2);
+      }
+      .ring-ink-2 {
+        --tw-ring-color: var(--ink-2);
+      }
+      .bg-ink-3 {
+        background-color: var(--ink-3);
+      }
+      .text-ink-3 {
+        color: var(--ink-3);
+      }
+      .border-ink-3 {
+        border-color: var(--ink-3);
+      }
+      .ring-ink-3 {
+        --tw-ring-color: var(--ink-3);
+      }
+      .bg-line {
+        background-color: var(--line);
+      }
+      .text-line {
+        color: var(--line);
+      }
+      .border-line {
+        border-color: var(--line);
+      }
+      .ring-line {
+        --tw-ring-color: var(--line);
+      }
+      .bg-state-success {
+        background-color: var(--state-success);
+      }
+      .text-state-success {
+        color: var(--state-success);
+      }
+      .border-state-success {
+        border-color: var(--state-success);
+      }
+      .ring-state-success {
+        --tw-ring-color: var(--state-success);
+      }
+      .bg-state-warning {
+        background-color: var(--state-warning);
+      }
+      .text-state-warning {
+        color: var(--state-warning);
+      }
+      .border-state-warning {
+        border-color: var(--state-warning);
+      }
+      .ring-state-warning {
+        --tw-ring-color: var(--state-warning);
+      }
+      .bg-state-error {
+        background-color: var(--state-error);
+      }
+      .text-state-error {
+        color: var(--state-error);
+      }
+      .border-state-error {
+        border-color: var(--state-error);
+      }
+      .ring-state-error {
+        --tw-ring-color: var(--state-error);
+      }
+      .bg-state-info {
+        background-color: var(--state-info);
+      }
+      .text-state-info {
+        color: var(--state-info);
+      }
+      .border-state-info {
+        border-color: var(--state-info);
+      }
+      .ring-state-info {
+        --tw-ring-color: var(--state-info);
+      }
+      .bg-background {
+        background-color: var(--focuscode-background);
+      }
+      .text-background {
+        color: var(--focuscode-background);
+      }
+      .border-background {
+        border-color: var(--focuscode-background);
+      }
+      .ring-background {
+        --tw-ring-color: var(--focuscode-background);
+      }
+      .bg-foreground {
+        background-color: var(--focuscode-foreground);
+      }
+      .text-foreground {
+        color: var(--focuscode-foreground);
+      }
+      .border-foreground {
+        border-color: var(--focuscode-foreground);
+      }
+      .ring-foreground {
+        --tw-ring-color: var(--focuscode-foreground);
+      }
+      .bg-card {
+        background-color: var(--focuscode-card);
+      }
+      .text-card {
+        color: var(--focuscode-card);
+      }
+      .border-card {
+        border-color: var(--focuscode-card);
+      }
+      .ring-card {
+        --tw-ring-color: var(--focuscode-card);
+      }
+      .bg-card-foreground {
+        background-color: var(--focuscode-card-foreground);
+      }
+      .text-card-foreground {
+        color: var(--focuscode-card-foreground);
+      }
+      .border-card-foreground {
+        border-color: var(--focuscode-card-foreground);
+      }
+      .ring-card-foreground {
+        --tw-ring-color: var(--focuscode-card-foreground);
+      }
+      .bg-popover {
+        background-color: var(--focuscode-popover);
+      }
+      .text-popover {
+        color: var(--focuscode-popover);
+      }
+      .border-popover {
+        border-color: var(--focuscode-popover);
+      }
+      .ring-popover {
+        --tw-ring-color: var(--focuscode-popover);
+      }
+      .bg-popover-foreground {
+        background-color: var(--focuscode-popover-foreground);
+      }
+      .text-popover-foreground {
+        color: var(--focuscode-popover-foreground);
+      }
+      .border-popover-foreground {
+        border-color: var(--focuscode-popover-foreground);
+      }
+      .ring-popover-foreground {
+        --tw-ring-color: var(--focuscode-popover-foreground);
+      }
+      .bg-primary {
+        background-color: var(--focuscode-primary);
+      }
+      .text-primary {
+        color: var(--focuscode-primary);
+      }
+      .border-primary {
+        border-color: var(--focuscode-primary);
+      }
+      .ring-primary {
+        --tw-ring-color: var(--focuscode-primary);
+      }
+      .bg-primary-foreground {
+        background-color: var(--focuscode-primary-foreground);
+      }
+      .text-primary-foreground {
+        color: var(--focuscode-primary-foreground);
+      }
+      .border-primary-foreground {
+        border-color: var(--focuscode-primary-foreground);
+      }
+      .ring-primary-foreground {
+        --tw-ring-color: var(--focuscode-primary-foreground);
+      }
+      .bg-muted {
+        background-color: var(--focuscode-muted);
+      }
+      .text-muted {
+        color: var(--focuscode-muted);
+      }
+      .border-muted {
+        border-color: var(--focuscode-muted);
+      }
+      .ring-muted {
+        --tw-ring-color: var(--focuscode-muted);
+      }
+      .bg-muted-foreground {
+        background-color: var(--focuscode-muted-foreground);
+      }
+      .text-muted-foreground {
+        color: var(--focuscode-muted-foreground);
+      }
+      .border-muted-foreground {
+        border-color: var(--focuscode-muted-foreground);
+      }
+      .ring-muted-foreground {
+        --tw-ring-color: var(--focuscode-muted-foreground);
+      }
+      .bg-border {
+        background-color: var(--focuscode-border);
+      }
+      .text-border {
+        color: var(--focuscode-border);
+      }
+      .border-border {
+        border-color: var(--focuscode-border);
+      }
+      .ring-border {
+        --tw-ring-color: var(--focuscode-border);
+      }
+      .bg-input {
+        background-color: var(--focuscode-input);
+      }
+      .text-input {
+        color: var(--focuscode-input);
+      }
+      .border-input {
+        border-color: var(--focuscode-input);
+      }
+      .ring-input {
+        --tw-ring-color: var(--focuscode-input);
+      }
+      .bg-ring {
+        background-color: var(--focuscode-ring);
+      }
+      .text-ring {
+        color: var(--focuscode-ring);
+      }
+      .border-ring {
+        border-color: var(--focuscode-ring);
+      }
+      .ring-ring {
+        --tw-ring-color: var(--focuscode-ring);
+      }
     </style>
     <style>
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
       [data-icon] {
         display: inline-flex;
         align-items: center;
@@ -353,713 +659,1591 @@
         background-color: currentColor;
       }
     </style>
-</head>
-<body class="min-h-screen font-sans antialiased">
-    <main class="min-h-screen" style="background: var(--bg);">
-      <style>
-        /* CRT scanline overlay - very subtle */
-        body::before {
-          content: "";
-          position: fixed;
-          inset: 0;
-          background: repeating-linear-gradient(
-            0deg,
-            rgba(0,0,0,0) 0px,
-            rgba(0,0,0,0) 2px,
-            rgba(0,0,0,0.03) 3px,
-            rgba(0,0,0,0) 4px
-          );
-          pointer-events: none;
-          z-index: 100;
+    <style id="watercolor-mascot-styles">
+      /* Watercolor mascot page styles */
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+          "Microsoft YaHei", sans-serif;
+      }
+
+      /* Terminal chrome */
+      .term-window {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        overflow: hidden;
+      }
+      .term-titlebar {
+        background: var(--surface-2);
+        border-bottom: 1px solid var(--line);
+        padding: 8px 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--ink-3);
+      }
+      .term-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .term-body {
+        padding: 24px;
+      }
+
+      /* Cards */
+      .mascot-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        padding: 20px;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        position: relative;
+        overflow: hidden;
+      }
+      .mascot-card:hover {
+        border-color: var(--brand);
+        box-shadow: 0 0 20px rgba(255, 135, 0, 0.08);
+      }
+      .evo-card {
+        text-align: center;
+      }
+      .comp-card {
+        text-align: center;
+      }
+
+      /* Art containers */
+      .art-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 12px auto;
+        position: relative;
+      }
+      .art-container.evo {
+        min-height: 160px;
+      }
+      .art-container.comp {
+        min-height: 130px;
+      }
+      .evo-svg {
+        display: block;
+        max-width: 160px;
+        max-height: 140px;
+        width: 100%;
+        height: auto;
+      }
+      .companion-svg {
+        display: block;
+        max-width: 120px;
+        max-height: 110px;
+        width: 100%;
+        height: auto;
+      }
+
+      /* Level badges */
+      .lv-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+        letter-spacing: 0.5px;
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      /* Fox glow and float animations */
+      @keyframes foxGlowPulse {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.3));
         }
-        /* Terminal window chrome */
-        .term-chrome {
-          background: var(--surface);
-          border: 1px solid var(--line);
-          border-radius: var(--r-md);
-          overflow: hidden;
+        50% {
+          filter: drop-shadow(0 0 14px rgba(255, 215, 0, 0.6))
+            drop-shadow(0 0 24px rgba(255, 175, 0, 0.3));
         }
-        .term-titlebar {
-          background: var(--surface-2);
-          border-bottom: 1px solid var(--line);
-          padding: 10px 16px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-family: "JetBrains Mono", "Fira Code", monospace;
-          font-size: 13px;
+      }
+      .fox-glow {
+        animation: foxGlowPulse 3s ease-in-out infinite;
+      }
+      @keyframes floaty {
+        0%,
+        100% {
+          transform: translateY(0);
         }
-        .term-dot {
-          width: 12px; height: 12px; border-radius: 50%;
+        50% {
+          transform: translateY(-4px);
         }
-        .term-body {
-          padding: 24px;
-        }
-        /* Evolution card top border thickness/color progression */
-        .evo-card {
-          background: var(--surface);
-          border: 1px solid var(--line);
-          border-radius: var(--r-md);
-          padding: 20px;
-          position: relative;
-          overflow: hidden;
-          transition: border-color 0.2s, transform 0.2s;
-        }
-        .evo-card:hover {
-          border-color: var(--brand);
-          transform: translateY(-2px);
-        }
-        .evo-card::before {
-          content: "";
-          position: absolute;
-          top: 0; left: 0; right: 0;
-          height: var(--bar-h, 2px);
-          background: var(--bar-c, var(--brand));
-        }
-        .evo-lv1 { --bar-h: 2px; --bar-c: var(--brand); }
-        .evo-lv2 { --bar-h: 2px; --bar-c: var(--brand-400); }
-        .evo-lv3 { --bar-h: 3px; --bar-c: var(--brand-400); }
-        .evo-lv4 { --bar-h: 3px; --bar-c: var(--brand-500); }
-        .evo-lv5 { --bar-h: 3px; --bar-c: var(--state-warning); }
-        .evo-lv6 { --bar-h: 4px; --bar-c: var(--state-warning); }
-        .evo-lv7 { --bar-h: 4px; --bar-c: #ffd700; }
-        .evo-lv8 { --bar-h: 4px; --bar-c: #ffd700; }
-        .evo-lv9 { --bar-h: 5px; --bar-c: #ffd700; }
-        /* Level badge */
-        .lv-badge {
-          display: inline-block;
-          font-family: "JetBrains Mono", monospace;
-          font-size: 11px;
-          font-weight: 700;
-          padding: 2px 8px;
-          border-radius: var(--r-sm);
-          letter-spacing: 0.5px;
-        }
-        /* Mascot card */
-        .mascot-card {
-          background: var(--surface);
-          border: 1px solid var(--line);
-          border-radius: var(--r-md);
-          padding: 24px;
-          transition: border-color 0.2s;
-        }
-        .mascot-card:hover {
-          border-color: var(--brand);
-        }
-        /* Mood pill */
-        .mood-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 10px;
-          background: var(--surface-2);
-          border: 1px solid var(--line);
-          border-radius: var(--r-sm);
-          font-family: "JetBrains Mono", monospace;
-          font-size: 11px;
-        }
-        .mood-pill .mood-art {
-          color: var(--brand);
-          font-size: 12px;
-        }
-        /* Code block */
-        .code-block {
-          background: var(--surface);
-          border: 1px solid var(--line);
-          border-radius: var(--r-md);
-          font-family: "JetBrains Mono", "Fira Code", monospace;
-          font-size: 13px;
-          line-height: 1.6;
-          padding: 20px 24px;
-          color: var(--ink-2);
-          overflow-x: auto;
-        }
-        .code-block .prompt { color: var(--state-success); }
-        .code-block .comment { color: var(--ink-3); }
-        .code-block .key { color: var(--brand); }
-        .code-block .str { color: var(--state-warning); }
-        .code-block .num { color: var(--state-info); }
-        /* Section heading with terminal prompt */
-        .section-heading {
-          font-family: "JetBrains Mono", "Fira Code", monospace;
-          font-size: 14px;
-          color: var(--brand);
-          font-weight: 600;
-          margin-bottom: 24px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .section-heading .prompt-char {
-          color: var(--state-success);
-        }
-        /* Info bar */
-        .info-bar {
-          font-family: "JetBrains Mono", monospace;
-          font-size: 12px;
-          color: var(--ink-3);
-          background: var(--bg);
-          border: 1px solid var(--line);
-          border-radius: var(--r-sm);
-          padding: 8px 14px;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px 16px;
-        }
-        .info-bar .sep { color: var(--line); }
-        .info-bar .val { color: var(--brand); }
-        /* Species tag */
-        .species-tag {
-          font-family: "JetBrains Mono", monospace;
-          font-size: 11px;
-          color: var(--ink-3);
-          text-transform: uppercase;
-          letter-spacing: 1px;
-        }
-        /* Catchphrase */
-        .catchphrase {
-          font-size: 13px;
-          color: var(--ink-2);
-          font-style: italic;
-          margin-top: 8px;
-        }
-        /* Mascot name */
-        .mascot-name {
-          font-size: 18px;
-          font-weight: 700;
-          color: var(--ink);
-        }
-        /* Flavor text */
-        .flavor-text {
-          font-size: 12px;
-          color: var(--ink-3);
-          margin-top: 12px;
-          line-height: 1.5;
-        }
-        /* Stage name */
-        .stage-name {
-          font-size: 15px;
-          font-weight: 600;
-          color: var(--ink);
-          margin-top: 8px;
-        }
-        /* Mood table */
-        .mood-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-family: "JetBrains Mono", monospace;
-          font-size: 13px;
-        }
-        .mood-table th {
-          text-align: left;
-          padding: 10px 14px;
-          background: var(--surface-2);
-          color: var(--ink-3);
-          font-weight: 600;
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          border-bottom: 1px solid var(--line);
-        }
-        .mood-table td {
-          padding: 12px 14px;
-          border-bottom: 1px solid var(--line);
-          color: var(--ink-2);
-        }
-        .mood-table tr:last-child td { border-bottom: none; }
-        .mood-table tr:hover td { background: var(--surface-2); }
-        .mood-table .mood-icon-cell {
-          color: var(--brand);
-          font-size: 14px;
-          white-space: nowrap;
-          width: 120px;
-        }
-        .mood-table .mood-name-cell {
-          color: var(--ink);
-          font-weight: 600;
-          width: 120px;
-        }
-        /* Container */
-        .page-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 48px 24px 80px;
-        }
-        @media (max-width: 768px) {
-          .page-container { padding: 24px 16px 48px; }
-          .term-body { padding: 16px; }
-        }
-        /* Grid layouts */
+      }
+      .fox-float {
+        animation: floaty 4s ease-in-out infinite;
+      }
+
+      /* Mood pills */
+      .mood-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid;
+        font-family: "JetBrains Mono", monospace;
+      }
+      .mood-row {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      /* Catchphrase */
+      .catchphrase {
+        font-size: 12px;
+        color: var(--ink-2);
+        font-style: italic;
+        margin-top: 8px;
+      }
+
+      /* Section headers */
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .section-header .term-prompt {
+        color: var(--brand);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+      }
+      .section-header h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      /* Code block */
+      .code-block {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: var(--r-sm);
+        padding: 16px 20px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--ink-2);
+        overflow-x: auto;
+      }
+      .code-block .kw {
+        color: var(--brand);
+      }
+      .code-block .str {
+        color: var(--state-success);
+      }
+      .code-block .cmt {
+        color: var(--ink-3);
+      }
+      .code-block .num {
+        color: var(--state-info);
+      }
+
+      /* Species tag */
+      .species-tag {
+        font-size: 11px;
+        color: var(--ink-3);
+        font-family: "JetBrains Mono", monospace;
+        margin-bottom: 4px;
+      }
+
+      /* Hero terminal */
+      .hero-term {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        overflow: hidden;
+        margin-bottom: 40px;
+      }
+      .hero-titlebar {
+        background: var(--surface-2);
+        border-bottom: 1px solid var(--line);
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .hero-body {
+        padding: 32px 28px;
+      }
+      .hero-prompt {
+        color: var(--brand);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      .hero-h1 {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--ink);
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+      }
+      .hero-sub {
+        font-size: 14px;
+        color: var(--ink-2);
+        font-family: "JetBrains Mono", monospace;
+      }
+      .hero-cursor {
+        display: inline-block;
+        width: 8px;
+        height: 16px;
+        background: var(--brand);
+        animation: blink 1s step-end infinite;
+        vertical-align: middle;
+        margin-left: 2px;
+      }
+
+      /* Grids */
+      .evo-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .comp-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+      }
+
+      /* Mood reference table */
+      .mood-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      .mood-table th,
+      .mood-table td {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        text-align: left;
+      }
+      .mood-table th {
+        background: var(--surface-2);
+        color: var(--ink-2);
+        font-weight: 600;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .mood-table td {
+        color: var(--ink);
+        vertical-align: middle;
+      }
+      .mood-table tr:hover td {
+        background: var(--surface-2);
+      }
+
+      /* Flavor text */
+      .flavor {
+        font-size: 12px;
+        color: var(--ink-2);
+        margin-top: 8px;
+        line-height: 1.5;
+      }
+
+      /* Stage name */
+      .stage-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+        margin-top: 8px;
+      }
+
+      @media (max-width: 768px) {
         .evo-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
+          grid-template-columns: 1fr;
         }
-        .companions-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 20px;
+        .comp-grid {
+          grid-template-columns: repeat(2, 1fr);
         }
-        @media (max-width: 768px) {
-          .evo-grid { grid-template-columns: 1fr; }
-          .companions-grid { grid-template-columns: 1fr; }
+        .hero-h1 {
+          font-size: 22px;
         }
-        /* Section spacing */
-        .section { margin-bottom: 80px; }
-        @media (max-width: 768px) {
-          .section { margin-bottom: 48px; }
-        }
-        /* Mascot art container */
-        .art-container {
-          background: var(--bg);
-          border: 1px solid var(--line);
-          border-radius: var(--r-sm);
-          padding: 16px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          min-height: 100px;
-          margin: 12px 0;
-        }
-        .art-container-companion {
-          min-height: 80px;
-          padding: 12px;
-        }
-      </style>
+      }
+    </style>
+  </head>
+  <body class="min-h-screen font-sans antialiased">
+    <main class="max-w-5xl mx-auto px-4 py-10">
+      <!-- Hidden SVG: watercolor filters + shared defs -->
+      <svg width="0" height="0" style="position: absolute">
+        <defs>
+          <filter id="wc-soft" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="blur" />
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.04"
+              numOctaves="3"
+              result="noise"
+              seed="2"
+            />
+            <feDisplacementMap
+              in="blur"
+              in2="noise"
+              scale="2"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+          <filter id="wc-wash" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.03"
+              numOctaves="4"
+              result="noise"
+              seed="5"
+            />
+            <feDisplacementMap
+              in="blur"
+              in2="noise"
+              scale="4"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+          <filter id="wc-paper" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="2" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" />
+            <feComposite
+              in="SourceGraphic"
+              in2="noise"
+              operator="arithmetic"
+              k1="0"
+              k2="0.9"
+              k3="0.1"
+              k4="0"
+            />
+          </filter>
+          <filter id="wc-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
 
-      <div class="page-container">
+          <!-- Fox body radial gradients by level -->
+          <radialGradient id="fox-orange" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#ffb366" />
+            <stop offset="60%" stop-color="#ff8700" />
+            <stop offset="100%" stop-color="#c25000" />
+          </radialGradient>
+          <radialGradient id="fox-bright" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#ffc988" />
+            <stop offset="50%" stop-color="#ff9220" />
+            <stop offset="100%" stop-color="#d06800" />
+          </radialGradient>
+          <radialGradient id="fox-gold" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#ffe4a0" />
+            <stop offset="50%" stop-color="#ffb040" />
+            <stop offset="100%" stop-color="#c87800" />
+          </radialGradient>
+          <radialGradient id="fox-celestial" cx="50%" cy="40%" r="65%">
+            <stop offset="0%" stop-color="#fff5e0" />
+            <stop offset="40%" stop-color="#ffd080" />
+            <stop offset="80%" stop-color="#ffa030" />
+            <stop offset="100%" stop-color="#c06800" />
+          </radialGradient>
+          <radialGradient id="fox-divine" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="30%" stop-color="#fff0c8" />
+            <stop offset="60%" stop-color="#ffc860" />
+            <stop offset="100%" stop-color="#e09020" />
+          </radialGradient>
+          <radialGradient id="fox-cream" cx="50%" cy="60%" r="55%">
+            <stop offset="0%" stop-color="#fffaf0" />
+            <stop offset="100%" stop-color="#ffe8c8" />
+          </radialGradient>
+          <radialGradient id="fox-tail-tip" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#fff5e0" />
+            <stop offset="100%" stop-color="#ffc080" />
+          </radialGradient>
+          <radialGradient id="fox-gold-tip" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="50%" stop-color="#ffe880" />
+            <stop offset="100%" stop-color="#ffb040" />
+          </radialGradient>
+        </defs>
+      </svg>
 
-        <!-- ===== HERO SECTION ===== -->
-        <section class="section" id="hero">
-          <div class="term-chrome" id="hero-terminal">
-            <div class="term-titlebar">
-              <span class="term-dot" style="background: #ff5f57;"></span>
-              <span class="term-dot" style="background: #ffbd2e;"></span>
-              <span class="term-dot" style="background: #28c840;"></span>
-              <span class="text-ink-3 ml-2">focuscode --companions</span>
-              <span class="ml-auto text-ink-3" style="font-size:11px;">foxglow-theme</span>
-            </div>
-            <div class="term-body" style="text-align: center; padding: 48px 32px;">
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-3); margin-bottom: 16px;">
-                <span style="color: var(--state-success);">$</span> FocusCode <span style="color: var(--state-info);">·</span> Companion Design v2
-              </div>
-              <h1 style="font-size: clamp(36px, 6vw, 56px); font-weight: 800; color: var(--brand); margin: 0 0 12px; letter-spacing: -1px; line-height: 1.1;">
-                伙伴图鉴
-              </h1>
-              <p style="font-size: 16px; color: var(--ink-2); margin: 0 0 24px; font-family: 'JetBrains Mono', monospace;">
-                终端编程伙伴 · 九尾进化系统 · 优化设计稿
-              </p>
-              <div class="info-bar" style="justify-content: center; display: inline-flex;">
-                <span><span class="sep">v</span><span class="val">0.4.0</span></span>
-                <span class="sep">|</span>
-                <span>foxglow theme</span>
-                <span class="sep">|</span>
-                <span><span class="val">7</span> companions</span>
-                <span class="sep">|</span>
-                <span><span class="val">9</span> evolution stages</span>
-              </div>
-            </div>
+      <!-- ============ HERO ============ -->
+      <div class="hero-term">
+        <div class="hero-titlebar">
+          <span class="term-dot" style="background: #ff5f57"></span>
+          <span class="term-dot" style="background: #febc2e"></span>
+          <span class="term-dot" style="background: #28c840"></span>
+          <span style="margin-left: 10px; color: var(--ink-3)">focuscode@mascots ~ %</span>
+        </div>
+        <div class="hero-body">
+          <div class="hero-prompt">$ focuscode --mascots --watercolor</div>
+          <h1 class="hero-h1">🦊 FocusCode 伙伴图鉴</h1>
+          <div class="hero-sub">
+            终端编程伙伴 · 九尾进化系统 · 水彩风设计稿 v2<span class="hero-cursor"></span>
           </div>
-        </section>
+        </div>
+      </div>
 
-        <!-- ===== FOXY EVOLUTION SECTION ===== -->
-        <section class="section" id="foxy-evolution">
-          <div class="section-heading">
-            <span class="prompt-char">##</span>
-            <span>小福 · 九尾进化</span>
-            <span style="color: var(--ink-3); margin-left: auto; font-size: 12px;">// foxy.evolution()</span>
+      <!-- ============ FOXY EVOLUTION ============ -->
+      <div class="mb-12">
+        <div class="section-header">
+          <span class="term-prompt">$</span>
+          <h2>小福 · 九尾进化</h2>
+          <span style="color: var(--ink-3); font-size: 12px; font-family: monospace"
+            >// foxy.evolution(9 stages)</span
+          >
+        </div>
+        <div class="evo-grid" id="evo-grid"></div>
+      </div>
+
+      <!-- ============ ALL COMPANIONS ============ -->
+      <div class="mb-12">
+        <div class="section-header">
+          <span class="term-prompt">$</span>
+          <h2>全伙伴图鉴</h2>
+          <span style="color: var(--ink-3); font-size: 12px; font-family: monospace"
+            >// companions.registry</span
+          >
+        </div>
+        <div class="comp-grid" id="comp-grid"></div>
+      </div>
+
+      <!-- ============ MOOD REFERENCE ============ -->
+      <div class="mb-12">
+        <div class="section-header">
+          <span class="term-prompt">$</span>
+          <h2>心情状态系统</h2>
+          <span style="color: var(--ink-3); font-size: 12px; font-family: monospace"
+            >// companion.moods</span
+          >
+        </div>
+        <div class="term-window">
+          <div class="term-body" style="padding: 0; overflow-x: auto">
+            <table class="mood-table">
+              <thead>
+                <tr>
+                  <th style="width: 100px">状态</th>
+                  <th style="width: 70px">表情</th>
+                  <th>触发条件</th>
+                  <th style="width: 80px">能量</th>
+                </tr>
+              </thead>
+              <tbody id="mood-tbody"></tbody>
+            </table>
           </div>
+        </div>
+      </div>
 
-          <div class="evo-grid" id="evo-grid">
-
-            <!-- Lv1 -->
-            <div class="evo-card evo-lv1" id="evo-lv1">
-              <span class="lv-badge" style="background: var(--surface-3); color: var(--brand-400);">LV 1</span>
-              <div class="stage-name">一尾小狐</div>
-              <div class="art-container">
-<pre class="mascot-art" style="margin:0; color: var(--brand);"><span style="color: var(--brand);">  /\_/\
- ( o.o ) </span><span style="color: var(--state-error);">♡</span><span style="color: var(--brand);">
- &gt;  ^ &lt; </span><span style="color: var(--brand);">つ</span></pre>
-              </div>
-              <div class="flavor-text">初次相遇，尾巴还只有一条。怯生生地看着你的光标。</div>
-            </div>
-
-            <!-- Lv2 -->
-            <div class="evo-card evo-lv2" id="evo-lv2">
-              <span class="lv-badge" style="background: var(--surface-3); color: var(--brand-400);">LV 2</span>
-              <div class="stage-name">二尾幼狐</div>
-              <div class="art-container">
-<pre class="mascot-art" style="margin:0; color: var(--brand);"><span style="color: var(--brand);">  /\_/\
- ( ^.^ ) </span><span style="color: var(--state-error);">♡</span><span style="color: var(--brand);">
- &gt;  ^ &lt; </span><span style="color: var(--brand);">つつ</span></pre>
-              </div>
-              <div class="flavor-text">开始熟悉你的按键节奏，会在编译时悄悄摇尾巴。</div>
-            </div>
-
-            <!-- Lv3 -->
-            <div class="evo-card evo-lv3" id="evo-lv3">
-              <span class="lv-badge" style="background: var(--surface-3); color: var(--brand-300);">LV 3</span>
-              <div class="stage-name">三尾灵狐</div>
-              <div class="art-container">
-<pre class="mascot-art" style="margin:0; color: var(--brand);"><span style="color: var(--brand);">  /\_/\
- ( </span><span style="color: var(--state-warning);">◕</span><span style="color: var(--brand);">.</span><span style="color: var(--state-warning);">◕</span><span style="color: var(--brand);"> ) </span><span style="color: var(--state-warning);">✦</span><span style="color: var(--brand);">
- &gt;  ω &lt; </span><span style="color: var(--brand);">つつつ</span></pre>
-              </div>
-              <div class="flavor-text">第三条尾巴长出来时，它第一次帮你找到了一个 typo。</div>
-            </div>
-
-            <!-- Lv4 -->
-            <div class="evo-card evo-lv4" id="evo-lv4">
-              <span class="lv-badge" style="background: var(--surface-2); color: var(--brand);">LV 4</span>
-              <div class="stage-name">四尾焰狐</div>
-              <div class="art-container">
-<pre class="mascot-art" style="margin:0; color: var(--brand); text-shadow: 0 0 6px rgba(255,135,0,0.4);"><span style="color: var(--brand);">  /\_/\
- ( </span><span style="color: var(--state-error);">♥</span><span style="color: var(--brand);">.</span><span style="color: var(--state-error);">♥</span><span style="color: var(--brand);"> ) </span><span style="color: var(--state-warning);">✧</span><span style="color: var(--brand);">
-／&gt;  ω &lt; </span><span style="color: var(--brand);">つつつつ</span></pre>
-              </div>
-              <div class="flavor-text">尾巴燃起暖焰，深夜 debug 时它就是你的光。</div>
-            </div>
-
-            <!-- Lv5 -->
-            <div class="evo-card evo-lv5" id="evo-lv5">
-              <span class="lv-badge" style="background: var(--brand-700); color: var(--ink);">LV 5</span>
-              <div class="stage-name">五尾炎狐</div>
-              <div class="art-container">
-<pre class="mascot-art" style="margin:0; color: var(--brand); text-shadow: 0 0 8px rgba(255,135,0,0.5);"><span style="color: var(--brand);">  /\___/\\
- ( </span><span style="color: var(--state-warning);">◆</span><span style="color: var(--brand);">.</span><span style="color: var(--state-warning);">◆</span><span style="color: var(--brand);"> ) </span><span style="color: var(--state-warning);">★</span><span style="color: var(--brand);">
-／&gt;  ᴥ &lt; </span><span style="color: var(--brand);">つつ</span><span style="color: var(--state-warning);">つつつ</span><span style="color: var(--brand);">
- </span><span style="color: var(--brand-400);">~~~~~~~</span></pre>
-              </div>
-              <div class="flavor-text">炎纹初现。它已经能在你写错函数名之前轻拍你的手腕。</div>
-            </div>
-
-            <!-- Lv6 -->
-            <div class="evo-card evo-lv6" id="evo-lv6">
-              <span class="lv-badge" style="background: var(--state-warning); color: var(--bg);">LV 6</span>
-              <div class="stage-name">六尾煌狐</div>
-              <div class="art-container">
-<pre class="mascot-art" style="margin:0; color: var(--state-warning); text-shadow: 0 0 8px rgba(255,175,0,0.5);"><span style="color: var(--state-warning);">  /\===/\\
- ( </span><span style="color: #ffd700;">✦</span><span style="color: var(--state-warning);">.</span><span style="color: #ffd700;">✦</span><span style="color: var(--state-warning);"> ) </span><span style="color: #ffd700;">★</span><span style="color: var(--state-warning);">
-／&gt;  ᴥ &lt; </span><span style="color: var(--brand);">つつ</span><span style="color: var(--state-warning);">つつつつ</span><span style="color: var(--state-warning);">
- </span><span style="color: var(--brand);">~≈≈≈≈≈≈≈~</span></pre>
-              </div>
-              <div class="flavor-text">金煌渐染。它开始理解你的架构意图，不只是语法。</div>
-            </div>
-
-            <!-- Lv7 -->
-            <div class="evo-card evo-lv7" id="evo-lv7">
-              <span class="lv-badge" style="background: #ffd700; color: var(--bg);">LV 7</span>
-              <div class="stage-name">七尾天狐</div>
-              <div class="art-container">
-<pre class="mascot-art glow-pulse" style="margin:0; color: #ffd700;"><span style="color: #ffd700;">  /\◆◆◆/\\
- ( </span><span style="color: #fff8e0;">★</span><span style="color: #ffd700;">.</span><span style="color: #fff8e0;">★</span><span style="color: #ffd700;"> ) </span><span style="color: #fff8e0;">✧</span><span style="color: #ffd700;">
-≋&gt;  ᴥ &lt; </span><span style="color: var(--state-warning);">≋</span><span style="color: #ffd700;">つつつつつつつ</span><span style="color: #ffd700;">
- </span><span style="color: var(--state-warning);">≈≈≈≈≈≈≈≈≈≈</span></pre>
-              </div>
-              <div class="flavor-text">天狐之姿。它会在 PR 之前指出你没考虑到的边界情况。</div>
-            </div>
-
-            <!-- Lv8 -->
-            <div class="evo-card evo-lv8" id="evo-lv8">
-              <span class="lv-badge" style="background: #ffd700; color: var(--bg);">LV 8</span>
-              <div class="stage-name">八尾圣狐</div>
-              <div class="art-container">
-<pre class="mascot-art glow-pulse" style="margin:0; color: #ffd700;"><span style="color: #ffd700;"> ╱\◆◆◆◆╱\\
-( </span><span style="color: #fff8e0;">✧</span><span style="color: #ffd700;">.</span><span style="color: #fff8e0;">✧</span><span style="color: #ffd700;"> ) </span><span style="color: #fff8e0;">✦</span><span style="color: #ffd700;">
-≋≋&gt;  ᴥ &lt; </span><span style="color: var(--state-warning);">≋≋</span><span style="color: #ffd700;">つつつつつつつつ</span><span style="color: #ffd700;">
- </span><span style="color: var(--state-warning);">≈≈≈≈≈≈≈≈≈≈≈≈</span></pre>
-              </div>
-              <div class="flavor-text">圣辉环绕。它能嗅出代码里的坏味道，像闻见过期牛奶。</div>
-            </div>
-
-            <!-- Lv9 -->
-            <div class="evo-card evo-lv9" id="evo-lv9">
-              <span class="lv-badge" style="background: linear-gradient(90deg, #ffd700, #fff8e0); color: var(--bg);">LV 9</span>
-              <div class="stage-name">九尾仙狐</div>
-              <div class="art-container">
-<pre class="mascot-art glow-pulse" style="margin:0; color: #fff8e0; text-shadow: 0 0 12px rgba(255,215,0,0.7), 0 0 24px rgba(255,215,0,0.3);"><span style="color: #ffd700;">╱\★★★★★╱\\
-</span><span style="color: #fff8e0;">( </span><span style="color: #ffd700;">✦</span><span style="color: #fff8e0;">.</span><span style="color: #ffd700;">✦</span><span style="color: #fff8e0;"> ) </span><span style="color: #ffd700;">★</span><span style="color: #fff8e0;">
-≈≈&gt;  ᴥ &lt; </span><span style="color: #ffd700;">≈≈</span><span style="color: #fff8e0;">つつつつつつつつつ</span><span style="color: #ffd700;">
- </span><span style="color: #ffd700;">≋≈≈≈≈≈≈≈≈≈≈≈≈≈</span></pre>
-              </div>
-              <div class="flavor-text">九尾圆满。传说中，它会替你写出那个你想了三天的函数。</div>
-            </div>
-
-          </div>
-        </section>
-
-        <!-- ===== ALL COMPANIONS SECTION ===== -->
-        <section class="section" id="all-companions">
-          <div class="section-heading">
-            <span class="prompt-char">##</span>
-            <span>全伙伴图鉴</span>
-            <span style="color: var(--ink-3); margin-left: auto; font-size: 12px;">// companion.roster</span>
-          </div>
-
-          <div class="companions-grid" id="companions-grid">
-
-            <!-- Foxy -->
-            <div class="mascot-card" id="companion-foxy">
-              <div class="mascot-name">小福 <span style="color: var(--ink-3); font-weight: 400; font-size: 14px;">Foxy</span></div>
-              <div class="species-tag">// focus fox</div>
-              <div class="art-container art-container-companion">
-<pre class="mascot-art" style="margin:0;"><span style="color: var(--brand);">  /\_/\
- ( </span><span style="color: var(--ink);">o.o</span><span style="color: var(--brand);"> ) </span><span style="color: var(--state-error);">♡</span><span style="color: var(--brand);">
- &gt;  </span><span style="color: var(--ink-2);">^</span><span style="color: var(--brand);"> &lt; </span><span style="color: var(--brand);">つ</span></pre>
-              </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-                <span class="mood-pill"><span class="mood-art" style="color: var(--brand);">◔ ◔</span> idle</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-info);">◑.◑</span> think</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-warning);">&gt;.&lt;</span> work</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-success);">^ω^</span> happy</span>
-              </div>
-              <div class="catchphrase">"你的编程陪伴鼓励师，一直在。"</div>
-            </div>
-
-            <!-- Mochi -->
-            <div class="mascot-card" id="companion-mochi">
-              <div class="mascot-name">云朵猫 <span style="color: var(--ink-3); font-weight: 400; font-size: 14px;">Mochi</span></div>
-              <div class="species-tag">// cloud cat</div>
-              <div class="art-container art-container-companion">
-<pre class="mascot-art" style="margin:0;"><span style="color: #f5c6d6;">  /ᐠ｡ꞈ｡ᐟ\
-   </span><span style="color: #f5c6d6;">づ </span><span style="color: var(--state-error);">♡</span><span style="color: #f5c6d6;"> ⊂</span></pre>
-              </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-                <span class="mood-pill"><span class="mood-art" style="color: #f5c6d6;">◔ ◔</span> idle</span>
-                <span class="mood-pill"><span class="mood-art" style="color: #f5c6d6;">◑.◑</span> think</span>
-                <span class="mood-pill"><span class="mood-art" style="color: #f5c6d6;">&gt;.&lt;</span> work</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-success);">^ω^</span> happy</span>
-              </div>
-              <div class="catchphrase">"把 bug 揉成小团子！"</div>
-            </div>
-
-            <!-- Byte -->
-            <div class="mascot-card" id="companion-byte">
-              <div class="mascot-name">像素小狐 <span style="color: var(--ink-3); font-weight: 400; font-size: 14px;">Byte</span></div>
-              <div class="species-tag">// pixel fox</div>
-              <div class="art-container art-container-companion">
-<pre class="mascot-art" style="margin:0;"><span style="color: var(--state-success);">  ▄▀▀▀▀▄
- █ </span><span style="color: var(--state-warning);">◆</span><span style="color: var(--state-success);">  </span><span style="color: var(--state-warning);">◆</span><span style="color: var(--state-success);"> █
- ▀▄▄▄▄▀</span></pre>
-              </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-success);">█ █</span> idle</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-info);">▒.▒</span> think</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-warning);">▄▀</span> work</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-success);">▲▲</span> happy</span>
-              </div>
-              <div class="catchphrase">"尾巴一扫，测试全绿。"</div>
-            </div>
-
-            <!-- Nori -->
-            <div class="mascot-card" id="companion-nori">
-              <div class="mascot-name">薄荷六角恐龙 <span style="color: var(--ink-3); font-weight: 400; font-size: 14px;">Nori</span></div>
-              <div class="species-tag">// mint axolotl</div>
-              <div class="art-container art-container-companion">
-<pre class="mascot-art" style="margin:0;"><span style="color: #7de8c8;">  ʚ(</span><span style="color: var(--ink);">•ᴗ•</span><span style="color: #7de8c8;">)ɞ
- ╱|     |╲</span></pre>
-              </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-                <span class="mood-pill"><span class="mood-art" style="color: #7de8c8;">•ᴗ•</span> idle</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-info);">◑_◑</span> think</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-warning);">●_●</span> work</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-success);">◕ᴗ◕</span> happy</span>
-              </div>
-              <div class="catchphrase">"再难的栈，也能慢慢游过去。"</div>
-            </div>
-
-            <!-- Pico -->
-            <div class="mascot-card" id="companion-pico">
-              <div class="mascot-name">布丁企鹅 <span style="color: var(--ink-3); font-weight: 400; font-size: 14px;">Pico</span></div>
-              <div class="species-tag">// pudding penguin</div>
-              <div class="art-container art-container-companion">
-<pre class="mascot-art" style="margin:0;"><span style="color: #d4e8ff;">  ＿(</span><span style="color: var(--state-info);">•ө•</span><span style="color: #d4e8ff;">)＿
-    ╱    ╲</span></pre>
-              </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-                <span class="mood-pill"><span class="mood-art" style="color: #d4e8ff;">•ө•</span> idle</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-info);">◑_◑</span> think</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-warning);">●_●</span> work</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-success);">▲ω▲</span> happy</span>
-              </div>
-              <div class="catchphrase">"滑进代码，稳稳落地。"</div>
-            </div>
-
-            <!-- Bubu -->
-            <div class="mascot-card" id="companion-bubu">
-              <div class="mascot-name">奶油小熊 <span style="color: var(--ink-3); font-weight: 400; font-size: 14px;">Bubu</span></div>
-              <div class="species-tag">// cream bear</div>
-              <div class="art-container art-container-companion">
-<pre class="mascot-art" style="margin:0;"><span style="color: #d4a574;">  ʕ </span><span style="color: var(--ink);">•ᴥ•</span><span style="color: #d4a574;"> ʔ
- ╱ </span><span style="color: #d4a574;">づ </span><span style="color: #c4874b;">◉</span></pre>
-              </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-                <span class="mood-pill"><span class="mood-art" style="color: #d4a574;">•ᴥ•</span> idle</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-info);">◑_◑</span> think</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-warning);">●ᴥ●</span> work</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-success);">◕ᴥ◕</span> happy</span>
-              </div>
-              <div class="catchphrase">"抱住需求，也抱住边界。"</div>
-            </div>
-
-            <!-- Kumo -->
-            <div class="mascot-card" id="companion-kumo">
-              <div class="mascot-name">代码水豚 <span style="color: var(--ink-3); font-weight: 400; font-size: 14px;">Kumo</span></div>
-              <div class="species-tag">// code capybara</div>
-              <div class="art-container art-container-companion">
-<pre class="mascot-art" style="margin:0;"><span style="color: #b8a898;">  (</span><span style="color: var(--ink);">•ㅅ• </span><span style="color: #b8a898;">)
- ╱| </span><span style="color: #8b6544;">∪</span><span style="color: #b8a898;"> |╲</span></pre>
-              </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-                <span class="mood-pill"><span class="mood-art" style="color: #b8a898;">•ㅅ•</span> idle</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-info);">◑_◑</span> think</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-warning);">●ㅅ●</span> work</span>
-                <span class="mood-pill"><span class="mood-art" style="color: var(--state-success);">◕ㅅ◕</span> happy</span>
-              </div>
-              <div class="catchphrase">"不慌，先读代码。"</div>
-            </div>
-
-          </div>
-        </section>
-
-        <!-- ===== MOOD REFERENCE SECTION ===== -->
-        <section class="section" id="mood-reference">
-          <div class="section-heading">
-            <span class="prompt-char">##</span>
-            <span>心情状态系统</span>
-            <span style="color: var(--ink-3); margin-left: auto; font-size: 12px;">// mood.states</span>
-          </div>
-
-          <div class="term-chrome" id="mood-table-chrome">
-            <div class="term-titlebar" style="padding: 8px 14px;">
-              <span class="term-dot" style="width:10px; height:10px; background: #ff5f57;"></span>
-              <span class="term-dot" style="width:10px; height:10px; background: #ffbd2e;"></span>
-              <span class="term-dot" style="width:10px; height:10px; background: #28c840;"></span>
-              <span class="text-ink-3 ml-2" style="font-size: 12px;">mood_reference.ts</span>
-            </div>
-            <div style="overflow-x: auto;">
-              <table class="mood-table" id="mood-table">
-                <thead>
-                  <tr>
-                    <th style="padding-left: 20px;">状态</th>
-                    <th>标识</th>
-                    <th>表情</th>
-                    <th>触发场景</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="mood-name-cell" style="padding-left: 20px;">空闲</td>
-                    <td style="color: var(--ink-3);">idle</td>
-                    <td class="mood-icon-cell"><span style="color: var(--ink-2);">◔ ◔</span></td>
-                    <td>等待输入，光标闪烁时的默认状态</td>
-                  </tr>
-                  <tr>
-                    <td class="mood-name-cell" style="padding-left: 20px;">思考中</td>
-                    <td style="color: var(--ink-3);">thinking</td>
-                    <td class="mood-icon-cell"><span style="color: var(--state-info);">◑.◑</span></td>
-                    <td>模型正在生成，流式输出中</td>
-                  </tr>
-                  <tr>
-                    <td class="mood-name-cell" style="padding-left: 20px;">工作中</td>
-                    <td style="color: var(--ink-3);">working</td>
-                    <td class="mood-icon-cell"><span style="color: var(--state-warning);">&gt;.&lt;</span></td>
-                    <td>执行工具调用、运行命令、读写文件</td>
-                  </tr>
-                  <tr>
-                    <td class="mood-name-cell" style="padding-left: 20px;">开心</td>
-                    <td style="color: var(--ink-3);">happy</td>
-                    <td class="mood-icon-cell"><span style="color: var(--state-success);">^ω^</span></td>
-                    <td>测试通过、任务完成、收到夸奖</td>
-                  </tr>
-                  <tr>
-                    <td class="mood-name-cell" style="padding-left: 20px;">出错</td>
-                    <td style="color: var(--ink-3);">oops</td>
-                    <td class="mood-icon-cell"><span style="color: var(--state-error);">;ω;</span></td>
-                    <td>编译报错、工具失败、权限拒绝</td>
-                  </tr>
-                  <tr>
-                    <td class="mood-name-cell" style="padding-left: 20px;">休眠</td>
-                    <td style="color: var(--ink-3);">sleeping</td>
-                    <td class="mood-icon-cell"><span style="color: var(--ink-3);">-.- zZ</span></td>
-                    <td>长时间无操作，伙伴进入待机</td>
-                  </tr>
-                  <tr>
-                    <td class="mood-name-cell" style="padding-left: 20px;">庆祝</td>
-                    <td style="color: var(--ink-3);">celebrating</td>
-                    <td class="mood-icon-cell"><span style="color: var(--state-warning);">^ω^ﾉ</span></td>
-                    <td>PR 合并、发布成功、重大突破</td>
-                  </tr>
-                  <tr>
-                    <td class="mood-name-cell" style="padding-left: 20px;">升级</td>
-                    <td style="color: var(--ink-3);">levelup</td>
-                    <td class="mood-icon-cell"><span style="color: var(--brand);">≧▽≦ ⬆</span></td>
-                    <td>经验值累积，尾巴数量增加</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- ===== DESIGN NOTES SECTION ===== -->
-        <section class="section" id="design-notes" style="margin-bottom: 0;">
-          <div class="section-heading">
-            <span class="prompt-char">$</span>
-            <span>设计约束</span>
-            <span style="color: var(--ink-3); margin-left: auto; font-size: 12px;">// design.constraints</span>
-          </div>
-
-          <div class="code-block" id="design-notes-code">
-<span class="comment">// FocusCode Companion Design Constraints</span>
-<span class="comment">// packages/tui/src/companions/art-registry.ts</span>
-
-<span class="key">const</span> FRAME_CONSTRAINTS = {
-  <span class="key">maxLines</span>: <span class="num">10</span>,
-  <span class="key">maxCharsPerLine</span>: <span class="num">40</span>,
-  <span class="key">charset</span>: <span class="str">"ascii+unicode"</span>,        <span class="comment">// no control chars, no ESC sequences</span>
-  <span class="key">lineEnding</span>: <span class="str">"\n"</span>,
-};
-
-<span class="key">const</span> COLOR_MAP = {
-  <span class="key">body</span>: <span class="str">"var(--ink-2)"</span>,            <span class="comment">// secondary color for outline</span>
-  <span class="key">accent</span>: <span class="str">"var(--brand)"</span>,          <span class="comment">// fox orange for highlights/moods</span>
-  <span class="key">eyes</span>: <span class="str">"var(--ink)"</span>,              <span class="comment">// primary text for eyes</span>
-  <span class="key">decor</span>: {
-    <span class="key">heart</span>: <span class="str">"var(--state-error)"</span>,   <span class="comment">// ♡ ♥</span>
-    <span class="key">star</span>: <span class="str">"var(--state-warning)"</span>,   <span class="comment">// ★ ✦ ✧</span>
-    <span class="key">gold</span>: <span class="str">"#ffd700"</span>,               <span class="comment">// Lv7+ tails and aureola</span>
-  },
-};
-
-<span class="key">const</span> ANIMATION = {
-  <span class="key">tickMs</span>: <span class="num">500</span>,                      <span class="comment">// 2 FPS idle, gentle</span>
-  <span class="key">framesPerMood</span>: [<span class="num">1</span>, <span class="num">8</span>],           <span class="comment">// idle:1, thinking:4, working:8</span>
-  <span class="key">easing</span>: <span class="str">"step-end"</span>,             <span class="comment">// no tween, terminal snap</span>
-};
-
-<span class="key">const</span> TAIL_SYSTEM = {
-  <span class="key">character</span>: <span class="str">"つ"</span>,                     <span class="comment">// hiragana "tsu" as tail</span>
-  <span class="key">countByLevel</span>: { <span class="num">1</span>:<span class="num">1</span>, <span class="num">2</span>:<span class="num">2</span>, <span class="num">3</span>:<span class="num">3</span>, <span class="num">4</span>:<span class="num">4</span>, <span class="num">5</span>:<span class="num">5</span>, <span class="num">6</span>:<span class="num">6</span>, <span class="num">7</span>:<span class="num">7</span>, <span class="num">8</span>:<span class="num">8</span>, <span class="num">9</span>:<span class="num">9</span> },
-  <span class="key">colorByLevel</span>: {
-    <span class="num">1</span>:<span class="str">"var(--brand)"</span>,            <span class="comment">// Lv1-4: fox orange</span>
-    <span class="num">2</span>:<span class="str">"var(--brand)"</span>,
-    <span class="num">3</span>:<span class="str">"var(--brand)"</span>,
-    <span class="num">4</span>:<span class="str">"var(--brand)"</span>,
-    <span class="num">5</span>:<span class="str">"var(--state-warning)"</span>,    <span class="comment">// Lv5-6: warm gold transition</span>
-    <span class="num">6</span>:<span class="str">"var(--state-warning)"</span>,
-    <span class="num">7</span>:<span class="str">"#ffd700"</span>,                 <span class="comment">// Lv7-9: celestial gold</span>
-    <span class="num">8</span>:<span class="str">"#ffd700"</span>,
-    <span class="num">9</span>:<span class="str">"#ffd700"</span>,
-  },
-};
-
-<span class="prompt">focuscode$</span> <span style="color: var(--ink);">_</span>
-          </div>
-        </section>
-
+      <!-- ============ DESIGN NOTES ============ -->
+      <div class="mb-8">
+        <div class="section-header">
+          <span class="term-prompt">$</span>
+          <h2>设计规范</h2>
+          <span style="color: var(--ink-3); font-size: 12px; font-family: monospace"
+            >// design.spec</span
+          >
+        </div>
+        <div class="code-block"><pre id="spec-block"></pre></div>
       </div>
     </main>
-    <script>lucide.createIcons();</script>
-</body>
+    <script>
+      // ========== FOX EVOLUTION DATA ==========
+      const foxLevels = [
+        {
+          lv: 1,
+          name: "一尾小狐",
+          body: "#ff8c32",
+          light: "#ffb870",
+          dark: "#d45a00",
+          cream: "#fff2dc",
+          tip: "#fff5e0",
+          tails: 1,
+          badge: "#8a5a30",
+          btxt: "#2a1a08",
+          flair: "",
+          iris: null,
+          fmark: null,
+          glow: false,
+          flt: false,
+          desc: "初入代码世界的小狐狸，毛茸茸的大尾巴好奇地摆动，眼睛里闪烁着对终端的憧憬。",
+        },
+        {
+          lv: 2,
+          name: "二尾幼狐",
+          body: "#ff8c32",
+          light: "#ffb870",
+          dark: "#d45a00",
+          cream: "#fff2dc",
+          tip: "#fff5e0",
+          tails: 2,
+          badge: "#a06820",
+          btxt: "#2a1a08",
+          flair: "",
+          iris: null,
+          fmark: null,
+          glow: false,
+          flt: false,
+          desc: "第二条尾巴悄悄长出来啦！学会了基本命令，小狐狸的步伐更加自信。",
+        },
+        {
+          lv: 3,
+          name: "三尾灵狐",
+          body: "#ff9538",
+          light: "#ffc080",
+          dark: "#d46000",
+          cream: "#fff5e0",
+          tip: "#fff5e0",
+          tails: 3,
+          badge: "#c88020",
+          btxt: "#2a1a08",
+          flair: "sparkle",
+          iris: null,
+          fmark: "dot",
+          glow: false,
+          flt: false,
+          desc: "灵光乍现！额间一点朱砂，三尾轻摇间已经能理解复杂的代码逻辑了。",
+        },
+        {
+          lv: 4,
+          name: "四尾焰狐",
+          body: "#ffa040",
+          light: "#ffc880",
+          dark: "#e06810",
+          cream: "#fff8e8",
+          tip: "#ffe880",
+          tails: 4,
+          badge: "#e89020",
+          btxt: "#2a1000",
+          flair: "warm",
+          iris: "#e89420",
+          fmark: "dot",
+          glow: false,
+          flt: false,
+          desc: "尾尖燃起温暖的橙色光焰，胸口跳动着代码的热量，Bug 在它面前无所遁形。",
+        },
+        {
+          lv: 5,
+          name: "五尾炎狐",
+          body: "#ffb040",
+          light: "#ffd080",
+          dark: "#d88010",
+          cream: "#fff8e8",
+          tip: "#fff0a0",
+          tails: 5,
+          badge: "#e8a820",
+          btxt: "#2a1800",
+          flair: "flame",
+          iris: "#f0a830",
+          fmark: "dia",
+          glow: false,
+          flt: false,
+          desc: "五尾如扇展开，额间菱形印记闪耀金辉，炎狐能一眼看穿性能瓶颈。",
+        },
+        {
+          lv: 6,
+          name: "六尾煌狐",
+          body: "#ffc050",
+          light: "#ffe090",
+          dark: "#d89020",
+          cream: "#fffaf0",
+          tip: "#fff8c0",
+          tails: 6,
+          badge: "#f0c040",
+          btxt: "#2a1800",
+          flair: "orb",
+          iris: "#f0c040",
+          fmark: "star",
+          glow: false,
+          flt: false,
+          desc: "六尾金光璀璨，星辰印记浮于额前，爪尖环绕着智慧光球，架构设计了然于胸。",
+        },
+        {
+          lv: 7,
+          name: "七尾天狐",
+          body: "#ffd070",
+          light: "#ffe8a8",
+          dark: "#d8a030",
+          cream: "#fffaf0",
+          tip: "#fff8d0",
+          tails: 7,
+          badge: "#f0d060",
+          btxt: "#2a1800",
+          flair: "stars",
+          iris: "#f0d060",
+          fmark: "star2",
+          glow: true,
+          flt: false,
+          desc: "七尾如瀑布般垂落，天狐的皮毛泛着天界金光，神秘粒子围绕它飞舞。",
+        },
+        {
+          lv: 8,
+          name: "八尾圣狐",
+          body: "#ffe8a0",
+          light: "#fff4cc",
+          dark: "#d8b050",
+          cream: "#ffffff",
+          tip: "#ffffff",
+          tails: 8,
+          badge: "#fff0c0",
+          btxt: "#3a2800",
+          flair: "aura",
+          iris: "#fff0a0",
+          fmark: "crystal",
+          glow: true,
+          flt: true,
+          desc: "八尾舒展，毛色化为白金，圣狐散发着温和却强大的光芒，代码在它身边自然排列整齐。",
+        },
+        {
+          lv: 9,
+          name: "九尾仙狐",
+          body: "#fff0c0",
+          light: "#ffffff",
+          dark: "#e0b860",
+          cream: "#ffffff",
+          tip: "#ffffff",
+          tails: 9,
+          badge: "#ffffff",
+          btxt: "#3a2000",
+          flair: "divine",
+          iris: "#ffd860",
+          fmark: "radiant",
+          glow: true,
+          flt: true,
+          desc: "九尾仙狐！传说中的编程之神，周身环绕金色祥云与神秘宝珠，它的存在即是最好的代码。",
+        },
+      ];
+
+      // ========== COMPANION DATA ==========
+      const companions = [
+        {
+          id: "foxy",
+          name: "小福 Foxy",
+          species: "赤狐 / Fox",
+          color: "#ff8c32",
+          moodc: "#ff8c32",
+          catch: "「我们一起写代码吧！」",
+        },
+        {
+          id: "mochi",
+          name: "云朵 Mochi",
+          species: "云朵猫 / Cloud Cat",
+          color: "#f5c6d6",
+          moodc: "#f5a0b8",
+          catch: "「喵~ Bug 都被我蹭走啦~」",
+        },
+        {
+          id: "byte",
+          name: "字节 Byte",
+          species: "像素狐 / Pixel Fox",
+          color: "#5fd75f",
+          moodc: "#5fd75f",
+          catch: "「01001000 01101001!」",
+        },
+        {
+          id: "nori",
+          name: "海苔 Nori",
+          species: "六角恐龙 / Axolotl",
+          color: "#7de8c8",
+          moodc: "#50c8a8",
+          catch: "「咕嘟~ 水里写代码好舒服~」",
+        },
+        {
+          id: "pico",
+          name: "布丁 Pico",
+          species: "企鹅 / Penguin",
+          color: "#87afd7",
+          moodc: "#87afd7",
+          catch: "「咕噜噜~ 这个 bug 滑溜溜的!」",
+        },
+        {
+          id: "bubu",
+          name: "奶油 Bubu",
+          species: "小熊 / Bear",
+          color: "#d4a574",
+          moodc: "#c49060",
+          catch: "「嗯...写完这段就吃饼干~」",
+        },
+        {
+          id: "kumo",
+          name: "云步 Kumo",
+          species: "水豚 / Capybara",
+          color: "#b8a898",
+          moodc: "#a89888",
+          catch: "「...代码嘛，慢慢来就好...」",
+        },
+      ];
+
+      const moods = [
+        {
+          id: "idle",
+          label: "待机",
+          face: "◔ ◔",
+          color: "#6b6560",
+          desc: "无任务运行，等待输入",
+          energy: "—",
+        },
+        {
+          id: "happy",
+          label: "开心",
+          face: "^ω^",
+          color: "#5fd75f",
+          desc: "测试通过 / 构建成功 / 收到 Star",
+          energy: "⚡⚡⚡",
+        },
+        {
+          id: "thinking",
+          label: "思考",
+          face: "◑.◑",
+          color: "#87afd7",
+          desc: "分析代码 / 调试推理中",
+          energy: "⚡⚡",
+        },
+        {
+          id: "working",
+          label: "努力",
+          face: ">.<",
+          color: "#ffaf00",
+          desc: "执行任务 / 重构 / 修复 Bug",
+          energy: "⚡⚡⚡⚡",
+        },
+        {
+          id: "sleepy",
+          label: "困倦",
+          face: "-ω-",
+          color: "#a8a39b",
+          desc: "深夜编程 / 长时间运行后",
+          energy: "⚡",
+        },
+        {
+          id: "confused",
+          label: "困惑",
+          face: "¿.¿",
+          color: "#d7875f",
+          desc: "遇到不熟悉的代码 / 奇怪报错",
+          energy: "⚡⚡",
+        },
+        {
+          id: "excited",
+          label: "兴奋",
+          face: "★▽★",
+          color: "#ff8700",
+          desc: "发现巧妙解法 / 性能大幅提升",
+          energy: "⚡⚡⚡⚡⚡",
+        },
+        {
+          id: "worried",
+          label: "担心",
+          face: "⌒.⌒",
+          color: "#d75f5f",
+          desc: "发现严重 Bug / CI 挂了 / 合并冲突",
+          energy: "⚡",
+        },
+      ];
+
+      // ========== HELPER: 手绘萌系狐狸 SVG ==========
+      // 核心设计：歪头 + 超大圆眼 + 高光星星眼 + 自然卷曲大毛刷尾巴 + 软糯身体
+      function foxSVG(f) {
+        const animClass = (f.glow ? " fox-glow" : "") + (f.flt ? " fox-float" : "");
+        const auraColor = f.lv >= 7 ? f.light : f.lv >= 4 ? f.body : f.dark;
+        const auraOpacity = f.lv >= 8 ? 0.22 : f.lv >= 5 ? 0.15 : 0.08;
+
+        // ---- 尾巴：手绘自然卷毛刷 ----
+        // 单尾从身体左侧绕上来形成大C形卷曲；多尾扇形展开，每根都是独立的贝塞尔曲线
+        function oneTail(
+          d,
+          startX,
+          startY,
+          cp1x,
+          cp1y,
+          cp2x,
+          cp2y,
+          endX,
+          endY,
+          col,
+          tipCol,
+          tipStart,
+          thick,
+          glowCol,
+        ) {
+          // thick 是尾巴根部宽度，末端会自然收窄；用多道描边叠加模拟毛量
+          let out = "";
+          // 阴影底层（水彩晕染）
+          out += `<path d="M${startX},${startY} C${cp1x},${cp1y} ${cp2x},${cp2y} ${endX},${endY}" stroke="${glowCol || col}" stroke-width="${thick * 1.8}" fill="none" stroke-linecap="round" opacity="0.12" filter="url(#wc-wash)"/>`;
+          // 主体毛色（粗描边+水彩滤镜）
+          out += `<path d="M${startX},${startY} C${cp1x},${cp1y} ${cp2x},${cp2y} ${endX},${endY}" stroke="${col}" stroke-width="${thick}" fill="none" stroke-linecap="round" opacity="0.92" filter="url(#wc-soft)"/>`;
+          // 浅色高光（沿尾巴上缘的细描边，营造立体毛感）
+          out += `<path d="M${startX},${startY - 1} C${cp1x},${cp1y - 2} ${cp2x},${cp2y - 2} ${endX},${endY - 1}" stroke="${f.light}" stroke-width="${thick * 0.35}" fill="none" stroke-linecap="round" opacity="0.5" filter="url(#wc-soft)"/>`;
+          // 白色尾尖：从 tipStart 比例处开始换色——简单做法是画一个棉球
+          const t = tipStart;
+          // 估算尾尖位置：在贝塞尔曲线上 t 位置
+          const t1x = startX + (cp1x - startX) * t,
+            t1y = startY + (cp1y - startY) * t;
+          const t2x = cp1x + (cp2x - cp1x) * t,
+            t2y = cp1y + (cp2y - cp1y) * t;
+          const t3x = cp2x + (endX - cp2x) * t,
+            t3y = cp2y + (endY - cp2y) * t;
+          const m1x = t1x + (t2x - t1x) * t,
+            m1y = t1y + (t2y - t1y) * t;
+          const m2x = t2x + (t3x - t2x) * t,
+            m2y = t2y + (t3y - t2y) * t;
+          const tipX = m1x + (m2x - m1x) * t,
+            tipY = m1y + (m2y - m1y) * t;
+          // 白色尾尖棉球（3个重叠圆，毛茸茸）
+          out += `<circle cx="${tipX}" cy="${tipY}" r="${thick * 0.7}" fill="${tipCol}" opacity="0.9" filter="url(#wc-soft)"/>`;
+          out += `<circle cx="${tipX + thick * 0.3}" cy="${tipY - thick * 0.2}" r="${thick * 0.45}" fill="${tipCol}" opacity="0.7" filter="url(#wc-soft)"/>`;
+          out += `<circle cx="${tipX - thick * 0.25}" cy="${tipY + thick * 0.3}" r="${thick * 0.4}" fill="#ffffff" opacity="0.5" filter="url(#wc-soft)"/>`;
+          return out;
+        }
+
+        let tails = "";
+        const n = f.tails;
+        const baseX = 82,
+          baseY = 105; // 尾巴从身体左侧偏后处长出
+
+        if (n === 1) {
+          // 经典大C卷尾：从后腰向左上方大弧度绕到头顶旁
+          tails += oneTail(
+            0,
+            baseX,
+            baseY,
+            40,
+            110,
+            20,
+            70,
+            45,
+            35,
+            f.body,
+            f.tip,
+            0.55,
+            14,
+            f.light,
+          );
+          // 尾巴边缘毛丛碎感
+          tails += `<circle cx="30" cy="55" r="4" fill="${f.body}" opacity="0.5" filter="url(#wc-soft)"/>`;
+          tails += `<circle cx="22" cy="48" r="3" fill="${f.tip}" opacity="0.6" filter="url(#wc-soft)"/>`;
+        } else {
+          // 多尾扇形：从同一点长出，角度从-150°(左下)到-30°(右上)均匀展开
+          // 每根尾巴是独立S曲线，外侧尾巴稍长
+          const startDeg = -160,
+            endDeg = -20;
+          for (let i = 0; i < n; i++) {
+            const t = n === 1 ? 0.5 : i / (n - 1);
+            const deg = startDeg + (endDeg - startDeg) * t;
+            const rad = (deg * Math.PI) / 180;
+            const edgeBias = Math.abs(t - 0.5) * 2;
+            const len = 55 + edgeBias * 15 + Math.min(f.lv * 2, 12);
+            const thick = n <= 3 ? 11 : n <= 5 ? 9 : n <= 7 ? 7.5 : 6.5;
+            // 自然S曲线：控制点偏移
+            const cp1dist = len * 0.35;
+            const cp2dist = len * 0.75;
+            const curveOut = (t < 0.5 ? -1 : 1) * (8 + edgeBias * 12);
+            const cp1x =
+              baseX + Math.cos(rad) * cp1dist + Math.cos(rad + Math.PI / 2) * curveOut * 0.3;
+            const cp1y =
+              baseY + Math.sin(rad) * cp1dist + Math.sin(rad + Math.PI / 2) * curveOut * 0.3;
+            const cp2x = baseX + Math.cos(rad) * cp2dist + Math.cos(rad + Math.PI / 2) * curveOut;
+            const cp2y =
+              baseY +
+              Math.sin(rad) * cp2dist +
+              Math.sin(rad + Math.PI / 2) * curveOut -
+              (1 - edgeBias) * 8;
+            const endX = baseX + Math.cos(rad) * len + Math.cos(rad + Math.PI / 2) * curveOut * 0.8;
+            const endY =
+              baseY +
+              Math.sin(rad) * len +
+              Math.sin(rad + Math.PI / 2) * curveOut * 0.8 -
+              (1 - edgeBias) * 10;
+            tails += oneTail(
+              i,
+              baseX,
+              baseY,
+              cp1x,
+              cp1y,
+              cp2x,
+              cp2y,
+              endX,
+              endY,
+              f.body,
+              f.tip,
+              0.5,
+              thick,
+              f.light,
+            );
+          }
+          // Lv5+ 尾根金色辉光洗色
+          if (f.lv >= 5) {
+            tails += `<ellipse cx="${baseX - 5}" cy="${baseY - 5}" rx="25" ry="20" fill="${f.light}" opacity="0.1" filter="url(#wc-wash)"/>`;
+          }
+        }
+
+        // ---- 装饰特效 ----
+        let flair = "";
+        if (f.flair === "sparkle") {
+          flair = `<g opacity="0.75" filter="url(#wc-glow)">
+          <text x="52" y="28" font-size="11" fill="#ffd060">✦</text>
+          <text x="128" y="42" font-size="7" fill="#ffd870">✧</text>
+        </g>`;
+        }
+        if (f.flair === "warm") {
+          flair = `<ellipse cx="90" cy="90" rx="32" ry="28" fill="#ffb040" opacity="0.1" filter="url(#wc-wash)"/>
+                 <text x="48" y="30" font-size="8" fill="#ffb040" opacity="0.55">✦</text>`;
+        }
+        if (f.flair === "flame") {
+          flair = `<ellipse cx="90" cy="85" rx="36" ry="32" fill="#ffa030" opacity="0.12" filter="url(#wc-wash)"/>
+                 <path d="M52,40 Q56,30 60,40 Q64,32 68,40" stroke="#ffc040" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.6"/>
+                 <path d="M112,45 Q116,35 120,45 Q124,37 128,45" stroke="#ffc040" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.6"/>`;
+        }
+        if (f.flair === "orb") {
+          flair = `<ellipse cx="90" cy="85" rx="40" ry="34" fill="#ffc840" opacity="0.13" filter="url(#wc-wash)"/>
+                 <circle cx="135" cy="70" r="5" fill="#ffe880" opacity="0.75" filter="url(#wc-glow)"/>
+                 <circle cx="135" cy="70" r="2" fill="#fff" opacity="0.9"/>
+                 <text x="40" y="32" font-size="8" fill="#ffd060" opacity="0.5">✧</text>`;
+        }
+        if (f.flair === "stars") {
+          flair = `<ellipse cx="90" cy="80" rx="45" ry="38" fill="#ffd860" opacity="0.1" filter="url(#wc-wash)"/>`;
+          [
+            [38, 32],
+            [142, 28],
+            [148, 65],
+            [30, 62],
+            [45, 125],
+            [135, 120],
+          ].forEach(([sx, sy], i) => {
+            flair += `<text x="${sx}" y="${sy}" font-size="${i % 2 ? 9 : 7}" fill="#ffe880" opacity="${0.4 + (i % 2) * 0.25}">✦</text>`;
+          });
+          for (let i = 0; i < 7; i++) {
+            const a = (i * Math.PI * 2) / 7;
+            flair += `<circle cx="${90 + Math.cos(a) * 52}" cy="${68 + Math.sin(a) * 42}" r="1.3" fill="#fff8c0" opacity="0.6"/>`;
+          }
+        }
+        if (f.flair === "aura") {
+          flair = `<ellipse cx="90" cy="78" rx="52" ry="44" fill="#fff0c0" opacity="0.18" filter="url(#wc-glow)"/>`;
+          for (let i = 0; i < 9; i++) {
+            const a = (i * Math.PI * 2) / 9;
+            flair += `<circle cx="${90 + Math.cos(a) * 58}" cy="${70 + Math.sin(a) * 46}" r="1.6" fill="#fff" opacity="0.55"/>`;
+            flair += `<text x="${90 + Math.cos(a) * 64 - 4}" y="${70 + Math.sin(a) * 46 + 3}" font-size="7" fill="#ffe880" opacity="0.5">✧</text>`;
+          }
+        }
+        if (f.flair === "divine") {
+          flair = `<ellipse cx="90" cy="75" rx="60" ry="50" fill="#fff8e0" opacity="0.2" filter="url(#wc-glow)"/>
+                 <ellipse cx="90" cy="75" rx="44" ry="36" fill="#ffd860" opacity="0.1" filter="url(#wc-wash)"/>`;
+          for (let i = 0; i < 12; i++) {
+            const a = (i * Math.PI * 2) / 12;
+            const r = 58 + (i % 2 ? 8 : 0);
+            flair += `<circle cx="${90 + Math.cos(a) * r}" cy="${62 + Math.sin(a) * r}" r="2" fill="#fff8c0" opacity="0.65" filter="url(#wc-glow)"/>`;
+          }
+          [
+            [30, 28],
+            [148, 32],
+            [152, 75],
+            [32, 75],
+            [138, 130],
+            [42, 125],
+          ].forEach(([ox, oy]) => {
+            flair += `<circle cx="${ox}" cy="${oy}" r="4.5" fill="#ffe880" opacity="0.55" filter="url(#wc-glow)"/>
+                    <circle cx="${ox}" cy="${oy}" r="1.8" fill="#fff" opacity="0.85"/>`;
+          });
+          flair += `<ellipse cx="68" cy="142" rx="22" ry="4" fill="#fff" opacity="0.15" filter="url(#wc-wash)"/>
+                  <ellipse cx="112" cy="144" rx="24" ry="3" fill="#fff" opacity="0.12" filter="url(#wc-wash)"/>`;
+        }
+
+        // ---- 眼睛：超大圆眼+双高光+星星眼（高等级） ----
+        const eyeY = 64;
+        const eyeRX = 7.5,
+          eyeRY = 8.5;
+        const eyeLX = 78,
+          eyeRX_pos = 102;
+        let eyes = "";
+        if (!f.iris) {
+          eyes = `<ellipse cx="${eyeLX}" cy="${eyeY}" rx="${eyeRX}" ry="${eyeRY}" fill="#1a0a00" opacity="0.95"/>
+                <ellipse cx="${eyeRX_pos}" cy="${eyeY}" rx="${eyeRX}" ry="${eyeRY}" fill="#1a0a00" opacity="0.95"/>
+                <circle cx="${eyeLX + 2}" cy="${eyeY - 2.5}" r="2.8" fill="#fff" opacity="0.95"/>
+                <circle cx="${eyeRX_pos + 2}" cy="${eyeY - 2.5}" r="2.8" fill="#fff" opacity="0.95"/>
+                <circle cx="${eyeLX - 2.5}" cy="${eyeY + 3}" r="1.2" fill="#fff" opacity="0.5"/>
+                <circle cx="${eyeRX_pos - 2.5}" cy="${eyeY + 3}" r="1.2" fill="#fff" opacity="0.5"/>`;
+        } else {
+          const irisR = 5.5;
+          eyes = `<ellipse cx="${eyeLX}" cy="${eyeY}" rx="${eyeRX + 0.5}" ry="${eyeRY + 0.5}" fill="#1a0a00" opacity="0.95"/>
+                <ellipse cx="${eyeRX_pos}" cy="${eyeY}" rx="${eyeRX + 0.5}" ry="${eyeRY + 0.5}" fill="#1a0a00" opacity="0.95"/>
+                <circle cx="${eyeLX}" cy="${eyeY}" r="${irisR}" fill="${f.iris}" opacity="0.8"/>
+                <circle cx="${eyeRX_pos}" cy="${eyeY}" r="${irisR}" fill="${f.iris}" opacity="0.8"/>
+                <ellipse cx="${eyeLX}" cy="${eyeY + 1}" rx="2.5" ry="4" fill="#1a0a00" opacity="0.85"/>
+                <ellipse cx="${eyeRX_pos}" cy="${eyeY + 1}" rx="2.5" ry="4" fill="#1a0a00" opacity="0.85"/>
+                <circle cx="${eyeLX + 2.5}" cy="${eyeY - 3}" r="2.5" fill="#fff" opacity="0.95"/>
+                <circle cx="${eyeRX_pos + 2.5}" cy="${eyeY - 3}" r="2.5" fill="#fff" opacity="0.95"/>
+                <circle cx="${eyeLX - 2}" cy="${eyeY + 3}" r="1" fill="#fff" opacity="0.5"/>
+                <circle cx="${eyeRX_pos - 2}" cy="${eyeY + 3}" r="1" fill="#fff" opacity="0.5"/>`;
+          // Lv8+ 眼睛有星形高光
+          if (f.lv >= 8) {
+            eyes += `<text x="${eyeLX - 5}" y="${eyeY - 5}" font-size="8" fill="#fff" opacity="0.8">✦</text>
+                   <text x="${eyeRX_pos - 5}" y="${eyeY - 5}" font-size="8" fill="#fff" opacity="0.8">✦</text>`;
+          }
+        }
+
+        // ---- 额印 ----
+        let fmark = "";
+        if (f.fmark === "dot") {
+          fmark = `<ellipse cx="90" cy="44" rx="2.8" ry="2" fill="#d46020" opacity="0.75" filter="url(#wc-soft)"/>`;
+        }
+        if (f.fmark === "dia") {
+          fmark = `<path d="M90,39 L93.5,45 L90,51 L86.5,45 Z" fill="#f0a830" opacity="0.85" filter="url(#wc-soft)"/>`;
+        }
+        if (f.fmark === "star") {
+          fmark = `<text x="84" y="51" font-size="12" fill="#f0c040" opacity="0.85">✦</text>`;
+        }
+        if (f.fmark === "star2") {
+          fmark = `<text x="82" y="51" font-size="15" fill="#f0d060" opacity="0.9" filter="url(#wc-glow)">✦</text>`;
+        }
+        if (f.fmark === "crystal") {
+          fmark = `<path d="M90,34 L96,44 L93,54 L87,54 L84,44 Z" fill="#fff0c0" opacity="0.85" filter="url(#wc-glow)"/>
+                 <path d="M90,36 L94,44 L90,50 L86,44 Z" fill="#ffffff" opacity="0.6"/>`;
+        }
+        if (f.fmark === "radiant") {
+          fmark = `<circle cx="90" cy="44" r="4.5" fill="#fff8c0" opacity="0.85" filter="url(#wc-glow)"/>
+                 <text x="81" y="50" font-size="18" fill="#ffd860" opacity="0.75" filter="url(#wc-glow)">✦</text>`;
+        }
+
+        // ---- 耳朵（手绘三角形，略不对称显灵动） ----
+        // 左耳稍大稍高，右耳略小略偏，歪头效果
+        const earL = `<path d="M68,50 Q58,20 54,28 Q52,38 66,48 Z" fill="${f.body}" opacity="0.95" filter="url(#wc-soft)"/>
+                    <path d="M66,47 Q60,28 58,33 Q57,40 64,46 Z" fill="#ff9999" opacity="0.45" filter="url(#wc-soft)"/>`;
+        const earR = `<path d="M112,50 Q122,22 126,30 Q127,40 114,49 Z" fill="${f.body}" opacity="0.95" filter="url(#wc-soft)"/>
+                    <path d="M114,47 Q120,30 122,35 Q122,42 116,46 Z" fill="#ff9999" opacity="0.45" filter="url(#wc-soft)"/>`;
+
+        // ---- 爪子（小短爪，圆润） ----
+        const paws = `<ellipse cx="78" cy="130" rx="8" ry="5.5" fill="${f.body}" opacity="0.9" filter="url(#wc-soft)"/>
+                    <ellipse cx="102" cy="130" rx="8" ry="5.5" fill="${f.body}" opacity="0.9" filter="url(#wc-soft)"/>
+                    <path d="M73,130 Q78,127 83,130" stroke="${f.cream}" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7" filter="url(#wc-soft)"/>
+                    <path d="M97,130 Q102,127 107,130" stroke="${f.cream}" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7" filter="url(#wc-soft)"/>`;
+
+        // ---- 胸前毛团（高级狐狸） ----
+        let chestFluff = "";
+        if (f.lv >= 5) {
+          chestFluff = `<circle cx="83" cy="106" r="5" fill="${f.cream}" opacity="0.6" filter="url(#wc-soft)"/>
+                      <circle cx="97" cy="106" r="5" fill="${f.cream}" opacity="0.6" filter="url(#wc-soft)"/>`;
+        }
+        if (f.lv >= 8) {
+          chestFluff += `<circle cx="90" cy="110" r="6" fill="#ffffff" opacity="0.7" filter="url(#wc-soft)"/>`;
+        }
+
+        // ---- 头部歪头：通过 g 元素 rotate(-5deg) 实现 ----
+        const headTilt = f.lv <= 2 ? -6 : -4; // 低等级歪头更明显=更萌
+
+        return `<svg viewBox="0 0 180 160" class="evo-svg${animClass}" xmlns="http://www.w3.org/2000/svg">
+        <!-- 光晕 -->
+        <ellipse cx="90" cy="85" rx="${f.lv >= 7 ? 68 : 55}" ry="${f.lv >= 7 ? 58 : 48}" fill="${auraColor}" opacity="${auraOpacity}" filter="url(#wc-wash)"/>
+        ${flair}
+        ${tails}
+        <!-- 身体（圆润坐姿，贝塞尔勾勒） -->
+        <path d="M65,100 Q60,115 68,130 Q90,138 112,130 Q120,115 115,100 Q100,92 90,94 Q80,92 65,100 Z" fill="${f.body}" opacity="0.92" filter="url(#wc-soft)"/>
+        <!-- 腹部奶油色 -->
+        <path d="M75,108 Q72,120 78,128 Q90,133 102,128 Q108,120 105,108 Q95,115 90,114 Q85,115 75,108 Z" fill="${f.cream}" opacity="0.75" filter="url(#wc-soft)"/>
+        ${chestFluff}
+        ${paws}
+        <!-- 歪头的头部组 -->
+        <g transform="rotate(${headTilt},90,68)">
+          <!-- 头部（圆润贝塞尔，不是正圆，略扁） -->
+          <path d="M63,68 Q60,42 90,38 Q120,42 117,68 Q118,85 90,88 Q62,85 63,68 Z" fill="${f.body}" opacity="0.96" filter="url(#wc-soft)"/>
+          <!-- 脸部白色（嘴周+脸颊奶油色） -->
+          <path d="M72,68 Q70,80 90,83 Q110,80 108,68 Q100,78 90,78 Q80,78 72,68 Z" fill="${f.cream}" opacity="0.7" filter="url(#wc-soft)"/>
+          ${earL}
+          ${earR}
+          ${fmark}
+          ${eyes}
+          <!-- 鼻子（小圆鼻+高光） -->
+          <ellipse cx="90" cy="77" rx="3" ry="2.2" fill="#2a1000" opacity="0.85"/>
+          <ellipse cx="89" cy="76.2" rx="1" ry="0.7" fill="#fff" opacity="0.4"/>
+          <!-- 嘴（ω形小猫嘴，非常萌） -->
+          <path d="M87,80 Q88.5,83 90,81 Q91.5,83 93,80" stroke="#2a1000" stroke-width="1.1" fill="none" stroke-linecap="round" opacity="0.65"/>
+          <!-- 腮红 -->
+          <ellipse cx="71" cy="76" rx="5" ry="3" fill="#ff9999" opacity="0.32" filter="url(#wc-soft)"/>
+          <ellipse cx="109" cy="76" rx="5" ry="3" fill="#ff9999" opacity="0.32" filter="url(#wc-soft)"/>
+        </g>
+      </svg>`;
+      }
+
+      // ========== 手绘萌系伙伴 SVG ==========
+      function foxyCompSVG() {
+        return `<svg viewBox="0 0 120 110" class="companion-svg" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="45" fill="#ff8c32" opacity="0.1" filter="url(#wc-wash)"/>
+        <!-- 大卷尾：从身体后绕到右肩 -->
+        <path d="M40,72 Q12,68 10,38 Q12,20 32,28" stroke="#ff8c32" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.9" filter="url(#wc-soft)"/>
+        <path d="M40,71 Q12,66 10,37 Q12,19 32,27" stroke="#ffb870" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.45" filter="url(#wc-soft)"/>
+        <circle cx="30" cy="26" r="7" fill="#fff5e0" opacity="0.9" filter="url(#wc-soft)"/>
+        <circle cx="33" cy="23" r="4" fill="#fff" opacity="0.5" filter="url(#wc-soft)"/>
+        <!-- 身体 -->
+        <path d="M40,72 Q35,88 44,97 Q60,102 76,97 Q85,88 80,72 Q70,65 60,67 Q50,65 40,72 Z" fill="#ff8c32" opacity="0.92" filter="url(#wc-soft)"/>
+        <path d="M48,78 Q45,88 52,94 Q60,97 68,94 Q75,88 72,78 Q65,84 60,83 Q55,84 48,78 Z" fill="#fff2dc" opacity="0.7" filter="url(#wc-soft)"/>
+        <!-- 小爪 -->
+        <ellipse cx="48" cy="97" rx="5" ry="3.5" fill="#ff8c32" opacity="0.9" filter="url(#wc-soft)"/>
+        <ellipse cx="72" cy="97" rx="5" ry="3.5" fill="#ff8c32" opacity="0.9" filter="url(#wc-soft)"/>
+        <!-- 歪头 -->
+        <g transform="rotate(-4,60,48)">
+          <path d="M39,48 Q36,26 60,22 Q84,26 81,48 Q82,62 60,64 Q38,62 39,48 Z" fill="#ff8c32" opacity="0.96" filter="url(#wc-soft)"/>
+          <path d="M46,48 Q44,58 60,60 Q76,58 74,48 Q68,56 60,56 Q52,56 46,48 Z" fill="#fff2dc" opacity="0.65" filter="url(#wc-soft)"/>
+          <!-- 耳朵 -->
+          <path d="M44,33 Q36,10 32,18 Q30,28 42,32 Z" fill="#ff8c32" opacity="0.95" filter="url(#wc-soft)"/>
+          <path d="M76,33 Q84,12 88,20 Q89,30 78,32 Z" fill="#ff8c32" opacity="0.95" filter="url(#wc-soft)"/>
+          <path d="M42,31 Q37,16 35,21 Q34,28 40,30 Z" fill="#ff9999" opacity="0.4" filter="url(#wc-soft)"/>
+          <path d="M78,31 Q83,18 85,23 Q85,29 80,30 Z" fill="#ff9999" opacity="0.4" filter="url(#wc-soft)"/>
+          <!-- 大眼 -->
+          <circle cx="50" cy="44" r="6" fill="#1a0a00" opacity="0.95"/>
+          <circle cx="70" cy="44" r="6" fill="#1a0a00" opacity="0.95"/>
+          <circle cx="52" cy="42" r="2.2" fill="#fff" opacity="0.95"/>
+          <circle cx="72" cy="42" r="2.2" fill="#fff" opacity="0.95"/>
+          <circle cx="48" cy="46" r="0.9" fill="#fff" opacity="0.5"/>
+          <circle cx="68" cy="46" r="0.9" fill="#fff" opacity="0.5"/>
+          <ellipse cx="60" cy="53" rx="2.2" ry="1.6" fill="#2a1000" opacity="0.85"/>
+          <path d="M57.5,55.5 Q59,58 60.5,56.5 Q62,58 62.5,55.5" stroke="#2a1000" stroke-width="0.9" fill="none" stroke-linecap="round" opacity="0.6"/>
+          <ellipse cx="45" cy="52" rx="3.5" ry="2.2" fill="#ff9999" opacity="0.32" filter="url(#wc-soft)"/>
+          <ellipse cx="75" cy="52" rx="3.5" ry="2.2" fill="#ff9999" opacity="0.32" filter="url(#wc-soft)"/>
+        </g>
+      </svg>`;
+      }
+
+      function mochiSVG() {
+        // 云朵猫：棉花糖般的堆叠云朵身体，卷卷尾巴
+        return `<svg viewBox="0 0 120 110" class="companion-svg" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="45" fill="#f5a0b8" opacity="0.1" filter="url(#wc-wash)"/>
+        <!-- 蓬松云朵身体（5个重叠圆） -->
+        <circle cx="60" cy="80" r="20" fill="#fce0ea" opacity="0.95" filter="url(#wc-soft)"/>
+        <circle cx="44" cy="75" r="13" fill="#fce0ea" opacity="0.85" filter="url(#wc-soft)"/>
+        <circle cx="76" cy="75" r="13" fill="#fce0ea" opacity="0.85" filter="url(#wc-soft)"/>
+        <circle cx="52" cy="88" r="10" fill="#fef0f5" opacity="0.6" filter="url(#wc-soft)"/>
+        <circle cx="68" cy="88" r="10" fill="#fef0f5" opacity="0.6" filter="url(#wc-soft)"/>
+        <!-- 卷尾巴（像棉花糖卷） -->
+        <path d="M88,72 Q102,68 100,52 Q96,40 86,46 Q82,52 90,56 Q94,58 92,62" stroke="#fce0ea" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.85" filter="url(#wc-soft)"/>
+        <circle cx="86" cy="45" r="4" fill="#fef0f5" opacity="0.6" filter="url(#wc-soft)"/>
+        <!-- 头部云朵 -->
+        <circle cx="60" cy="42" r="19" fill="#fce0ea" opacity="0.96" filter="url(#wc-soft)"/>
+        <circle cx="46" cy="35" r="9" fill="#fce0ea" opacity="0.75" filter="url(#wc-soft)"/>
+        <circle cx="74" cy="35" r="9" fill="#fce0ea" opacity="0.75" filter="url(#wc-soft)"/>
+        <!-- 猫耳（三角形粉色内） -->
+        <path d="M46,28 Q40,8 54,22 Z" fill="#fce0ea" opacity="0.95" filter="url(#wc-soft)"/>
+        <path d="M74,28 Q80,8 66,22 Z" fill="#fce0ea" opacity="0.95" filter="url(#wc-soft)"/>
+        <path d="M47,26 Q44,14 52,22 Z" fill="#ffb0c0" opacity="0.45" filter="url(#wc-soft)"/>
+        <path d="M73,26 Q76,14 68,22 Z" fill="#ffb0c0" opacity="0.45" filter="url(#wc-soft)"/>
+        <!-- 大眼（薄荷绿） -->
+        <circle cx="51" cy="42" r="5.5" fill="#1a2a2a" opacity="0.95"/>
+        <circle cx="69" cy="42" r="5.5" fill="#1a2a2a" opacity="0.95"/>
+        <circle cx="51" cy="42" r="3.5" fill="#6bb8a0" opacity="0.75"/>
+        <circle cx="69" cy="42" r="3.5" fill="#6bb8a0" opacity="0.75"/>
+        <circle cx="52.5" cy="40" r="1.8" fill="#fff" opacity="0.95"/>
+        <circle cx="70.5" cy="40" r="1.8" fill="#fff" opacity="0.95"/>
+        <circle cx="49.5" cy="44" r="0.8" fill="#fff" opacity="0.5"/>
+        <circle cx="67.5" cy="44" r="0.8" fill="#fff" opacity="0.5"/>
+        <!-- 粉鼻+ω嘴 -->
+        <path d="M58.5,50 L61.5,50 L60,53 Z" fill="#e88090" opacity="0.85"/>
+        <path d="M57,53 Q58.5,56 60,54 Q61.5,56 63,53" stroke="#c06070" stroke-width="0.9" fill="none" stroke-linecap="round" opacity="0.7"/>
+        <!-- 胡须 -->
+        <line x1="44" y1="48" x2="30" y2="45" stroke="#d4a0a8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <line x1="44" y1="51" x2="28" y2="51" stroke="#d4a0a8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <line x1="76" y1="48" x2="90" y2="45" stroke="#d4a0a8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <line x1="76" y1="51" x2="92" y2="51" stroke="#d4a0a8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <!-- 腮红 -->
+        <ellipse cx="43" cy="50" rx="4" ry="2.5" fill="#ff99aa" opacity="0.38" filter="url(#wc-soft)"/>
+        <ellipse cx="77" cy="50" rx="4" ry="2.5" fill="#ff99aa" opacity="0.38" filter="url(#wc-soft)"/>
+        <!-- 小爱心 -->
+        <path d="M18,28 Q14,20 20,20 Q24,20 24,25 Q24,30 18,36 Q12,30 12,25 Q12,20 16,20 Q22,20 18,28 Z" fill="#ff99aa" opacity="0.65" filter="url(#wc-soft)"/>
+      </svg>`;
+      }
+
+      function byteSVG() {
+        // 像素狐：圆角方块感，但保留萌系大眼
+        return `<svg viewBox="0 0 120 110" class="companion-svg" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="58" r="42" fill="#5fd75f" opacity="0.1" filter="url(#wc-wash)"/>
+        <!-- 方块身体（圆角） -->
+        <rect x="38" y="66" width="44" height="28" rx="10" fill="#5fd75f" opacity="0.92" filter="url(#wc-soft)"/>
+        <rect x="45" y="72" width="30" height="16" rx="6" fill="#a0f0a0" opacity="0.4" filter="url(#wc-soft)"/>
+        <!-- 像素方块尾（阶梯状） -->
+        <rect x="82" y="68" width="14" height="10" rx="2" fill="#5fd75f" opacity="0.85" filter="url(#wc-soft)"/>
+        <rect x="92" y="64" width="10" height="8" rx="2" fill="#5fd75f" opacity="0.8" filter="url(#wc-soft)"/>
+        <rect x="98" y="60" width="8" height="6" rx="2" fill="#a0f0a0" opacity="0.6" filter="url(#wc-soft)"/>
+        <!-- 方头（圆角） -->
+        <rect x="34" y="25" width="52" height="44" rx="14" fill="#5fd75f" opacity="0.96" filter="url(#wc-soft)"/>
+        <!-- 像素耳（阶梯方形） -->
+        <rect x="36" y="14" width="8" height="14" rx="2" fill="#5fd75f" opacity="0.95" filter="url(#wc-soft)"/>
+        <rect x="44" y="10" width="8" height="18" rx="2" fill="#5fd75f" opacity="0.95" filter="url(#wc-soft)"/>
+        <rect x="68" y="10" width="8" height="18" rx="2" fill="#5fd75f" opacity="0.95" filter="url(#wc-soft)"/>
+        <rect x="76" y="14" width="8" height="14" rx="2" fill="#5fd75f" opacity="0.95" filter="url(#wc-soft)"/>
+        <rect x="44" y="10" width="4" height="6" rx="1" fill="#309030" opacity="0.5" filter="url(#wc-soft)"/>
+        <rect x="72" y="10" width="4" height="6" rx="1" fill="#309030" opacity="0.5" filter="url(#wc-soft)"/>
+        <!-- 像素大眼（方+圆混合，绿色像素高光是特色） -->
+        <rect x="44" y="40" width="12" height="12" rx="3" fill="#0a2a0a" opacity="0.95"/>
+        <rect x="64" y="40" width="12" height="12" rx="3" fill="#0a2a0a" opacity="0.95"/>
+        <rect x="47" y="43" width="6" height="6" rx="1" fill="#8fe88f" opacity="0.85"/>
+        <rect x="67" y="43" width="6" height="6" rx="1" fill="#8fe88f" opacity="0.85"/>
+        <rect x="49" y="41" width="3" height="3" rx="0.5" fill="#fff" opacity="0.95"/>
+        <rect x="69" y="41" width="3" height="3" rx="0.5" fill="#fff" opacity="0.95"/>
+        <!-- 方鼻+小嘴 -->
+        <rect x="56" y="54" width="8" height="5" rx="1.5" fill="#1a3a1a" opacity="0.75"/>
+        <path d="M56,61 Q60,64 64,61" stroke="#1a3a1a" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.5"/>
+        <!-- 像素腮红 -->
+        <rect x="38" y="52" width="7" height="4" rx="1" fill="#ff99aa" opacity="0.28" filter="url(#wc-soft)"/>
+        <rect x="75" y="52" width="7" height="4" rx="1" fill="#ff99aa" opacity="0.28" filter="url(#wc-soft)"/>
+        <!-- 像素闪光 -->
+        <rect x="18" y="22" width="4" height="4" rx="0.5" fill="#8fe88f" opacity="0.7"/>
+        <rect x="22" y="26" width="2" height="2" fill="#8fe88f" opacity="0.5"/>
+        <rect x="15" y="27" width="2" height="2" fill="#8fe88f" opacity="0.5"/>
+      </svg>`;
+      }
+
+      function noriSVG() {
+        // 海苔小蝾螈：外鳃、卷尾、水嫩大眼
+        return `<svg viewBox="0 0 120 110" class="companion-svg" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="45" fill="#7de8c8" opacity="0.1" filter="url(#wc-wash)"/>
+        <!-- 卷尾（海蛞蝓式卷曲） -->
+        <path d="M38,75 Q12,82 14,58 Q20,42 36,52" stroke="#7de8c8" stroke-width="11" fill="none" stroke-linecap="round" opacity="0.85" filter="url(#wc-soft)"/>
+        <path d="M38,74 Q12,81 14,57 Q20,41 36,51" stroke="#a0f0d8" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.5" filter="url(#wc-soft)"/>
+        <circle cx="15" cy="55" r="4" fill="#b8f5e0" opacity="0.6" filter="url(#wc-soft)"/>
+        <!-- 胖身体 -->
+        <path d="M38,70 Q34,90 50,95 Q60,97 70,95 Q86,90 82,70 Q70,63 60,65 Q50,63 38,70 Z" fill="#7de8c8" opacity="0.92" filter="url(#wc-soft)"/>
+        <ellipse cx="60" cy="80" rx="16" ry="11" fill="#b8f5e0" opacity="0.55" filter="url(#wc-soft)"/>
+        <!-- 小短腿（3只可见） -->
+        <ellipse cx="45" cy="94" rx="4.5" ry="3" fill="#7de8c8" opacity="0.85" filter="url(#wc-soft)"/>
+        <ellipse cx="60" cy="96" rx="4.5" ry="3" fill="#7de8c8" opacity="0.85" filter="url(#wc-soft)"/>
+        <ellipse cx="75" cy="94" rx="4.5" ry="3" fill="#7de8c8" opacity="0.85" filter="url(#wc-soft)"/>
+        <!-- 头部 -->
+        <g transform="rotate(-3,60,50)">
+          <path d="M38,50 Q36,28 60,26 Q84,28 82,50 Q83,62 60,64 Q37,62 38,50 Z" fill="#7de8c8" opacity="0.96" filter="url(#wc-soft)"/>
+          <!-- 外鳃（左右各3只，粉色尖端像小树枝） -->
+          <path d="M38,42 Q25,32 22,42 Q26,47 38,46" stroke="#7de8c8" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.75" filter="url(#wc-soft)"/>
+          <circle cx="23" cy="41" r="3" fill="#ff99aa" opacity="0.5" filter="url(#wc-soft)"/>
+          <path d="M38,50 Q22,46 20,56 Q25,62 38,56" stroke="#7de8c8" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.75" filter="url(#wc-soft)"/>
+          <circle cx="22" cy="56" r="3" fill="#ff99aa" opacity="0.5" filter="url(#wc-soft)"/>
+          <path d="M40,58 Q28,62 26,67 Q32,71 42,62" stroke="#7de8c8" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.65" filter="url(#wc-soft)"/>
+          <circle cx="28" cy="67" r="2.5" fill="#ff99aa" opacity="0.45" filter="url(#wc-soft)"/>
+          <path d="M82,42 Q95,32 98,42 Q94,47 82,46" stroke="#7de8c8" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.75" filter="url(#wc-soft)"/>
+          <circle cx="97" cy="41" r="3" fill="#ff99aa" opacity="0.5" filter="url(#wc-soft)"/>
+          <path d="M82,50 Q98,46 100,56 Q95,62 82,56" stroke="#7de8c8" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.75" filter="url(#wc-soft)"/>
+          <circle cx="98" cy="56" r="3" fill="#ff99aa" opacity="0.5" filter="url(#wc-soft)"/>
+          <path d="M80,58 Q92,62 94,67 Q88,71 78,62" stroke="#7de8c8" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.65" filter="url(#wc-soft)"/>
+          <circle cx="92" cy="67" r="2.5" fill="#ff99aa" opacity="0.45" filter="url(#wc-soft)"/>
+          <!-- 超大圆眼 -->
+          <circle cx="50" cy="45" r="7" fill="#1a2a2a" opacity="0.95"/>
+          <circle cx="70" cy="45" r="7" fill="#1a2a2a" opacity="0.95"/>
+          <circle cx="50" cy="45" r="4.5" fill="#5ac0a8" opacity="0.7"/>
+          <circle cx="70" cy="45" r="4.5" fill="#5ac0a8" opacity="0.7"/>
+          <circle cx="52" cy="42.5" r="2.3" fill="#fff" opacity="0.95"/>
+          <circle cx="72" cy="42.5" r="2.3" fill="#fff" opacity="0.95"/>
+          <circle cx="48" cy="47.5" r="0.9" fill="#fff" opacity="0.5"/>
+          <circle cx="68" cy="47.5" r="0.9" fill="#fff" opacity="0.5"/>
+          <!-- 微笑 -->
+          <path d="M55,55 Q60,59 65,55" stroke="#2a5a4a" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+          <!-- 腮红 -->
+          <ellipse cx="44" cy="53" rx="3.5" ry="2" fill="#ff99aa" opacity="0.32" filter="url(#wc-soft)"/>
+          <ellipse cx="76" cy="53" rx="3.5" ry="2" fill="#ff99aa" opacity="0.32" filter="url(#wc-soft)"/>
+        </g>
+        <!-- 气泡 -->
+        <circle cx="102" cy="25" r="5" fill="#a0d8f0" opacity="0.3" filter="url(#wc-soft)"/>
+        <circle cx="103" cy="24" r="2" fill="#fff" opacity="0.5"/>
+        <circle cx="110" cy="38" r="3.5" fill="#a0d8f0" opacity="0.25" filter="url(#wc-soft)"/>
+        <circle cx="97" cy="15" r="2.5" fill="#a0d8f0" opacity="0.2" filter="url(#wc-soft)"/>
+      </svg>`;
+      }
+
+      function picoSVG() {
+        // 小企鹅：圆滚滚布丁身材，橙喙橙脚
+        return `<svg viewBox="0 0 120 110" class="companion-svg" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="45" fill="#87afd7" opacity="0.1" filter="url(#wc-wash)"/>
+        <!-- 圆蛋身体 -->
+        <path d="M34,68 Q30,92 50,100 Q60,103 70,100 Q90,92 86,68 Q75,60 60,60 Q45,60 34,68 Z" fill="#5a7a9a" opacity="0.95" filter="url(#wc-soft)"/>
+        <!-- 白肚 -->
+        <path d="M42,72 Q40,90 52,96 Q60,98 68,96 Q80,90 78,72 Q70,82 60,83 Q50,82 42,72 Z" fill="#ffffff" opacity="0.92" filter="url(#wc-soft)"/>
+        <!-- 小翅膀 -->
+        <path d="M34,72 Q24,76 28,88 Q34,90 38,84 Z" fill="#5a7a9a" opacity="0.9" filter="url(#wc-soft)"/>
+        <path d="M86,72 Q96,76 92,88 Q86,90 82,84 Z" fill="#5a7a9a" opacity="0.9" filter="url(#wc-soft)"/>
+        <!-- 橙脚 -->
+        <ellipse cx="48" cy="99" rx="7" ry="4" fill="#ff8c32" opacity="0.88" filter="url(#wc-soft)"/>
+        <ellipse cx="72" cy="99" rx="7" ry="4" fill="#ff8c32" opacity="0.88" filter="url(#wc-soft)"/>
+        <!-- 头部 -->
+        <g transform="rotate(-3,60,38)">
+          <circle cx="60" cy="38" r="22" fill="#5a7a9a" opacity="0.96" filter="url(#wc-soft)"/>
+          <!-- 白脸 -->
+          <ellipse cx="60" cy="42" rx="15" ry="13" fill="#ffffff" opacity="0.88" filter="url(#wc-soft)"/>
+          <!-- 大眼 -->
+          <circle cx="52" cy="35" r="5.5" fill="#1a2a3a" opacity="0.95"/>
+          <circle cx="68" cy="35" r="5.5" fill="#1a2a3a" opacity="0.95"/>
+          <circle cx="53.5" cy="33" r="2" fill="#fff" opacity="0.95"/>
+          <circle cx="69.5" cy="33" r="2" fill="#fff" opacity="0.95"/>
+          <circle cx="50.5" cy="37.5" r="0.8" fill="#fff" opacity="0.5"/>
+          <circle cx="66.5" cy="37.5" r="0.8" fill="#fff" opacity="0.5"/>
+          <!-- 橙喙 -->
+          <path d="M56,44 Q60,52 64,44 Q60,47 56,44 Z" fill="#ff9830" opacity="0.92" filter="url(#wc-soft)"/>
+          <path d="M58,44 Q60,48 62,44" stroke="#e07820" stroke-width="0.7" fill="none" opacity="0.5"/>
+          <!-- 腮红 -->
+          <ellipse cx="45" cy="43" rx="3.5" ry="2" fill="#ff99aa" opacity="0.28" filter="url(#wc-soft)"/>
+          <ellipse cx="75" cy="43" rx="3.5" ry="2" fill="#ff99aa" opacity="0.28" filter="url(#wc-soft)"/>
+        </g>
+        <!-- 雪花 -->
+        <g transform="translate(100,18)" opacity="0.55">
+          <line x1="0" y1="-6" x2="0" y2="6" stroke="#a0d0f0" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="-6" y1="0" x2="6" y2="0" stroke="#a0d0f0" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="-4" y1="-4" x2="4" y2="4" stroke="#a0d0f0" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>
+          <line x1="-4" y1="4" x2="4" y2="-4" stroke="#a0d0f0" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>
+        </g>
+      </svg>`;
+      }
+
+      function bubuSVG() {
+        // 布布熊：圆滚滚奶棕色，抱饼干
+        return `<svg viewBox="0 0 120 110" class="companion-svg" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="62" r="46" fill="#d4a574" opacity="0.1" filter="url(#wc-wash)"/>
+        <!-- 胖身体 -->
+        <circle cx="60" cy="75" r="25" fill="#d4a574" opacity="0.95" filter="url(#wc-soft)"/>
+        <!-- 奶油肚 -->
+        <ellipse cx="60" cy="80" rx="17" ry="14" fill="#f0d8b8" opacity="0.7" filter="url(#wc-soft)"/>
+        <!-- 短腿 -->
+        <ellipse cx="48" cy="97" rx="7" ry="4" fill="#d4a574" opacity="0.88" filter="url(#wc-soft)"/>
+        <ellipse cx="72" cy="97" rx="7" ry="4" fill="#d4a574" opacity="0.88" filter="url(#wc-soft)"/>
+        <!-- 胳膊抱饼干 -->
+        <path d="M38,70 Q30,74 34,84 Q40,86 44,80" fill="#d4a574" opacity="0.9" filter="url(#wc-soft)"/>
+        <path d="M82,70 Q90,74 86,84 Q80,86 76,80" fill="#d4a574" opacity="0.9" filter="url(#wc-soft)"/>
+        <!-- 饼干（圆） -->
+        <circle cx="50" cy="80" r="9" fill="#b07040" opacity="0.92" filter="url(#wc-soft)"/>
+        <circle cx="47" cy="77" r="1.3" fill="#6a4020" opacity="0.65"/>
+        <circle cx="53" cy="77" r="1.1" fill="#6a4020" opacity="0.65"/>
+        <circle cx="50" cy="82" r="1.4" fill="#6a4020" opacity="0.65"/>
+        <circle cx="55" cy="82" r="1" fill="#6a4020" opacity="0.65"/>
+        <circle cx="46" cy="82" r="0.9" fill="#6a4020" opacity="0.65"/>
+        <!-- 头部 -->
+        <g transform="rotate(-4,60,42)">
+          <circle cx="60" cy="42" r="24" fill="#d4a574" opacity="0.96" filter="url(#wc-soft)"/>
+          <!-- 奶油色嘴周 -->
+          <ellipse cx="60" cy="48" rx="14" ry="11" fill="#f0d8b8" opacity="0.7" filter="url(#wc-soft)"/>
+          <!-- 圆耳 -->
+          <circle cx="40" cy="22" r="9" fill="#d4a574" opacity="0.92" filter="url(#wc-soft)"/>
+          <circle cx="80" cy="22" r="9" fill="#d4a574" opacity="0.92" filter="url(#wc-soft)"/>
+          <circle cx="40" cy="22" r="5" fill="#ff99aa" opacity="0.3" filter="url(#wc-soft)"/>
+          <circle cx="80" cy="22" r="5" fill="#ff99aa" opacity="0.3" filter="url(#wc-soft)"/>
+          <!-- 暖棕色大眼 -->
+          <circle cx="50" cy="40" r="5.5" fill="#2a1a08" opacity="0.95"/>
+          <circle cx="70" cy="40" r="5.5" fill="#2a1a08" opacity="0.95"/>
+          <circle cx="50" cy="41" r="3.5" fill="#8a5020" opacity="0.55"/>
+          <circle cx="70" cy="41" r="3.5" fill="#8a5020" opacity="0.55"/>
+          <circle cx="51.8" cy="38" r="2" fill="#fff" opacity="0.95"/>
+          <circle cx="71.8" cy="38" r="2" fill="#fff" opacity="0.95"/>
+          <circle cx="48.5" cy="42.5" r="0.8" fill="#fff" opacity="0.5"/>
+          <circle cx="68.5" cy="42.5" r="0.8" fill="#fff" opacity="0.5"/>
+          <!-- 圆鼻+微笑 -->
+          <circle cx="60" cy="49" r="2.8" fill="#2a1a08" opacity="0.85"/>
+          <circle cx="59" cy="48" r="0.9" fill="#fff" opacity="0.3"/>
+          <path d="M56,54 Q60,58 64,54" stroke="#2a1a08" stroke-width="1.1" fill="none" stroke-linecap="round" opacity="0.55"/>
+          <!-- 腮红 -->
+          <ellipse cx="42" cy="48" rx="4" ry="2.5" fill="#ff99aa" opacity="0.32" filter="url(#wc-soft)"/>
+          <ellipse cx="78" cy="48" rx="4" ry="2.5" fill="#ff99aa" opacity="0.32" filter="url(#wc-soft)"/>
+        </g>
+      </svg>`;
+      }
+
+      function kumoSVG() {
+        // 水豚：敦实佛系，半眯眼，捧咖啡
+        return `<svg viewBox="0 0 120 110" class="companion-svg" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="62" r="46" fill="#b8a898" opacity="0.1" filter="url(#wc-wash)"/>
+        <!-- 敦实身体 -->
+        <ellipse cx="60" cy="78" rx="30" ry="22" fill="#b8a898" opacity="0.95" filter="url(#wc-soft)"/>
+        <ellipse cx="60" cy="82" rx="20" ry="13" fill="#d0c0b0" opacity="0.5" filter="url(#wc-soft)"/>
+        <!-- 短腿 -->
+        <ellipse cx="42" cy="98" rx="7" ry="4" fill="#b8a898" opacity="0.88" filter="url(#wc-soft)"/>
+        <ellipse cx="60" cy="99" rx="7" ry="4" fill="#b8a898" opacity="0.88" filter="url(#wc-soft)"/>
+        <ellipse cx="78" cy="98" rx="7" ry="4" fill="#b8a898" opacity="0.88" filter="url(#wc-soft)"/>
+        <!-- 宽头（略方带圆） -->
+        <g transform="rotate(-1,60,48)">
+          <path d="M34,48 Q32,26 60,24 Q88,26 86,48 Q88,60 60,63 Q32,60 34,48 Z" fill="#b8a898" opacity="0.96" filter="url(#wc-soft)"/>
+          <ellipse cx="60" cy="52" rx="18" ry="14" fill="#c8b8a8" opacity="0.65" filter="url(#wc-soft)"/>
+          <!-- 小圆耳，分得很开 -->
+          <circle cx="36" cy="28" r="6" fill="#b8a898" opacity="0.92" filter="url(#wc-soft)"/>
+          <circle cx="84" cy="28" r="6" fill="#b8a898" opacity="0.92" filter="url(#wc-soft)"/>
+          <circle cx="36" cy="28" r="3" fill="#c0a090" opacity="0.4" filter="url(#wc-soft)"/>
+          <circle cx="84" cy="28" r="3" fill="#c0a090" opacity="0.4" filter="url(#wc-soft)"/>
+          <!-- 佛系眯眯眼（弧线+小点） -->
+          <path d="M44,44 Q50,47 56,44" stroke="#2a1a08" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.85"/>
+          <path d="M64,44 Q70,47 76,44" stroke="#2a1a08" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.85"/>
+          <circle cx="50" cy="46.5" r="1.5" fill="#2a1a08" opacity="0.65"/>
+          <circle cx="70" cy="46.5" r="1.5" fill="#2a1a08" opacity="0.65"/>
+          <!-- 钝鼻宽椭圆 -->
+          <ellipse cx="60" cy="55" rx="5" ry="3.8" fill="#887060" opacity="0.7" filter="url(#wc-soft)"/>
+          <circle cx="57.5" cy="55" r="1" fill="#2a1a08" opacity="0.55"/>
+          <circle cx="62.5" cy="55" r="1" fill="#2a1a08" opacity="0.55"/>
+          <!-- 宁静微笑 -->
+          <path d="M54,61 Q60,65 66,61" stroke="#6a5848" stroke-width="1.1" fill="none" stroke-linecap="round" opacity="0.55"/>
+          <!-- 淡腮红 -->
+          <ellipse cx="42" cy="55" rx="3.5" ry="2" fill="#d8a090" opacity="0.22" filter="url(#wc-soft)"/>
+          <ellipse cx="78" cy="55" rx="3.5" ry="2" fill="#d8a090" opacity="0.22" filter="url(#wc-soft)"/>
+        </g>
+        <!-- 咖啡杯（小只捧着） -->
+        <rect x="84" y="72" width="13" height="14" rx="2.5" fill="#8a6848" opacity="0.88" filter="url(#wc-soft)"/>
+        <ellipse cx="90.5" cy="72" rx="6.5" ry="1.8" fill="#6a4828" opacity="0.75"/>
+        <path d="M97,76 Q103,76 103,81 Q103,85 97,85" stroke="#8a6848" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.85"/>
+        <!-- 咖啡热气 -->
+        <path d="M88,68 Q90,63 88,58" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.25"/>
+        <path d="M93,68 Q95,63 93,58" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.25"/>
+      </svg>`;
+      }
+
+      const compSVGGenerators = {
+        foxy: foxyCompSVG,
+        mochi: mochiSVG,
+        byte: byteSVG,
+        nori: noriSVG,
+        pico: picoSVG,
+        bubu: bubuSVG,
+        kumo: kumoSVG,
+      };
+
+      // ========== MOOD FACE SVG (tiny) ==========
+      function moodFaceSVG(color) {
+        // Returns a generic tiny cute face shape; the actual expression is conveyed by the unicode char in the pill
+        return `<svg viewBox="0 0 32 24" width="32" height="24" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="16" cy="13" rx="13" ry="10" fill="${color}" opacity="0.15" filter="url(#wc-soft)"/>
+        <circle cx="11" cy="11" r="2" fill="${color}" opacity="0.8"/>
+        <circle cx="21" cy="11" r="2" fill="${color}" opacity="0.8"/>
+        <path d="M12,16 Q16,19 20,16" stroke="${color}" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.7"/>
+      </svg>`;
+      }
+
+      // ========== RENDER FUNCTIONS ==========
+      function renderEvoGrid() {
+        const g = document.getElementById("evo-grid");
+        g.innerHTML = foxLevels
+          .map((f) => {
+            const badgeStyle = `background:${f.badge}; color:${f.btxt};`;
+            return `<div class="mascot-card evo-card">
+          <span class="lv-badge" style="${badgeStyle}">LV ${f.lv}</span>
+          <div class="stage-name">${f.name}</div>
+          <div class="art-container evo">${foxSVG(f)}</div>
+          <div class="flavor">${f.desc}</div>
+        </div>`;
+          })
+          .join("");
+      }
+
+      function renderCompGrid() {
+        const g = document.getElementById("comp-grid");
+        g.innerHTML = companions
+          .map((c) => {
+            const moodsHTML = moods
+              .slice(0, 4)
+              .map((m) => {
+                return `<span class="mood-pill" style="color:${c.moodc}; border-color:${c.moodc}33; background:${c.moodc}10;">${m.face} ${m.label}</span>`;
+              })
+              .join("");
+            return `<div class="mascot-card comp-card">
+          <div class="species-tag">${c.species}</div>
+          <div style="font-size:15px; font-weight:700; color:var(--ink); margin-bottom:4px;">${c.name}</div>
+          <div class="art-container comp">${compSVGGenerators[c.id]()}</div>
+          <div class="mood-row">${moodsHTML}</div>
+          <div class="catchphrase">${c.catch}</div>
+        </div>`;
+          })
+          .join("");
+      }
+
+      function renderMoodTable() {
+        const tb = document.getElementById("mood-tbody");
+        tb.innerHTML = moods
+          .map((m) => {
+            return `<tr>
+          <td style="color:${m.color}; font-weight:600; font-family:'JetBrains Mono',monospace;">${m.label}</td>
+          <td style="font-size:18px; text-align:center;">${moodFaceSVG(m.color)}<div style="font-size:12px; color:${m.color}; margin-top:2px;">${m.face}</div></td>
+          <td style="color:var(--ink-2); font-size:12px;">${m.desc}</td>
+          <td style="color:${m.color}; font-size:13px; white-space:nowrap;">${m.energy}</td>
+        </tr>`;
+          })
+          .join("");
+      }
+
+      function renderSpec() {
+        const spec = `{
+  <span class="cmt">// 渲染技术</span>
+  <span class="kw">"rendering"</span>: <span class="str">"SVG + 水彩滤镜"</span>,
+  <span class="kw">"filters"</span>: {
+    <span class="kw">"wc-soft"</span>:   <span class="str">"GaussianBlur(0.8) + Turbulence Disp(2)"</span>,
+    <span class="kw">"wc-wash"</span>:   <span class="str">"GaussianBlur(2) + Turbulence Disp(4) 湿边晕染"</span>,
+    <span class="kw">"wc-paper"</span>:  <span class="str">"fractalNoise 纸张纹理"</span>,
+    <span class="kw">"wc-glow"</span>:   <span class="str">"GaussianBlur(4) + Merge 光晕"</span>
+  },
+
+  <span class="cmt">// 画框规格</span>
+  <span class="kw">"viewBox"</span>: {
+    <span class="kw">"evolution"</span>:   <span class="str">"0 0 180 160"</span>,   <span class="cmt">// 九尾狐进化卡</span>
+    <span class="kw">"companion"</span>:   <span class="str">"0 0 120 110"</span>,   <span class="cmt">// 伙伴图鉴卡</span>
+    <span class="kw">"mood-face"</span>:  <span class="str">"0 0 32 24"</span>      <span class="cmt">// 心情微表情</span>
+  },
+
+  <span class="cmt">// 色彩系统</span>
+  <span class="kw">"color"</span>: {
+    <span class="kw">"principle"</span>: <span class="str">"per-species primary + cream/white accents"</span>,
+    <span class="kw">"fill"</span>:       <span class="str">"radialGradient 水彩晕染 (中心亮→边缘深)"</span>,
+    <span class="kw">"opacity"</span>:    <span class="str">"0.7~0.95 多层叠色营造通透感"</span>,
+    <span class="kw">"palette"</span>: {
+      <span class="kw">"foxy"</span>:   <span class="str">"#ff8700 orange → #ffd860 gold → #fff8e0 divine"</span>,
+      <span class="kw">"mochi"</span>:  <span class="str">"#f5c6d6 pink cloud"</span>,
+      <span class="kw">"byte"</span>:   <span class="str">"#5fd75f cyber green"</span>,
+      <span class="kw">"nori"</span>:   <span class="str">"#7de8c8 mint axolotl"</span>,
+      <span class="kw">"pico"</span>:   <span class="str">"#87afd7 ice blue"</span>,
+      <span class="kw">"bubu"</span>:   <span class="str">"#d4a574 cream brown"</span>,
+      <span class="kw">"kumo"</span>:   <span class="str">"#b8a898 zen gray"</span>
+    }
+  },
+
+  <span class="cmt">// 动画</span>
+  <span class="kw">"animation"</span>: {
+    <span class="kw">"foxGlowPulse"</span>: <span class="str">"3s ease-in-out infinite (Lv7+ 光晕脉动)"</span>,
+    <span class="kw">"floaty"</span>:       <span class="str">"4s ease-in-out infinite (Lv8+ 浮空微动)"</span>,
+    <span class="kw">"blink"</span>:        <span class="str">"1s step-end (终端光标)"</span>
+  },
+
+  <span class="cmt">// 进化维度</span>
+  <span class="kw">"evolution"</span>: {
+    <span class="kw">"tails"</span>:     <span class="str">"${1}→${9} 扇形展开"</span>,
+    <span class="kw">"color-shift"</span>: <span class="str">"orange → gold → white-gold (Lv8+)"</span>,
+    <span class="kw">"particles"</span>:  <span class="str">"sparkle → orb → stars → aura → divine mist"</span>,
+    <span class="kw">"forehead"</span>:   <span class="str">"dot(Lv3) → ◆(Lv5) → ✦(Lv6) → crystal(Lv8) → radiant(Lv9)"</span>,
+    <span class="kw">"eyes"</span>:      <span class="str">"solid black → amber iris → gold iris → luminous"</span>
+  },
+
+  <span class="cmt">// 萌系核心原则</span>
+  <span class="kw">"cuteness"</span>: [
+    <span class="str">"big eyes (2 highlights per eye: 1 big + 1 tiny)"</span>,
+    <span class="str">"pink blush circles on cheeks (#ff9999 low opacity)"</span>,
+    <span class="str">"chibi proportions: head ~60% of body, stubby limbs"</span>,
+    <span class="str">"fluffy curved tails with soft gradient tips"</span>,
+    <span class="str">"rounded shapes everywhere, no sharp edges except pixel fox"</span>,
+    <span class="str">"layered translucent fills for watercolor depth"</span>
+  ]
+}`;
+        document.getElementById("spec-block").innerHTML = spec;
+      }
+
+      // ========== INIT ==========
+      renderEvoGrid();
+      renderCompGrid();
+      renderMoodTable();
+      renderSpec();
+    </script>
+    <script>
+      lucide.createIcons();
+    </script>
+  </body>
 </html>

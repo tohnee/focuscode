@@ -1,6 +1,6 @@
 {
   "name": "@focuscode/cli",
-  "version": "0.4.0-beta.2",
+  "version": "0.5.0",
   "description": "Model-neutral terminal coding agent with TUI, OAuth, multimodal input and isolated execution",
   "type": "module",
   "bin": {

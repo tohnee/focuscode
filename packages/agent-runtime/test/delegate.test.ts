@@ -87,8 +87,9 @@ describe("delegate tool", () => {
       .entries.map((entry) => entry.message)
       .find((message) => message.role === "tool" && message.toolName === "delegate");
     expect(toolMessage?.content).toContain("child answer: workspace is empty");
-    expect(toolMessage?.content).toContain("[delegate: 1 round(s)");
-    expect(toolMessage?.content).toContain("tokens in=6 out=3");
+    expect(toolMessage?.content).toContain("Delegate result (structured):");
+    expect(toolMessage?.content).toContain('"inputTokens":6');
+    expect(toolMessage?.content).toContain('"outputTokens":3');
   });
 
   it("rejects oversized tasks and honors maxRounds bounds", async () => {

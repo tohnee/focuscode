@@ -158,6 +158,10 @@ async function main(): Promise<void> {
     appendSystemPrompt(fragment: string) {
       send({ type: "appendSystemPrompt", fragment });
     },
+    beforeTool() {
+      // Process-isolated extensions do not support beforeTool hooks.
+      // beforeTool is only available for in-process extensions (ExtensionHost).
+    },
   };
 
   const lines = createInterface({ input: process.stdin });

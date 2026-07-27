@@ -82,14 +82,24 @@ export function createDelegateTool(getContext: () => DelegateContext): AgentTool
           ? `${result.content.slice(0, MAX_RESULT_CHARS)}\n... [truncated to ${MAX_RESULT_CHARS} characters]`
           : result.content;
       const usage = result.usage;
-      return {
-        content: `${body}\n\n[delegate: ${result.rounds} round(s), ${result.toolCalls} tool call(s), stopped=${result.stopped}, tokens in=${usage.inputTokens} out=${usage.outputTokens}]`,
-        metadata: {
-          rounds: result.rounds,
-          toolCalls: result.toolCalls,
-          stopped: result.stopped,
-          usage: result.usage,
+      // Structured metadata embedded in the content so the parent agent's
+      // model can parse it without re-reading the prose body. This follows
+      // the OMP yield-schema pattern: the parent reads a typed object rather
+      // than散文, eliminating "parent misunderstands child report" failures.
+      const structured = {
+        success: result.stopped === "stop",
+        stopped: result.stopped,
+        rounds: result.rounds,
+        toolCalls: result.toolCalls,
+        usage: {
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+          ...(usage.cachedInputTokens ? { cachedInputTokens: usage.cachedInputTokens } : {}),
         },
+      };
+      return {
+        content: `${body}\n\n---\nDelegate result (structured):\n${JSON.stringify(structured)}`,
+        metadata: structured,
       };
     },
   };

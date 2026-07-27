@@ -13,11 +13,34 @@ export interface ExtensionCommand {
   execute(args: string, context: ExtensionCommandContext): Promise<string | void> | string | void;
 }
 
+export interface BeforeToolContext {
+  toolName: string;
+  arguments: Record<string, unknown>;
+  cwd: string;
+}
+
+export interface BeforeToolResult {
+  /** Return { allow: false, reason: "..." } to veto execution. */
+  allow: boolean;
+  reason?: string;
+}
+
+export type BeforeToolHook = (
+  context: BeforeToolContext,
+) => BeforeToolResult | Promise<BeforeToolResult>;
+
 export interface AgentExtensionApi {
   registerTool(tool: AgentTool): void;
   registerCommand(command: ExtensionCommand): void;
   onEvent(listener: (event: AgentEvent) => void | Promise<void>): void;
   appendSystemPrompt(fragment: string): void;
+  /**
+   * Register a hook called before each tool execution. Return {allow:false}
+   * to veto execution - the tool call is rejected and the reason is returned
+   * to the model as an error result. Hooks are called in registration order;
+   * the first veto wins.
+   */
+  beforeTool(hook: BeforeToolHook): void;
 }
 
 export interface LoadedExtension {
@@ -40,6 +63,13 @@ export interface ExtensionHostLike {
   getCommand(name: string): ExtensionCommand | undefined;
   systemPrompt(): string;
   emit(event: AgentEvent): Promise<void>;
+  /**
+   * Check beforeTool hooks for a pending tool call. Returns the first veto
+   * result, or undefined if all hooks allow execution. Hooks that throw are
+   * treated as allow (fail-open) to avoid blocking the agent loop on
+   * buggy extensions.
+   */
+  checkBeforeTool?(context: BeforeToolContext): Promise<BeforeToolResult | undefined>;
   /** Release host resources (child processes for the process host). No-op in-process. */
   dispose?(): void | Promise<void>;
 }
@@ -50,6 +80,7 @@ export class ExtensionHost implements ExtensionHostLike {
   private readonly commands = new Map<string, ExtensionCommand>();
   private readonly listeners: Array<(event: AgentEvent) => void | Promise<void>> = [];
   private readonly promptFragments: string[] = [];
+  private readonly beforeToolHooks: BeforeToolHook[] = [];
   private readonly loaded: LoadedExtension[] = [];
   private readonly baseToolNames: Set<string>;
   private paths: string[] = [];
@@ -134,7 +165,20 @@ export class ExtensionHost implements ExtensionHostLike {
         const trimmed = fragment.trim();
         if (trimmed) this.promptFragments.push(trimmed);
       },
+      beforeTool: (hook) => this.beforeToolHooks.push(hook),
     };
+  }
+
+  async checkBeforeTool(context: BeforeToolContext): Promise<BeforeToolResult | undefined> {
+    for (const hook of this.beforeToolHooks) {
+      try {
+        const result = await hook(context);
+        if (!result.allow) return result;
+      } catch {
+        // Buggy hook: fail-open (allow execution) to avoid blocking the agent.
+      }
+    }
+    return undefined;
   }
 }
 

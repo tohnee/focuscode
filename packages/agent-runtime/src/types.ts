@@ -1,4 +1,4 @@
-import type { ApprovalMode } from "@focuscode/action-domain";
+import type { ApprovalMode, CommandPrefixRule } from "@focuscode/action-domain";
 
 export type { ApprovalMode };
 
@@ -73,6 +73,19 @@ export interface ToolDefinition {
 export interface ModelRequest {
   model: string;
   systemPrompt: string;
+  /**
+   * Optional split of system prompt into cacheable segments. When set, the
+   * Provider client may insert cache breakpoints at the boundary between
+   * stable and dynamic so prefix-cache hits are maximized across rounds.
+   * When absent, `systemPrompt` is used as the single monolithic prompt
+   * (backward compatible).
+   */
+  systemPromptParts?: {
+    /** Stable prefix that rarely changes between rounds (cached by Provider). */
+    stable: string;
+    /** Dynamic suffix that changes per-round (not cached). */
+    dynamic: string;
+  };
   messages: AgentMessage[];
   tools: ToolDefinition[];
   temperature: number;
@@ -262,6 +275,7 @@ export interface AgentRuntimeOptions {
     projectTrusted: boolean;
     protectedPaths: string[];
     approve?: ApprovalHandler;
+    prefixRules?: CommandPrefixRule[];
   };
   sessionStore: import("./session-store.js").SessionStore;
   sessionId?: string;
