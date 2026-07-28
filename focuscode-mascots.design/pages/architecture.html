@@ -2551,17 +2551,24 @@
               <div class="component-card-file">spec_draft_ready event · tui.ts</div>
               <div class="component-card-desc">
                 <code>spec_draft_ready</code> 事件现在携带完整的
-                <code>taskBreakdown</code> 数组。TUI 预览面板渲染 understanding（需求理解）、taskBreakdown（任务分解）与
-                decisions（关键决策）三部分，采用粗体标题 + 暗色元数据的排版层次，用户可在确认前逐项审查。
+                <code>taskBreakdown</code> 数组。TUI 预览面板渲染
+                understanding（需求理解）、taskBreakdown（任务分解）与
+                decisions（关键决策）三部分，采用粗体标题 +
+                暗色元数据的排版层次，用户可在确认前逐项审查。
               </div>
             </div>
             <div class="component-card">
               <div class="component-card-name">Spec History Browser</div>
               <div class="component-card-file">specHistoryView · renderSpecHistory() · Alt+H</div>
               <div class="component-card-desc">
-                新增 <code>specHistoryView</code> 状态追踪已完成规格（specId、topic、completedAt、totalDuration、stages、status）。
-                <code>renderSpecHistory()</code> 覆盖层提供可滚动历史列表：状态图标（● 完成 / ○ 进行中）、
-                相对时间戳、阶段分解、选择高亮。<code>Alt+H</code> 打开，<code>Up/Down/j/k</code> 导航，<code>Esc</code> 关闭。
+                新增
+                <code>specHistoryView</code>
+                状态追踪已完成规格（specId、topic、completedAt、totalDuration、stages、status）。
+                <code>renderSpecHistory()</code> 覆盖层提供可滚动历史列表：状态图标（● 完成 / ○
+                进行中）、 相对时间戳、阶段分解、选择高亮。<code>Alt+H</code> 打开，<code
+                  >Up/Down/j/k</code
+                >
+                导航，<code>Esc</code> 关闭。
               </div>
             </div>
           </div>
@@ -2578,8 +2585,10 @@
               <div class="component-card-name">Active Pane Focus Cycling</div>
               <div class="component-card-file">activePane · cycleSidebarFocus() · Alt+]</div>
               <div class="component-card-desc">
-                新增 <code>activePane</code> 状态（<code>"input" | "todo" | "spec" | "context"</code>），
-                <code>cycleSidebarFocus()</code> 在侧栏面板间循环切换焦点。聚焦面板边框以品牌橙渲染，
+                新增 <code>activePane</code> 状态（<code>"input" | "todo" | "spec" | "context"</code
+                >），
+                <code>cycleSidebarFocus()</code>
+                在侧栏面板间循环切换焦点。聚焦面板边框以品牌橙渲染，
                 非聚焦面板边框以暗色渲染，提供清晰的视觉焦点反馈。
               </div>
             </div>
@@ -2587,9 +2596,9 @@
               <div class="component-card-name">Pane Action Dispatch</div>
               <div class="component-card-file">performSidebarAction() · Alt+Enter</div>
               <div class="component-card-desc">
-                <code>performSidebarAction()</code> 对当前聚焦面板执行上下文操作：Todo 面板切换复选框、
-                Spec 面板展开/折叠、Context 面板刷新等。<code>Alt+Enter</code> 触发，
-                让侧栏面板无需鼠标即可完成全部交互。
+                <code>performSidebarAction()</code> 对当前聚焦面板执行上下文操作：Todo
+                面板切换复选框、 Spec 面板展开/折叠、Context 面板刷新等。<code>Alt+Enter</code>
+                触发， 让侧栏面板无需鼠标即可完成全部交互。
               </div>
             </div>
           </div>
@@ -2606,18 +2615,19 @@
               <div class="component-card-name">Rich Typography Rendering</div>
               <div class="component-card-file">bold() · italic() · faintLocal() · renderer.ts</div>
               <div class="component-card-desc">
-                Renderer 现消费 spec-progress 与 markdown 渲染管线中的 bold / italic / dim / underline ANSI 样式。
-                新增 <code>bold()</code>、<code>italic()</code>、<code>faintLocal()</code> 辅助函数。
-                标题以粗体渲染，元数据以暗色渲染，强调以斜体渲染，重要文本以下划线渲染。
+                Renderer 现消费 spec-progress 与 markdown 渲染管线中的 bold / italic / dim /
+                underline ANSI 样式。 新增 <code>bold()</code>、<code>italic()</code>、<code
+                  >faintLocal()</code
+                >
+                辅助函数。 标题以粗体渲染，元数据以暗色渲染，强调以斜体渲染，重要文本以下划线渲染。
               </div>
             </div>
             <div class="component-card">
               <div class="component-card-name">Toast Notification System</div>
               <div class="component-card-file">toast · fade animations · renderer.ts</div>
               <div class="component-card-desc">
-                实现 toast 通知系统，支持淡入淡出动画（右上角定位，3 秒后自动消失），
-                提供 success / warning / error / info 四种语义变体，与品牌色系统一致。
-                操作反馈不再依赖硬切文本。
+                实现 toast 通知系统，支持淡入淡出动画（右上角定位，3 秒后自动消失）， 提供 success /
+                warning / error / info 四种语义变体，与品牌色系统一致。 操作反馈不再依赖硬切文本。
               </div>
             </div>
             <div class="component-card">
@@ -2641,12 +2651,15 @@
           <div class="component-grid">
             <div class="component-card">
               <div class="component-card-name">AbortSignal Propagation</div>
-              <div class="component-card-file">controller.signal · exploreCodebase() · tool.execute()</div>
+              <div class="component-card-file">
+                controller.signal · exploreCodebase() · tool.execute()
+              </div>
               <div class="component-card-desc">
-                <code>controller.signal</code> 现沿 <code>exploreCodebase()</code>
-                传递到所有工具执行路径：<code>read</code> / <code>write</code> / <code>edit</code> /
-                <code>ls</code> / <code>runProcess</code> / <code>grepRecursive</code> /
-                <code>listFiles</code>。工具实现接受并遵守 AbortSignal，超时或用户中断时慢工具可被及时终止。
+                <code>controller.signal</code> 现沿
+                <code>exploreCodebase()</code> 传递到所有工具执行路径：<code>read</code> /
+                <code>write</code> / <code>edit</code> / <code>ls</code> / <code>runProcess</code> /
+                <code>grepRecursive</code> / <code>listFiles</code>。工具实现接受并遵守
+                AbortSignal，超时或用户中断时慢工具可被及时终止。
               </div>
             </div>
             <div class="component-card">
@@ -2654,8 +2667,8 @@
               <div class="component-card-file">persistCompanion() · 500ms debounce</div>
               <div class="component-card-desc">
                 为 <code>persistCompanion()</code> 添加 500ms 防抖，快速连续的
-                <code>agent_end</code> 事件合并为单次磁盘写入，显著降低高频交互下的 IO 压力，
-                避免 Companion 状态在快速操作中产生不必要的磁盘抖动。
+                <code>agent_end</code> 事件合并为单次磁盘写入，显著降低高频交互下的 IO 压力， 避免
+                Companion 状态在快速操作中产生不必要的磁盘抖动。
               </div>
             </div>
             <div class="component-card">
@@ -2663,25 +2676,27 @@
               <div class="component-card-file">setPaletteCallback() · 16 commands · tui.ts</div>
               <div class="component-card-desc">
                 通过 <code>tui.setPaletteCallback()</code> 接入全部 16 个命令的处理逻辑：
-                布局切换（classic/split/focus/wide/cycle）、Vim 模式切换、搜索、模型选择、Todo 面板、
-                Spec 拒绝、会话新建/分叉、推理展开、记录清空、Spec/Context 侧栏切换。
+                布局切换（classic/split/focus/wide/cycle）、Vim 模式切换、搜索、模型选择、Todo
+                面板、 Spec 拒绝、会话新建/分叉、推理展开、记录清空、Spec/Context 侧栏切换。
               </div>
             </div>
             <div class="component-card">
               <div class="component-card-name">Sidebar Pane Toggle</div>
               <div class="component-card-file">toggleSidebarPane() · pane:toggle_spec/context</div>
               <div class="component-card-desc">
-                新增 <code>toggleSidebarPane(paneId)</code> 方法与命令面板命令，
-                可单独控制 Spec / Context 面板显隐；<code>toggleTodoPanel</code>
-                现同步 layout pane 状态，<code>setLayoutMode</code> 切换时同步 todoPanel.visible。
+                新增 <code>toggleSidebarPane(paneId)</code> 方法与命令面板命令， 可单独控制 Spec /
+                Context 面板显隐；<code>toggleTodoPanel</code> 现同步 layout pane 状态，<code
+                  >setLayoutMode</code
+                >
+                切换时同步 todoPanel.visible。
               </div>
             </div>
           </div>
         </div>
 
         <div class="fallback-note">
-          <span class="label">Remaining:</span> 终端色深自动探测（根据
-          <code>TERM</code> / <code>COLORTERM</code> 自动降级 truecolor → 256 → 16 色）尚未实现，
+          <span class="label">Remaining:</span> 终端色深自动探测（根据 <code>TERM</code> /
+          <code>COLORTERM</code> 自动降级 truecolor → 256 → 16 色）尚未实现，
           将在后续版本中处理。当前默认 truecolor 输出，在绝大多数现代终端下工作正常。
         </div>
       </section>
@@ -2723,7 +2738,8 @@
                 <strong>已修复。</strong><code>spec_draft_ready</code> 事件现在携带
                 <code>taskBreakdown</code> 数组。TUI 在规格草案预览中渲染
                 <code>understanding</code>、<code>taskBreakdown</code> 与
-                <code>decisions</code>，并采用正确的排版层次（粗体标题、暗色元数据）。用户可在确认前完整审查规格草案。
+                <code>decisions</code
+                >，并采用正确的排版层次（粗体标题、暗色元数据）。用户可在确认前完整审查规格草案。
               </div>
             </div>
           </div>
@@ -2756,8 +2772,9 @@
               <div class="issue-desc">
                 <strong>已修复。</strong>新增 <code>specHistoryView</code> 状态追踪已完成规格（含
                 specId、topic、completedAt、totalDuration、stages、status）。新
-                <code>renderSpecHistory()</code> 覆盖层渲染可滚动列表，带状态图标（●/○）、相对时间戳、阶段分解与选择高亮。绑定 <code>Alt+H</code> 快捷键，
-                <code>Up/Down/j/k</code> 导航，<code>Esc</code> 关闭。
+                <code>renderSpecHistory()</code>
+                覆盖层渲染可滚动列表，带状态图标（●/○）、相对时间戳、阶段分解与选择高亮。绑定
+                <code>Alt+H</code> 快捷键， <code>Up/Down/j/k</code> 导航，<code>Esc</code> 关闭。
               </div>
             </div>
           </div>
@@ -2768,9 +2785,10 @@
               <div class="issue-desc">
                 <strong>已修复。</strong>新增 <code>activePane</code> 状态（<code
                   >"input" | "todo" | "spec" | "context"</code
-                >）与 <code>cycleSidebarFocus()</code>（<code>Alt+]</code> 循环切换面板）、<code
-                  >performSidebarAction()</code
-                >（<code>Alt+Enter</code> 对聚焦面板执行操作，如切换 Todo 复选框）。聚焦面板边框以强调色渲染，其余面板边框以暗色渲染。
+                >）与 <code>cycleSidebarFocus()</code>（<code>Alt+]</code>
+                循环切换面板）、<code>performSidebarAction()</code>（<code>Alt+Enter</code>
+                对聚焦面板执行操作，如切换 Todo
+                复选框）。聚焦面板边框以强调色渲染，其余面板边框以暗色渲染。
               </div>
             </div>
           </div>
@@ -2801,7 +2819,8 @@
               </div>
               <div class="issue-desc">
                 <strong>已修复。</strong><code>controller.signal</code> 现沿
-                <code>exploreCodebase()</code> 传递到所有工具执行路径（<code>read/write/edit/ls/runProcess/grepRecursive/listFiles</code>）。工具实现现接受并遵守
+                <code>exploreCodebase()</code>
+                传递到所有工具执行路径（<code>read/write/edit/ls/runProcess/grepRecursive/listFiles</code>）。工具实现现接受并遵守
                 AbortSignal 以支持取消操作，超时或用户中断时慢工具可被及时终止。
               </div>
             </div>
@@ -2812,7 +2831,8 @@
               <div class="issue-title">Typography 系统已设计但未实现</div>
               <div class="issue-desc">
                 <strong>已修复。</strong>Renderer 现消费 spec-progress 与 markdown 渲染中的 bold /
-                italic / dim / underline ANSI 样式。新增 <code>bold()</code>、<code>italic()</code>、<code>faintLocal()</code>
+                italic / dim / underline ANSI 样式。新增
+                <code>bold()</code>、<code>italic()</code>、<code>faintLocal()</code>
                 辅助函数。标题以粗体渲染，元数据以暗色渲染，强调以斜体渲染，重要文本以下划线渲染，文本层次清晰可辨。
               </div>
             </div>
@@ -2823,7 +2843,8 @@
               <div class="issue-title">Micro-animation 系统未实现</div>
               <div class="issue-desc">
                 <strong>已修复。</strong>实现了 toast 通知系统，带淡入淡出动画（右上角，3
-                秒后自动消失，success/warning/error/info 四种变体）。新增 shimmer 加载状态效果。阶段过渡现具有微妙的视觉反馈，状态切换不再硬切。
+                秒后自动消失，success/warning/error/info 四种变体）。新增 shimmer
+                加载状态效果。阶段过渡现具有微妙的视觉反馈，状态切换不再硬切。
               </div>
             </div>
           </div>
@@ -3284,7 +3305,13 @@
       document.addEventListener("keydown", (e) => {
         // Ignore if typing in search box
         if (e.target.tagName === "INPUT") return;
-        const map = { 1: "spec-engine", 2: "tui", 3: "integration", 4: "optimizations", 5: "issues" };
+        const map = {
+          1: "spec-engine",
+          2: "tui",
+          3: "integration",
+          4: "optimizations",
+          5: "issues",
+        };
         if (map[e.key]) {
           switchTab(map[e.key], e);
         }

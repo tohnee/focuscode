@@ -898,7 +898,10 @@ function renderSpecHistory(
 
   // List area: show up to ~8 entries, with selection highlight.
   const listMax = Math.min(8, Math.max(3, height - 12));
-  const startIdx = Math.max(0, Math.min(view.selectedIndex - Math.floor(listMax / 2), view.entries.length - listMax));
+  const startIdx = Math.max(
+    0,
+    Math.min(view.selectedIndex - Math.floor(listMax / 2), view.entries.length - listMax),
+  );
   const visible = view.entries.slice(startIdx, startIdx + listMax);
 
   for (let i = 0; i < visible.length; i++) {
@@ -925,8 +928,20 @@ function renderSpecHistory(
     lines.push(faintLocal(fg(theme.muted, "  " + truncatePlain(selected.specId, innerWidth - 4))));
     lines.push("");
     for (const stage of selected.stages) {
-      const icon = stage.status === "done" ? "●" : stage.status === "failed" ? "✗" : stage.status === "running" ? "◐" : "○";
-      const color = stage.status === "done" ? theme.success : stage.status === "failed" ? theme.danger : theme.muted;
+      const icon =
+        stage.status === "done"
+          ? "●"
+          : stage.status === "failed"
+            ? "✗"
+            : stage.status === "running"
+              ? "◐"
+              : "○";
+      const color =
+        stage.status === "done"
+          ? theme.success
+          : stage.status === "failed"
+            ? theme.danger
+            : theme.muted;
       const dur = stage.durationMs ? faintLocal(" " + stage.durationMs + "ms") : "";
       const fb = stage.fellBack ? faintLocal(fg(theme.warning, " (fallback)")) : "";
       lines.push("  " + fg(color, icon) + " " + stage.name + dur + fb);

@@ -560,36 +560,36 @@ export default function (api) {
 
 ### v0.5.0 新增功能（9 项 harness 修复）
 
-| 编号 | 功能 | 说明 |
-|------|------|------|
-| G1 | 截断拒执 | `stopReason=length` 时拒绝执行 tool calls，追加 error result |
-| G2 | doom-loop 检测 | tool call 指纹去重，连续 3 轮相同失败中止 |
-| G3 | prompt-cache 排序 | system prompt 拆分 stable/dynamic，标注缓存边界 |
-| G4 | ACP 服务器 | `--mode acp` JSON-RPC 2.0 over stdio，7 个协议方法 |
-| G5 | beforeTool 钩子 | 扩展可 veto 工具执行，buggy hooks fail-open |
-| G6 | delegate 结构化返回 | JSON metadata 嵌入 content，模型可解析 |
-| G7 | apply_patch 工具 | 已存在确认（git apply --check 干跑） |
-| G8 | execpolicy 前缀规则 | 加载期自测 + `--command-rules` CLI |
-| G9 | cache_control 断点 | Anthropic `cache_control: ephemeral` on stable prefix |
-| — | SpecEngine CLI | `--spec-engine` 全套参数 + TUI 确认桥接 |
+| 编号 | 功能                | 说明                                                         |
+| ---- | ------------------- | ------------------------------------------------------------ |
+| G1   | 截断拒执            | `stopReason=length` 时拒绝执行 tool calls，追加 error result |
+| G2   | doom-loop 检测      | tool call 指纹去重，连续 3 轮相同失败中止                    |
+| G3   | prompt-cache 排序   | system prompt 拆分 stable/dynamic，标注缓存边界              |
+| G4   | ACP 服务器          | `--mode acp` JSON-RPC 2.0 over stdio，7 个协议方法           |
+| G5   | beforeTool 钩子     | 扩展可 veto 工具执行，buggy hooks fail-open                  |
+| G6   | delegate 结构化返回 | JSON metadata 嵌入 content，模型可解析                       |
+| G7   | apply_patch 工具    | 已存在确认（git apply --check 干跑）                         |
+| G8   | execpolicy 前缀规则 | 加载期自测 + `--command-rules` CLI                           |
+| G9   | cache_control 断点  | Anthropic `cache_control: ephemeral` on stable prefix        |
+| —    | SpecEngine CLI      | `--spec-engine` 全套参数 + TUI 确认桥接                      |
 
 ### 已知局限（v0.5.0 仍未解决）
 
-| 类别 | 局限 | 影响 |
-|------|------|------|
-| **架构** | 双主链未收敛：CodingAgent 与 FocusKernel 仍分离 | 企业审计路径无法与会话路径复用 |
-| **架构** | SpecEngine 未与 compaction 结构化追踪集成 | spec 文档不在压缩事实中追踪 |
-| **架构** | ACP 服务器为最小实现 | 不含 approval routing、MCP wiring、session checkpoint |
-| **安全** | 真实攻击矩阵未做 | Docker/gVisor 代码差距关闭但未红队验证 |
-| **安全** | ProcessExtensionHost 不支持 beforeTool | 进程隔离扩展无法 veto 工具执行 |
-| **安全** | 前缀规则为文本匹配非 argv | `FOO=bar git push` 不匹配 `git push` 前缀 |
-| **功能** | 无会话同步/多设备 | 仅本地 JSONL + 导出 |
-| **功能** | 无子代理 worktree 隔离 | delegate 在同一工作区执行 |
-| **功能** | 无扩展市场 SHA pin | 已有 Ed25519 签名，SHA pin 为补充层 |
-| **体验** | Editor 落后 Pi | selection/IME/hardware cursor 未做 |
-| **体验** | Compaction 无 LLM 摘要 | 确定性文本提取，但可能丢失语义关联 |
-| **测试** | G1-G9 均无单元测试 | 9 项新功能缺乏回归测试覆盖 |
-| **平台** | 缺 Linux bubblewrap/seccomp 独立实现 | 仅有 Docker/gVisor 覆盖 Linux |
-| **性能** | doom-loop 指纹每轮 JSON.stringify | 大量 tool calls 时有 CPU 开销 |
-| **性能** | systemPromptParts 每轮重建 | 未做缓存，依赖 Provider 端缓存 |
-| **Provider** | cache_control 仅支持 Anthropic | OpenAI/Gemini 缓存机制未实现 |
+| 类别         | 局限                                            | 影响                                                  |
+| ------------ | ----------------------------------------------- | ----------------------------------------------------- |
+| **架构**     | 双主链未收敛：CodingAgent 与 FocusKernel 仍分离 | 企业审计路径无法与会话路径复用                        |
+| **架构**     | SpecEngine 未与 compaction 结构化追踪集成       | spec 文档不在压缩事实中追踪                           |
+| **架构**     | ACP 服务器为最小实现                            | 不含 approval routing、MCP wiring、session checkpoint |
+| **安全**     | 真实攻击矩阵未做                                | Docker/gVisor 代码差距关闭但未红队验证                |
+| **安全**     | ProcessExtensionHost 不支持 beforeTool          | 进程隔离扩展无法 veto 工具执行                        |
+| **安全**     | 前缀规则为文本匹配非 argv                       | `FOO=bar git push` 不匹配 `git push` 前缀             |
+| **功能**     | 无会话同步/多设备                               | 仅本地 JSONL + 导出                                   |
+| **功能**     | 无子代理 worktree 隔离                          | delegate 在同一工作区执行                             |
+| **功能**     | 无扩展市场 SHA pin                              | 已有 Ed25519 签名，SHA pin 为补充层                   |
+| **体验**     | Editor 落后 Pi                                  | selection/IME/hardware cursor 未做                    |
+| **体验**     | Compaction 无 LLM 摘要                          | 确定性文本提取，但可能丢失语义关联                    |
+| **测试**     | G1-G9 均无单元测试                              | 9 项新功能缺乏回归测试覆盖                            |
+| **平台**     | 缺 Linux bubblewrap/seccomp 独立实现            | 仅有 Docker/gVisor 覆盖 Linux                         |
+| **性能**     | doom-loop 指纹每轮 JSON.stringify               | 大量 tool calls 时有 CPU 开销                         |
+| **性能**     | systemPromptParts 每轮重建                      | 未做缓存，依赖 Provider 端缓存                        |
+| **Provider** | cache_control 仅支持 Anthropic                  | OpenAI/Gemini 缓存机制未实现                          |

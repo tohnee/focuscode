@@ -978,6 +978,26 @@ export class CodingAgent {
     const effectPort = this.options.effectPort!;
     const effectContext = this.options.effectContext!;
     const intent = buildActionIntent(call, definition, effectContext.execution.taskId);
+
+    // Extension beforeTool hooks: allow extensions to veto tool execution
+    // even in the spine path. Without this, FocusKernel effects bypass
+    // beforeTool hooks, creating a security gap where plugin vetoes only
+    // work in the legacy PermissionController path.
+    const veto = await this.options.extensionHost?.checkBeforeTool?.({
+      toolName: call.name,
+      arguments: call.arguments,
+      cwd: this.options.cwd,
+    });
+    if (veto && !veto.allow) {
+      const result = {
+        content: `Blocked by extension hook: ${veto.reason ?? "no reason provided"}`,
+        isError: true,
+      };
+      await this.emit({ type: "tool_start", call });
+      await this.emit({ type: "tool_end", call, result, durationMs: 0 });
+      return result;
+    }
+
     await this.emit({ type: "tool_start", call });
     const started = Date.now();
     let result: ToolExecutionResult;
