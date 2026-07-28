@@ -290,15 +290,13 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
     : undefined;
 
   // ─── SpecEngine options & deps ─────────────────────────────────────
-  // Build SpecEngineOptions when --spec-engine is passed. All pipeline
-  // stages default to the main model unless --spec-classifier-model or
-  // --spec-drafter-model specifies a separate small/medium model.
+  // Build deps first; if deps construction fails, skip SpecEngine entirely
+  // rather than crashing on the non-null assertion below.
   const specEngineDeps: SpecEngineDeps | undefined = args.specEngine
     ? buildSpecEngineDeps(config.instructions ?? [])
     : undefined;
-  const specEngineOptions: SpecEngineOptions | undefined = args.specEngine
-    ? await buildSpecEngineOptions(args, config, cwd)
-    : undefined;
+  const specEngineOptions: SpecEngineOptions | undefined =
+    args.specEngine && specEngineDeps ? await buildSpecEngineOptions(args, config, cwd) : undefined;
 
   agent = await CodingAgent.create({
     cwd,
@@ -338,8 +336,8 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
         }
       : {}),
     // ─── SpecEngine ───────────────────────────────────────────────────
-    ...(specEngineOptions
-      ? { specEngine: specEngineOptions, specEngineDeps: specEngineDeps! }
+    ...(specEngineOptions && specEngineDeps
+      ? { specEngine: specEngineOptions, specEngineDeps }
       : {}),
   });
   sessionId = agent.sessionId;

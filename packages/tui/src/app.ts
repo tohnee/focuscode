@@ -970,6 +970,10 @@ export class FullScreenTui {
       this.handleSpecConfirmationInput(value);
       return;
     }
+    if (this.specHistoryVisible) {
+      this.handleSpecHistoryInput(value);
+      return;
+    }
     if (value.startsWith("\u001bm")) {
       this.openPicker();
       const rest = value.slice(2);
@@ -1440,6 +1444,44 @@ export class FullScreenTui {
     }
   }
 
+  /**
+   * Handle keystrokes while the spec history browser overlay is open.
+   * Esc closes; Up/Down navigate; other keys are dropped.
+   */
+  private handleSpecHistoryInput(value: string): void {
+    let index = 0;
+    while (index < value.length) {
+      const rest = value.slice(index);
+      // Esc closes history view
+      if (rest.startsWith("\u001b") && !rest.startsWith("\u001b[")) {
+        this.closeSpecHistory();
+        index += 1;
+        continue;
+      }
+      // Arrow up / k — previous entry
+      if (rest.startsWith("\u001b[A") || rest === "k") {
+        this.navigateSpecHistory(-1);
+        index += rest.startsWith("\u001b[A") ? 3 : 1;
+        continue;
+      }
+      // Arrow down / j — next entry
+      if (rest.startsWith("\u001b[B") || rest === "j") {
+        this.navigateSpecHistory(1);
+        index += rest.startsWith("\u001b[B") ? 3 : 1;
+        continue;
+      }
+      // Drop other CSI sequences safely
+      if (rest.startsWith("\u001b[")) {
+        const match = /^(\u001b\[[0-?]*[ -/]*[@-~])/.exec(rest);
+        if (match) {
+          index += match[1]!.length;
+          continue;
+        }
+      }
+      index += 1;
+    }
+  }
+
   private confirmPickerSelection(): void {
     if (!this.picker) return;
     const result = confirmPicker(this.picker);
@@ -1617,6 +1659,14 @@ export class FullScreenTui {
       this.confirmSpecNavigation("confirm");
     } else if (action === "spec_cancel") {
       this.confirmSpecNavigation("cancel");
+    } else if (action === "spec_history_toggle") {
+      this.toggleSpecHistory();
+    } else if (action === "spec_history_up") {
+      this.navigateSpecHistory(-1);
+    } else if (action === "spec_history_down") {
+      this.navigateSpecHistory(1);
+    } else if (action === "spec_history_close") {
+      this.closeSpecHistory();
     }
   }
 

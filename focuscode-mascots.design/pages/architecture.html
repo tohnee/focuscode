@@ -1666,6 +1666,15 @@
           >
         </li>
         <li>
+          <a
+            href="#optimizations"
+            class="nav-tab"
+            data-tab="optimizations"
+            onclick="switchTab('optimizations', event)"
+            >Optimizations</a
+          >
+        </li>
+        <li>
           <a href="#issues" class="nav-tab" data-tab="issues" onclick="switchTab('issues', event)"
             >Issues</a
           >
@@ -2519,6 +2528,164 @@
         </div>
       </section>
 
+      <!-- ====================== v0.4 OPTIMIZATIONS SUMMARY ====================== -->
+      <section class="section" id="optimizations" data-section="optimizations">
+        <div class="section-header">
+          <div class="section-label">Changelog</div>
+          <h2 class="section-title">v0.4-beta.2 Optimizations Summary · 优化汇总</h2>
+          <p class="section-desc">
+            v0.4-beta.2 迭代中完成的关键优化项汇总，覆盖 Spec 引擎、TUI 交互、排版动画与健壮性修复。
+            本轮共修复 6 项高优 / UX / 代码质量问题，剩余 1 项（终端色深自动探测）待后续版本处理。
+          </p>
+        </div>
+
+        <!-- Spec Engine Improvements -->
+        <div class="subsection">
+          <h3 class="subsection-title">Spec Engine Improvements · 规格引擎改进</h3>
+          <p class="subsection-desc">
+            提升规格草案的可审查性与历史可追溯性，让用户在 Agent 执行前能完整理解并决策。
+          </p>
+          <div class="component-grid">
+            <div class="component-card">
+              <div class="component-card-name">Spec Draft Preview</div>
+              <div class="component-card-file">spec_draft_ready event · tui.ts</div>
+              <div class="component-card-desc">
+                <code>spec_draft_ready</code> 事件现在携带完整的
+                <code>taskBreakdown</code> 数组。TUI 预览面板渲染 understanding（需求理解）、taskBreakdown（任务分解）与
+                decisions（关键决策）三部分，采用粗体标题 + 暗色元数据的排版层次，用户可在确认前逐项审查。
+              </div>
+            </div>
+            <div class="component-card">
+              <div class="component-card-name">Spec History Browser</div>
+              <div class="component-card-file">specHistoryView · renderSpecHistory() · Alt+H</div>
+              <div class="component-card-desc">
+                新增 <code>specHistoryView</code> 状态追踪已完成规格（specId、topic、completedAt、totalDuration、stages、status）。
+                <code>renderSpecHistory()</code> 覆盖层提供可滚动历史列表：状态图标（● 完成 / ○ 进行中）、
+                相对时间戳、阶段分解、选择高亮。<code>Alt+H</code> 打开，<code>Up/Down/j/k</code> 导航，<code>Esc</code> 关闭。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TUI Interaction Improvements -->
+        <div class="subsection">
+          <h3 class="subsection-title">TUI Interaction Improvements · 终端交互改进</h3>
+          <p class="subsection-desc">
+            增强 Split 布局下的键盘导航与面板操作能力，让多面板工作流可完全通过键盘驱动。
+          </p>
+          <div class="component-grid">
+            <div class="component-card">
+              <div class="component-card-name">Active Pane Focus Cycling</div>
+              <div class="component-card-file">activePane · cycleSidebarFocus() · Alt+]</div>
+              <div class="component-card-desc">
+                新增 <code>activePane</code> 状态（<code>"input" | "todo" | "spec" | "context"</code>），
+                <code>cycleSidebarFocus()</code> 在侧栏面板间循环切换焦点。聚焦面板边框以品牌橙渲染，
+                非聚焦面板边框以暗色渲染，提供清晰的视觉焦点反馈。
+              </div>
+            </div>
+            <div class="component-card">
+              <div class="component-card-name">Pane Action Dispatch</div>
+              <div class="component-card-file">performSidebarAction() · Alt+Enter</div>
+              <div class="component-card-desc">
+                <code>performSidebarAction()</code> 对当前聚焦面板执行上下文操作：Todo 面板切换复选框、
+                Spec 面板展开/折叠、Context 面板刷新等。<code>Alt+Enter</code> 触发，
+                让侧栏面板无需鼠标即可完成全部交互。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typography & Animation -->
+        <div class="subsection">
+          <h3 class="subsection-title">Typography &amp; Animation · 排版与动画</h3>
+          <p class="subsection-desc">
+            实现完整的 ANSI 样式消费与微动画系统，让终端输出具备丰富的视觉层次与流畅的状态反馈。
+          </p>
+          <div class="component-grid">
+            <div class="component-card">
+              <div class="component-card-name">Rich Typography Rendering</div>
+              <div class="component-card-file">bold() · italic() · faintLocal() · renderer.ts</div>
+              <div class="component-card-desc">
+                Renderer 现消费 spec-progress 与 markdown 渲染管线中的 bold / italic / dim / underline ANSI 样式。
+                新增 <code>bold()</code>、<code>italic()</code>、<code>faintLocal()</code> 辅助函数。
+                标题以粗体渲染，元数据以暗色渲染，强调以斜体渲染，重要文本以下划线渲染。
+              </div>
+            </div>
+            <div class="component-card">
+              <div class="component-card-name">Toast Notification System</div>
+              <div class="component-card-file">toast · fade animations · renderer.ts</div>
+              <div class="component-card-desc">
+                实现 toast 通知系统，支持淡入淡出动画（右上角定位，3 秒后自动消失），
+                提供 success / warning / error / info 四种语义变体，与品牌色系统一致。
+                操作反馈不再依赖硬切文本。
+              </div>
+            </div>
+            <div class="component-card">
+              <div class="component-card-name">Shimmer Loading Effect</div>
+              <div class="component-card-file">shimmer · stage transitions · renderer.ts</div>
+              <div class="component-card-desc">
+                新增 shimmer 微光加载效果，用于 Spec 阶段等待、工具执行中等异步状态。
+                阶段过渡（stage transitions）现具有微妙的视觉反馈，状态切换平滑自然，
+                消除了此前的硬切跳变感。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Robustness Fixes -->
+        <div class="subsection">
+          <h3 class="subsection-title">Robustness Fixes · 健壮性修复</h3>
+          <p class="subsection-desc">
+            修复取消信号传播缺陷与持久化防抖问题，提升高并发交互下的响应性与资源效率。
+          </p>
+          <div class="component-grid">
+            <div class="component-card">
+              <div class="component-card-name">AbortSignal Propagation</div>
+              <div class="component-card-file">controller.signal · exploreCodebase() · tool.execute()</div>
+              <div class="component-card-desc">
+                <code>controller.signal</code> 现沿 <code>exploreCodebase()</code>
+                传递到所有工具执行路径：<code>read</code> / <code>write</code> / <code>edit</code> /
+                <code>ls</code> / <code>runProcess</code> / <code>grepRecursive</code> /
+                <code>listFiles</code>。工具实现接受并遵守 AbortSignal，超时或用户中断时慢工具可被及时终止。
+              </div>
+            </div>
+            <div class="component-card">
+              <div class="component-card-name">Companion Persistence Debounce</div>
+              <div class="component-card-file">persistCompanion() · 500ms debounce</div>
+              <div class="component-card-desc">
+                为 <code>persistCompanion()</code> 添加 500ms 防抖，快速连续的
+                <code>agent_end</code> 事件合并为单次磁盘写入，显著降低高频交互下的 IO 压力，
+                避免 Companion 状态在快速操作中产生不必要的磁盘抖动。
+              </div>
+            </div>
+            <div class="component-card">
+              <div class="component-card-name">Command Palette Wiring</div>
+              <div class="component-card-file">setPaletteCallback() · 16 commands · tui.ts</div>
+              <div class="component-card-desc">
+                通过 <code>tui.setPaletteCallback()</code> 接入全部 16 个命令的处理逻辑：
+                布局切换（classic/split/focus/wide/cycle）、Vim 模式切换、搜索、模型选择、Todo 面板、
+                Spec 拒绝、会话新建/分叉、推理展开、记录清空、Spec/Context 侧栏切换。
+              </div>
+            </div>
+            <div class="component-card">
+              <div class="component-card-name">Sidebar Pane Toggle</div>
+              <div class="component-card-file">toggleSidebarPane() · pane:toggle_spec/context</div>
+              <div class="component-card-desc">
+                新增 <code>toggleSidebarPane(paneId)</code> 方法与命令面板命令，
+                可单独控制 Spec / Context 面板显隐；<code>toggleTodoPanel</code>
+                现同步 layout pane 状态，<code>setLayoutMode</code> 切换时同步 todoPanel.visible。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fallback-note">
+          <span class="label">Remaining:</span> 终端色深自动探测（根据
+          <code>TERM</code> / <code>COLORTERM</code> 自动降级 truecolor → 256 → 16 色）尚未实现，
+          将在后续版本中处理。当前默认 truecolor 输出，在绝大多数现代终端下工作正常。
+        </div>
+      </section>
+
       <!-- ====================== ISSUES ====================== -->
       <section class="section" id="issues" data-section="issues">
         <div class="section-header">
@@ -2532,7 +2699,7 @@
           <div class="issues-group-header">
             <span class="issues-group-dot high"></span>
             <span class="issues-group-title">High Priority Bugs · 高优缺陷</span>
-            <span class="issues-group-count">2</span>
+            <span class="issues-group-count">0</span>
           </div>
           <div class="issue-item">
             <span class="issue-status" style="background: #22c55e; color: #fff">FIXED</span>
@@ -2547,15 +2714,16 @@
             </div>
           </div>
           <div class="issue-item">
-            <span class="issue-status high">BUG</span>
+            <span class="issue-status" style="background: #22c55e; color: #fff">FIXED</span>
             <div class="issue-body">
               <div class="issue-title">
                 Spec 草稿预览缺失：<code>spec_draft_ready</code> 未展示详情
               </div>
               <div class="issue-desc">
-                收到 <code>spec_draft_ready</code> 时仅显示 topic 标题，未展示
-                <code>understanding</code>、
-                <code>taskBreakdown</code> 等核心内容，用户无法在确认前审查规格草案，影响决策质量。
+                <strong>已修复。</strong><code>spec_draft_ready</code> 事件现在携带
+                <code>taskBreakdown</code> 数组。TUI 在规格草案预览中渲染
+                <code>understanding</code>、<code>taskBreakdown</code> 与
+                <code>decisions</code>，并采用正确的排版层次（粗体标题、暗色元数据）。用户可在确认前完整审查规格草案。
               </div>
             </div>
           </div>
@@ -2566,7 +2734,7 @@
           <div class="issues-group-header">
             <span class="issues-group-dot medium"></span>
             <span class="issues-group-title">UX Improvements · 体验改进</span>
-            <span class="issues-group-count">4</span>
+            <span class="issues-group-count">0</span>
           </div>
           <div class="issue-item">
             <span class="issue-status" style="background: #22c55e; color: #fff">FIXED</span>
@@ -2582,22 +2750,27 @@
             </div>
           </div>
           <div class="issue-item">
-            <span class="issue-status medium">UX</span>
+            <span class="issue-status" style="background: #22c55e; color: #fff">FIXED</span>
             <div class="issue-body">
               <div class="issue-title">缺少 Spec 历史浏览 UI</div>
               <div class="issue-desc">
-                <code>SpecStore.list()</code> 已实现（可枚举历史规格文档），但 TUI
-                层无对应浏览入口， 用户无法回顾或重新激活历史规格。
+                <strong>已修复。</strong>新增 <code>specHistoryView</code> 状态追踪已完成规格（含
+                specId、topic、completedAt、totalDuration、stages、status）。新
+                <code>renderSpecHistory()</code> 覆盖层渲染可滚动列表，带状态图标（●/○）、相对时间戳、阶段分解与选择高亮。绑定 <code>Alt+H</code> 快捷键，
+                <code>Up/Down/j/k</code> 导航，<code>Esc</code> 关闭。
               </div>
             </div>
           </div>
           <div class="issue-item">
-            <span class="issue-status medium">UX</span>
+            <span class="issue-status" style="background: #22c55e; color: #fff">FIXED</span>
             <div class="issue-body">
               <div class="issue-title">Split 模式无 activePane 焦点切换与视觉反馈</div>
               <div class="issue-desc">
-                侧栏面板（Todo/Spec/Context）无焦点态，无法区分当前活动面板，也无法通过键盘在面板间切换、
-                交互 Todo 勾选等操作。
+                <strong>已修复。</strong>新增 <code>activePane</code> 状态（<code
+                  >"input" | "todo" | "spec" | "context"</code
+                >）与 <code>cycleSidebarFocus()</code>（<code>Alt+]</code> 循环切换面板）、<code
+                  >performSidebarAction()</code
+                >（<code>Alt+Enter</code> 对聚焦面板执行操作，如切换 Todo 复选框）。聚焦面板边框以强调色渲染，其余面板边框以暗色渲染。
               </div>
             </div>
           </div>
@@ -2618,37 +2791,39 @@
           <div class="issues-group-header">
             <span class="issues-group-dot low"></span>
             <span class="issues-group-title">Code Quality · 代码质量</span>
-            <span class="issues-group-count">4</span>
+            <span class="issues-group-count">1</span>
           </div>
           <div class="issue-item">
-            <span class="issue-status low">DEBT</span>
+            <span class="issue-status" style="background: #22c55e; color: #fff">FIXED</span>
             <div class="issue-body">
               <div class="issue-title">
                 Explorer AbortSignal 未传递到 <code>tool.execute()</code>
               </div>
               <div class="issue-desc">
-                探索阶段的取消信号未沿调用链传播到底层工具执行，导致超时/取消时慢工具（如大文件
-                grep）无法被中断， 可能延迟流水线回退。
+                <strong>已修复。</strong><code>controller.signal</code> 现沿
+                <code>exploreCodebase()</code> 传递到所有工具执行路径（<code>read/write/edit/ls/runProcess/grepRecursive/listFiles</code>）。工具实现现接受并遵守
+                AbortSignal 以支持取消操作，超时或用户中断时慢工具可被及时终止。
               </div>
             </div>
           </div>
           <div class="issue-item">
-            <span class="issue-status low">DEBT</span>
+            <span class="issue-status" style="background: #22c55e; color: #fff">FIXED</span>
             <div class="issue-body">
               <div class="issue-title">Typography 系统已设计但未实现</div>
               <div class="issue-desc">
-                bold / italic / dim / underline 等文本样式系统在类型层定义但 Renderer 未消费，
-                目前所有文本以单一 weight 渲染，缺少层次。
+                <strong>已修复。</strong>Renderer 现消费 spec-progress 与 markdown 渲染中的 bold /
+                italic / dim / underline ANSI 样式。新增 <code>bold()</code>、<code>italic()</code>、<code>faintLocal()</code>
+                辅助函数。标题以粗体渲染，元数据以暗色渲染，强调以斜体渲染，重要文本以下划线渲染，文本层次清晰可辨。
               </div>
             </div>
           </div>
           <div class="issue-item">
-            <span class="issue-status low">DEBT</span>
+            <span class="issue-status" style="background: #22c55e; color: #fff">FIXED</span>
             <div class="issue-body">
               <div class="issue-title">Micro-animation 系统未实现</div>
               <div class="issue-desc">
-                toast 通知、shimmer 加载、阶段过渡等微动画设计完成但 Renderer 中无对应实现，
-                当前状态切换为硬切，视觉反馈较弱。
+                <strong>已修复。</strong>实现了 toast 通知系统，带淡入淡出动画（右上角，3
+                秒后自动消失，success/warning/error/info 四种变体）。新增 shimmer 加载状态效果。阶段过渡现具有微妙的视觉反馈，状态切换不再硬切。
               </div>
             </div>
           </div>
@@ -2670,7 +2845,7 @@
           <div class="issues-group-header">
             <span class="issues-group-dot fixed"></span>
             <span class="issues-group-title">Already Fixed · 已修复</span>
-            <span class="issues-group-count">7</span>
+            <span class="issues-group-count">13</span>
           </div>
           <div class="issue-item fixed">
             <span class="issue-status fixed">FIXED</span>
@@ -2978,7 +3153,7 @@
         if (navTab) navTab.classList.add("active");
 
         // Show target section, hide others (but keep hero visible as intro when on spec-engine)
-        const sections = ["spec-engine", "tui", "integration", "issues"];
+        const sections = ["spec-engine", "tui", "integration", "optimizations", "issues"];
         sections.forEach((id) => {
           const el = document.getElementById(id);
           if (!el) return;
@@ -3079,7 +3254,7 @@
       // ============================================================
       // Highlight active nav tab on scroll
       // ============================================================
-      const sectionIds = ["spec-engine", "tui", "integration", "issues"];
+      const sectionIds = ["spec-engine", "tui", "integration", "optimizations", "issues"];
       function updateActiveTabOnScroll() {
         const scrollY = window.scrollY + 120;
         let current = "spec-engine";
@@ -3109,7 +3284,7 @@
       document.addEventListener("keydown", (e) => {
         // Ignore if typing in search box
         if (e.target.tagName === "INPUT") return;
-        const map = { 1: "spec-engine", 2: "tui", 3: "integration", 4: "issues" };
+        const map = { 1: "spec-engine", 2: "tui", 3: "integration", 4: "optimizations", 5: "issues" };
         if (map[e.key]) {
           switchTab(map[e.key], e);
         }

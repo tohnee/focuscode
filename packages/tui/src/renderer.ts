@@ -8,6 +8,7 @@ import {
   renderSpecProgress,
   type SpecConfirmationState,
   type SpecProgressState,
+  type SpecStageInfo,
 } from "./spec-progress.js";
 import { renderContextBar, type ContextUsageState } from "./context-bar.js";
 import { renderPalette, type PaletteState } from "./command-palette.js";
@@ -101,6 +102,18 @@ export interface TuiRenderState {
   paneSelection?: { todo: number; spec: number; context: number };
   /** Toast notification rendered over the top-right corner with fade animation. */
   toast?: { text: string; startedAt: number; level: "info" | "success" | "warning" };
+  /** Spec history browser overlay entries and selection. */
+  specHistoryView?: {
+    entries: Array<{
+      specId: string;
+      topic: string;
+      completedAt: number;
+      totalDuration?: number;
+      status: "completed" | "skipped";
+      stages: SpecStageInfo[];
+    }>;
+    selectedIndex: number;
+  };
 }
 
 const MAX_INPUT_ROWS = 5;
@@ -134,9 +147,9 @@ export function renderTui(state: TuiRenderState): string {
   const theme = state.theme;
 
   // Layout dispatch: non-classic modes (split/focus/wide) use layout-aware rendering.
-  // Overlays (picker/palette) always use classic rendering since they take over the full screen.
+  // Overlays (picker/palette/spec-history) always use classic rendering since they take over the full screen.
   let frame: string;
-  if (state.layout && !state.picker && !state.palette?.visible) {
+  if (state.layout && !state.picker && !state.palette?.visible && !state.specHistoryView) {
     const computed = computeLayout(state.layout, width, height);
     if (computed.mode !== "classic") {
       frame = renderWithLayout(state, width, height, theme, computed);
@@ -300,6 +313,15 @@ function renderClassicFrame(
       theme,
     ).map((line) => fg(theme.accent, "│") + padVisible(line, width - 2) + fg(theme.accent, "│"));
     return bg(theme.background, [top, header, ...paletteLines, footer, bottom].join("\n"));
+  }
+  if (state.specHistoryView) {
+    const historyLines = renderSpecHistory(
+      state.specHistoryView,
+      width - 2,
+      Math.max(6, height - 7),
+      theme,
+    ).map((line) => fg(theme.accent, "│") + padVisible(line, width - 2) + fg(theme.accent, "│"));
+    return bg(theme.background, [top, header, ...historyLines, footer, bottom].join("\n"));
   }
   return bg(
     theme.background,
@@ -830,6 +852,104 @@ function italic(value: string): string {
 
 function faintLocal(value: string): string {
   return "\u001b[2m" + value + "\u001b[22m";
+}
+
+interface SpecHistoryView {
+  entries: Array<{
+    specId: string;
+    topic: string;
+    completedAt: number;
+    totalDuration?: number;
+    status: "completed" | "skipped";
+    stages: SpecStageInfo[];
+  }>;
+  selectedIndex: number;
+}
+
+/**
+ * Render the spec history browser overlay: a scrollable list of past specs
+ * with status icons, topics, timestamps, and stage summary. The selected
+ * entry shows its full stage breakdown below the list.
+ */
+function renderSpecHistory(
+  view: SpecHistoryView,
+  width: number,
+  height: number,
+  theme: TuiTheme,
+): string[] {
+  const lines: string[] = [];
+  const innerWidth = Math.max(30, width);
+  const dash = "─".repeat(innerWidth);
+
+  // Header
+  lines.push(bold(fg(theme.accent, "✦ Spec History")));
+  lines.push(fg(theme.muted, dash));
+
+  if (view.entries.length === 0) {
+    lines.push("");
+    lines.push(faintLocal(fg(theme.muted, "  No specs recorded yet. Run /spec to plan a task.")));
+    lines.push("");
+    lines.push(fg(theme.muted, dash));
+    lines.push(faintLocal(fg(theme.muted, " Esc close")));
+    // Pad to fill height
+    while (lines.length < height) lines.push("");
+    return lines;
+  }
+
+  // List area: show up to ~8 entries, with selection highlight.
+  const listMax = Math.min(8, Math.max(3, height - 12));
+  const startIdx = Math.max(0, Math.min(view.selectedIndex - Math.floor(listMax / 2), view.entries.length - listMax));
+  const visible = view.entries.slice(startIdx, startIdx + listMax);
+
+  for (let i = 0; i < visible.length; i++) {
+    const entry = visible[i]!;
+    const idx = startIdx + i;
+    const selected = idx === view.selectedIndex;
+    const statusIcon = entry.status === "completed" ? "●" : "○";
+    const statusColor = entry.status === "completed" ? theme.success : theme.warning;
+    const dur = entry.totalDuration ? " · " + (entry.totalDuration / 1000).toFixed(1) + "s" : "";
+    const timeAgo = formatTimeAgo(entry.completedAt);
+    const topic = truncatePlain(entry.topic, innerWidth - 12);
+    const line = " " + (selected ? "›" : " ") + " " + fg(statusColor, statusIcon) + " " + topic;
+    const meta = faintLocal(fg(theme.muted, dur + " · " + timeAgo));
+    const full = line + meta;
+    const padded = padVisible(full, innerWidth);
+    lines.push(selected ? bg(theme.muted, padded) : padded);
+  }
+
+  // Detail for selected entry
+  const selected = view.entries[view.selectedIndex];
+  if (selected) {
+    lines.push(fg(theme.muted, dash));
+    lines.push(bold(fg(theme.foreground, "  " + truncatePlain(selected.topic, innerWidth - 4))));
+    lines.push(faintLocal(fg(theme.muted, "  " + truncatePlain(selected.specId, innerWidth - 4))));
+    lines.push("");
+    for (const stage of selected.stages) {
+      const icon = stage.status === "done" ? "●" : stage.status === "failed" ? "✗" : stage.status === "running" ? "◐" : "○";
+      const color = stage.status === "done" ? theme.success : stage.status === "failed" ? theme.danger : theme.muted;
+      const dur = stage.durationMs ? faintLocal(" " + stage.durationMs + "ms") : "";
+      const fb = stage.fellBack ? faintLocal(fg(theme.warning, " (fallback)")) : "";
+      lines.push("  " + fg(color, icon) + " " + stage.name + dur + fb);
+    }
+  }
+
+  // Footer with keybindings
+  lines.push(fg(theme.muted, dash));
+  lines.push(faintLocal(fg(theme.muted, " ↑↓ navigate  Esc close")));
+
+  // Pad to fill height
+  while (lines.length < height) lines.push("");
+  return lines;
+}
+
+function formatTimeAgo(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return seconds + "s ago";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return minutes + "m ago";
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + "h ago";
+  return Math.floor(hours / 24) + "d ago";
 }
 
 /**

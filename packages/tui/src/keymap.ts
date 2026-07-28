@@ -40,7 +40,12 @@ export type TuiAction =
   | "spec_option_up"
   | "spec_option_down"
   | "spec_confirm"
-  | "spec_cancel";
+  | "spec_cancel"
+  // ─── Spec history browser keys ───
+  | "spec_history_up"
+  | "spec_history_down"
+  | "spec_history_close"
+  | "spec_history_toggle";
 
 export type TuiKeymap = Record<string, TuiAction>;
 
@@ -82,6 +87,7 @@ export const DEFAULT_KEYMAP: TuiKeymap = {
   "alt+t": "toggle_todo_panel",
   "alt+]": "cycle_sidebar_focus",
   "alt+enter": "sidebar_action",
+  "alt+h": "spec_history_toggle",
 };
 
 export type ParsedKey = { type: "action"; action: TuiAction } | { type: "text"; text: string };
@@ -128,6 +134,7 @@ const TERMINAL_SEQUENCES: Array<[string, string]> = [
   ["\u001bc", "alt+c"],
   ["\u001bl", "alt+l"],
   ["\u001bt", "alt+t"],
+  ["\u001bh", "alt+h"],
   ["\u001b]", "alt+]"],
   ["\u001b\r", "alt+enter"],
   ["\r", "enter"],
@@ -218,6 +225,10 @@ const VALID_ACTIONS: readonly TuiAction[] = [
   "spec_option_down",
   "spec_confirm",
   "spec_cancel",
+  "spec_history_up",
+  "spec_history_down",
+  "spec_history_close",
+  "spec_history_toggle",
 ];
 
 export function mergeKeymap(overrides: Partial<TuiKeymap> = {}): TuiKeymap {

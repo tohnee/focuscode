@@ -548,10 +548,17 @@ export class CodingAgent {
         await this.refresh();
       }
 
-      stopped = controller.signal.aborted ? "aborted" : "max_rounds";
-      const finalContent = controller.signal.aborted
-        ? "Request aborted."
-        : `Stopped after ${this.maxRounds} model rounds. Review the last tool results before continuing.`;
+      // Only set max_rounds/aborted if the loop wasn't already stopped by
+      // doom-loop detection (which sets stopped="error" and breaks).
+      if (stopped !== "error") {
+        stopped = controller.signal.aborted ? "aborted" : "max_rounds";
+      }
+      const finalContent =
+        stopped === "aborted"
+          ? "Request aborted."
+          : stopped === "error"
+            ? lastContent
+            : `Stopped after ${this.maxRounds} model rounds. Review the last tool results before continuing.`;
       const finalEntry = await this.options.sessionStore.appendMessage(this.sessionId, {
         role: "assistant",
         content: finalContent,
