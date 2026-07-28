@@ -143,7 +143,6 @@ async function runPath(
     protectedPaths: [".env", ".ssh"],
     ...(approve ? { approve } : {}),
   };
-  let agent: CodingAgent | undefined;
   const spine =
     pathKind === "spine"
       ? createSessionEffectSpine({
@@ -153,10 +152,9 @@ async function runPath(
           model,
           permission,
           ...(approve ? { approve } : {}),
-          onApprovalRequired: (request) => agent?.notifyApprovalRequired(request),
         })
       : undefined;
-  agent = await CodingAgent.create({
+  const agent = await CodingAgent.create({
     cwd: "/tmp",
     model,
     modelClient: unusedModelClient,
@@ -173,6 +171,7 @@ async function runPath(
         }
       : {}),
   });
+  spine?.setApprovalListener((request) => agent.notifyApprovalRequired(request));
 
   const results: ToolExecutionResult[] = [];
   for (const [name, argumentsValue] of CALLS) {
@@ -354,16 +353,14 @@ describe("legacy/spine behavioral parity", () => {
   it("changeApproval repoints the spine matrix mid-session", async () => {
     const tools = fixtureTools();
     const registry = new AgentToolRegistry(tools);
-    let agent: CodingAgent | undefined;
     const spine = createSessionEffectSpine({
       cwd: "/tmp",
       registry,
       taskId: "task_mode_switch",
       model,
       permission: { mode: "deny", projectTrusted: false, protectedPaths: [] },
-      onApprovalRequired: (request) => agent?.notifyApprovalRequired(request),
     });
-    agent = await CodingAgent.create({
+    const agent = await CodingAgent.create({
       cwd: "/tmp",
       model,
       modelClient: unusedModelClient,
@@ -375,6 +372,7 @@ describe("legacy/spine behavioral parity", () => {
       effectContext: spine.effectContext,
       onApprovalModeChange: (mode) => spine.setApprovalMode(mode),
     });
+    spine.setApprovalListener((request) => agent.notifyApprovalRequired(request));
     const denied = await agent.runTool("write", { path: "a.txt", content: "x" });
     expect(denied).toMatchObject({ content: "Permission denied: Side effects disabled" });
     agent.changeApproval("full-auto");

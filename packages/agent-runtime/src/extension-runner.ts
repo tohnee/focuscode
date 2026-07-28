@@ -1,7 +1,13 @@
 import { createInterface } from "node:readline";
 import { inspect } from "node:util";
 import { pathToFileURL } from "node:url";
-import type { AgentExtensionApi, ExtensionCommand } from "./extensions.js";
+import type {
+  AgentExtensionApi,
+  BeforeToolContext,
+  BeforeToolHook,
+  BeforeToolResult,
+  ExtensionCommand,
+} from "./extensions.js";
 import type { AgentEvent, AgentTool, ToolDefinition, ToolExecutionResult } from "./types.js";
 
 /**
@@ -30,6 +36,7 @@ type ParentToChild =
       context: { sessionId: string; cwd: string };
     }
   | { type: "event"; event: AgentEvent }
+  | { type: "beforeToolCheck"; id: string; context: BeforeToolContext }
   | { type: "cancel"; id: string };
 
 type ChildToParent =
@@ -41,11 +48,13 @@ type ChildToParent =
   | { type: "error"; message: string }
   | { type: "toolResult"; id: string; result?: ToolExecutionResult; error?: string }
   | { type: "commandResult"; id: string; result?: string | null; error?: string }
+  | { type: "beforeToolResult"; id: string; result?: BeforeToolResult; error?: string }
   | { type: "log"; message: string };
 
 const tools = new Map<string, AgentTool>();
 const commands = new Map<string, ExtensionCommand>();
 const listeners: Array<(event: AgentEvent) => void | Promise<void>> = [];
+const beforeToolHooks: BeforeToolHook[] = [];
 const executions = new Map<string, AbortController>();
 
 // stdout is protocol-owned; redirect extension logging to stderr so stray
@@ -128,6 +137,35 @@ async function handleMessage(message: ParentToChild): Promise<void> {
       }
       return;
     }
+    case "beforeToolCheck": {
+      process.stderr.write(
+        `[beforeTool] recv tool=${message.context.toolName} hooks=${beforeToolHooks.length}\n`,
+      );
+      let result: BeforeToolResult | undefined;
+      for (let i = 0; i < beforeToolHooks.length; i++) {
+        try {
+          const hookResult = await beforeToolHooks[i]!(message.context);
+          process.stderr.write(
+            `[beforeTool] hook index=${i} allow=${hookResult.allow} reason=${hookResult.reason ?? ""}\n`,
+          );
+          if (!hookResult.allow) {
+            result = hookResult;
+            break;
+          }
+        } catch (error) {
+          process.stderr.write(`[beforeTool] hook index=${i} error=${errorMessage(error)}\n`);
+        }
+      }
+      process.stderr.write(
+        `[beforeTool] response reqId=${message.id} allow=${result ? !result.allow : true}\n`,
+      );
+      send({
+        type: "beforeToolResult",
+        id: message.id,
+        ...(result ? { result } : {}),
+      });
+      return;
+    }
     case "cancel":
       executions.get(message.id)?.abort();
       return;
@@ -158,9 +196,8 @@ async function main(): Promise<void> {
     appendSystemPrompt(fragment: string) {
       send({ type: "appendSystemPrompt", fragment });
     },
-    beforeTool() {
-      // Process-isolated extensions do not support beforeTool hooks.
-      // beforeTool is only available for in-process extensions (ExtensionHost).
+    beforeTool(hook: BeforeToolHook) {
+      beforeToolHooks.push(hook);
     },
   };
 

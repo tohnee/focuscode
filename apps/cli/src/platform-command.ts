@@ -349,8 +349,13 @@ export async function runDoctorCommand(argv: string[]): Promise<void> {
     });
   } else {
     const results = activeMcpServers.map((server) => {
+      // HTTP transport servers are checked via fetch elsewhere; skip spawnSync probe.
+      const command = server.command;
+      if (server.transport === "http" || !command) {
+        return { id: server.id, ok: true };
+      }
       try {
-        const probe = spawnSync(server.command, server.args ?? [], {
+        const probe = spawnSync(command, server.args ?? [], {
           timeout: 2_000,
           stdio: "ignore",
           ...(server.env ? { env: { ...process.env, ...server.env } } : {}),

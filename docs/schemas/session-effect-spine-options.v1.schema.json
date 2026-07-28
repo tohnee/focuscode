@@ -56,10 +56,6 @@
       "type": "object",
       "description": "TypeScript injection point: ApprovalHandler. Bridges PolicyEngine approvals to the session handler. Omit to deny all. Not JSON-serializable."
     },
-    "onApprovalRequired": {
-      "type": "object",
-      "description": "TypeScript injection point: (request: PermissionRequest) => void | Promise<void>. Fires before approve(). Not JSON-serializable."
-    },
     "workerId": {
       "type": "string",
       "description": "Worker identifier. Defaults to `session-worker:${process.pid}`."

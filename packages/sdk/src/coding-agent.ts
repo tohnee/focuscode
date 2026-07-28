@@ -154,9 +154,8 @@ export async function createCodingAgent(
       })
     ).header.sessionId;
   }
-  // The spine bridge fires approvals during tool execution, i.e. after the
-  // agent exists, so the deferred reference is always set when it runs.
-  let agent: CodingAgent | undefined;
+  // The spine is created without any reference to the agent; the approval
+  // listener is wired explicitly after CodingAgent.create returns.
   const spine = spineEnabled
     ? createSessionEffectSpine({
         cwd,
@@ -169,11 +168,10 @@ export async function createCodingAgent(
           protectedPaths: config.protectedPaths,
         },
         ...(options.approve ? { approve: options.approve } : {}),
-        onApprovalRequired: (request) => agent?.notifyApprovalRequired(request),
       })
     : undefined;
   const eventSink = composeEventSink({ cwd, onEvent: options.onEvent, hooks: options.hooks });
-  agent = await CodingAgent.create({
+  const agent = await CodingAgent.create({
     cwd,
     model: config.model,
     modelClient: createModelClient({
@@ -206,6 +204,9 @@ export async function createCodingAgent(
         }
       : {}),
   });
+  // Explicit post-construction wiring: spine approvals emit the same
+  // approval_required event (with audit fan-out) as the legacy path.
+  spine?.setApprovalListener((request) => agent.notifyApprovalRequired(request));
   return { agent, sessions, extensions, resources, config };
 }
 

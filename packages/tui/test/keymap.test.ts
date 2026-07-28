@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_KEYMAP,
   mergeKeymap,
@@ -226,5 +226,77 @@ describe("spec decision keymap actions", () => {
     if (keys[0]?.type === "action") {
       expect(keys[0].action).toBe("spec_option_up");
     }
+  });
+});
+
+describe("D9 keymap conflict warning", () => {
+  const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+  beforeEach(() => {
+    warnSpy.mockClear();
+  });
+
+  it("TC-D9-01: reassigning an action emits warning with old and new key", () => {
+    // DEFAULT_KEYMAP has enter → submit; remapping submit to ctrl+x should warn
+    const merged = mergeKeymap({ "ctrl+x": "submit" });
+    expect(merged["ctrl+x"]).toBe("submit");
+    expect(merged["enter"]).toBeUndefined();
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    const msg = String(warnSpy.mock.calls[0]?.[0] ?? "");
+    expect(msg).toContain("enter");
+    expect(msg).toContain("ctrl+x");
+    expect(msg).toContain("submit");
+  });
+
+  it("TC-D9-02: no warning when adding a binding for an action with no existing binding", () => {
+    // toggle_reasoning has no default binding
+    const merged = mergeKeymap({ "ctrl+r": "toggle_reasoning" });
+    expect(merged["ctrl+r"]).toBe("toggle_reasoning");
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it("TC-D9-03: no warning when override key is the same as existing key", () => {
+    // Re-binding enter to submit (same as default) should not warn
+    const merged = mergeKeymap({ enter: "submit" });
+    expect(merged["enter"]).toBe("submit");
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it("TC-D9-04: multiple conflicts emit multiple warnings", () => {
+    // Remap two actions that have default bindings
+    warnSpy.mockClear();
+    mergeKeymap({ "ctrl+x": "submit", "ctrl+y": "abort" });
+    // submit was on enter, abort was on ctrl+c
+    expect(warnSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("TC-D9-05: resulting keymap has old binding removed and new binding set", () => {
+    const merged = mergeKeymap({ "ctrl+x": "submit" });
+    expect(merged["ctrl+x"]).toBe("submit");
+    expect(merged["enter"]).toBeUndefined();
+  });
+
+  it("TC-D9-06: no warning for falsy action values (skipped)", () => {
+    warnSpy.mockClear();
+    mergeKeymap({ "ctrl+r": undefined });
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it("TC-D9-07: warning message is descriptive and actionable", () => {
+    const merged = mergeKeymap({ "ctrl+x": "kill_line" });
+    expect(merged["ctrl+x"]).toBe("kill_line");
+    // ctrl+k was the default for kill_line
+    expect(merged["ctrl+k"]).toBeUndefined();
+    const msg = String(warnSpy.mock.calls[0]?.[0] ?? "");
+    expect(msg).toContain("ctrl+k");
+    expect(msg).toContain("ctrl+x");
+    expect(msg).toContain("kill_line");
+  });
+
+  it("TC-D9-08: empty overrides produces no warnings", () => {
+    warnSpy.mockClear();
+    const merged = mergeKeymap();
+    expect(merged).toEqual(DEFAULT_KEYMAP);
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 });

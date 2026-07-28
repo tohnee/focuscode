@@ -238,7 +238,12 @@ export function mergeKeymap(overrides: Partial<TuiKeymap> = {}): TuiKeymap {
     if (!validKey(key)) throw new Error("Invalid key binding: " + key);
     if (!VALID_ACTIONS.includes(action)) throw new Error("Invalid TUI action: " + action);
     for (const [existing, value] of Object.entries(result)) {
-      if (value === action) delete result[existing];
+      if (value === action && existing !== key) {
+        console.warn(
+          `keymap conflict: "${existing}" was bound to "${action}", reassigning to "${key}"`,
+        );
+        delete result[existing];
+      }
     }
     result[key] = action;
   }

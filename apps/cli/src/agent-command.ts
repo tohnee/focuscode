@@ -264,9 +264,8 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
       })
     ).header.sessionId;
   }
-  // The spine bridge fires approvals during tool execution, i.e. after the
-  // agent exists, so the deferred reference is always set when it runs.
-  let agent: CodingAgent | undefined;
+  // The spine is created without any reference to the agent; the approval
+  // listener is wired explicitly after CodingAgent.create returns.
   // Load user-configurable command prefix rules from a JSON file. The
   // PrefixRuleEngine constructor runs a self-test that throws on any
   // mismatched match/notMatch example, so bad rules fail at startup.
@@ -285,7 +284,6 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
           protectedPaths: config.protectedPaths,
         },
         ...(approve ? { approve } : {}),
-        onApprovalRequired: (request) => agent?.notifyApprovalRequired(request),
       })
     : undefined;
 
@@ -298,7 +296,7 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
   const specEngineOptions: SpecEngineOptions | undefined =
     args.specEngine && specEngineDeps ? await buildSpecEngineOptions(args, config, cwd) : undefined;
 
-  agent = await CodingAgent.create({
+  const agent = await CodingAgent.create({
     cwd,
     model: config.model,
     modelClient: client,
@@ -340,6 +338,9 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
       ? { specEngine: specEngineOptions, specEngineDeps }
       : {}),
   });
+  // Explicit post-construction wiring: spine approvals emit the same
+  // approval_required event (with audit fan-out) as the legacy path.
+  spine?.setApprovalListener((request) => agent.notifyApprovalRequired(request));
   sessionId = agent.sessionId;
   if (args.name && (args.session || args.continueSession || args.resume || args.fork)) {
     await agent.nameSession(args.name);

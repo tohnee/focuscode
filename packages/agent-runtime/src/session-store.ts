@@ -301,8 +301,11 @@ export class SessionStore {
           entries: snapshot.entries.length,
           preview: firstUser?.message.content.replace(/\s+/g, " ").slice(0, 100) ?? "",
         });
-      } catch {
+      } catch (error) {
         // A partially written or externally modified session is isolated from other sessions.
+        console.warn(
+          `session-store: skipping corrupt session ${id}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
     return items.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
@@ -479,7 +482,10 @@ export class SessionStore {
       // Unreadable content: fall back to the file mtime for the TTL check only.
       const info = await stat(lockPath);
       return { pid: -1, acquiredAt: info.mtime.toISOString(), hostname: "" };
-    } catch {
+    } catch (error) {
+      console.warn(
+        `session-store: readLock failed for ${lockPath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return undefined;
     }
   }

@@ -289,6 +289,72 @@ export function colorToRgb(color: ColorValue): [number, number, number] {
   return [color[0], color[1], color[2]];
 }
 
+// ─── D11: Truecolor Detection & Auto-Downgrade ─────────────────────────
+//
+// Terminals that don't advertise truecolor support will silently ignore
+// `\e[38;2;R;G;Bm` sequences, producing uncolored output. The detection +
+// downgrade pipeline converts hex/RGB colors to their nearest 256-color
+// palette entry so themes still render with a close approximation.
+
+/** Color rendering mode. */
+export type ColorMode = "truecolor" | "256" | "auto";
+
+let colorMode: ColorMode = "truecolor";
+let truecolorResolved: boolean | undefined;
+
+/**
+ * Detect whether the current terminal advertises truecolor (24-bit) support.
+ * Checks `COLORTERM` for `truecolor` or `24bit`, then falls back to known
+ * `TERM` values that imply direct-color capability.
+ */
+export function detectTruecolorSupport(): boolean {
+  const colorterm = process.env.COLORTERM;
+  if (colorterm === "truecolor" || colorterm === "24bit") return true;
+  const term = process.env.TERM;
+  if (term && (term.includes("direct") || term.includes("truecolor"))) return true;
+  return false;
+}
+
+/** Resolve "auto" mode to a concrete boolean by checking the environment. */
+function truecolorEnabled(): boolean {
+  if (colorMode === "truecolor") return true;
+  if (colorMode === "256") return false;
+  // auto: detect once and cache
+  if (truecolorResolved === undefined) truecolorResolved = detectTruecolorSupport();
+  return truecolorResolved;
+}
+
+/**
+ * Set the global color rendering mode.
+ *
+ * - `"truecolor"` — always emit 24-bit escapes for hex/RGB colors (default).
+ * - `"256"` — always downgrade hex/RGB to the nearest 256-color palette entry.
+ * - `"auto"` — detect from `COLORTERM` / `TERM` environment variables.
+ *
+ * Number colors (0–255) always emit 8-bit escapes regardless of mode.
+ */
+export function setColorMode(mode: ColorMode): void {
+  colorMode = mode;
+  truecolorResolved = undefined; // invalidate cache so "auto" re-detects
+}
+
+/**
+ * Convert an [r,g,b] triple to the nearest 8-bit ANSI color code (0–255).
+ * Uses the standard xterm 6×6×6 color cube (16–231) and grayscale ramp
+ * (232–255). The algorithm mirrors `ansi256ToRgb` so roundtripping is
+ * exact for palette entries.
+ */
+export function rgbToAnsi256(r: number, g: number, b: number): number {
+  // If all components are equal, use the grayscale ramp for best fidelity.
+  if (r === g && g === b) {
+    if (r < 8) return 16;
+    if (r > 248) return 231;
+    return Math.round(((r - 8) / 247) * 24) + 232;
+  }
+  const scale = (n: number) => (n === 0 ? 0 : Math.round((n - 55) / 40));
+  return 16 + 36 * scale(r) + 6 * scale(g) + scale(b);
+}
+
 /**
  * Approximate an 8-bit ANSI code as an [r,g,b] triple. Uses the standard
  * xterm 256-color palette mapping so the result matches what most terminals
@@ -318,8 +384,13 @@ export function fg(color: ColorValue, text: string): string {
   if (typeof color === "number") {
     return "\u001b[38;5;" + color + "m" + text + "\u001b[39m";
   }
+  if (truecolorEnabled()) {
+    const [r, g, b] = colorToRgb(color);
+    return "\u001b[38;2;" + r + ";" + g + ";" + b + "m" + text + "\u001b[39m";
+  }
+  // D11: downgrade hex/RGB to nearest 256-color palette entry.
   const [r, g, b] = colorToRgb(color);
-  return "\u001b[38;2;" + r + ";" + g + ";" + b + "m" + text + "\u001b[39m";
+  return "\u001b[38;5;" + rgbToAnsi256(r, g, b) + "m" + text + "\u001b[39m";
 }
 
 /** Apply background color to text, emitting the appropriate ANSI escape. */
@@ -327,14 +398,20 @@ export function bg(color: ColorValue, text: string): string {
   if (typeof color === "number") {
     return "\u001b[48;5;" + color + "m" + text + "\u001b[49m";
   }
+  if (truecolorEnabled()) {
+    const [r, g, b] = colorToRgb(color);
+    return "\u001b[48;2;" + r + ";" + g + ";" + b + "m" + text + "\u001b[49m";
+  }
+  // D11: downgrade hex/RGB to nearest 256-color palette entry.
   const [r, g, b] = colorToRgb(color);
-  return "\u001b[48;2;" + r + ";" + g + ";" + b + "m" + text + "\u001b[49m";
+  return "\u001b[48;5;" + rgbToAnsi256(r, g, b) + "m" + text + "\u001b[49m";
 }
 
 /**
  * Dim a color by blending it toward black, reducing perceived luminance.
- * Always emits a truecolor escape so the dimming effect is consistent across
- * both 8-bit and truecolor source values. The blend factor is 0.55, keeping
+ * In truecolor mode emits a 24-bit escape so the dimming effect is consistent
+ * across both 8-bit and truecolor source values. In 256-color mode (D11)
+ * downgrades to the nearest palette entry. The blend factor is 0.55, keeping
  * roughly half the original intensity — enough to read as "secondary" text
  * without dropping below the terminal's contrast floor.
  */
@@ -343,7 +420,11 @@ export function dim(color: ColorValue, text: string): string {
   const dr = Math.round(r * 0.55);
   const dg = Math.round(g * 0.55);
   const db = Math.round(b * 0.55);
-  return "\u001b[38;2;" + dr + ";" + dg + ";" + db + "m" + text + "\u001b[39m";
+  if (truecolorEnabled()) {
+    return "\u001b[38;2;" + dr + ";" + dg + ";" + db + "m" + text + "\u001b[39m";
+  }
+  // D11: downgrade dimmed truecolor to nearest 256-color palette entry.
+  return "\u001b[38;5;" + rgbToAnsi256(dr, dg, db) + "m" + text + "\u001b[39m";
 }
 
 /** Wrap text in ANSI bold (SGR 1). */

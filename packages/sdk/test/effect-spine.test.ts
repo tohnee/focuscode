@@ -195,3 +195,119 @@ describe("session effect spine composition", () => {
     expect(approvals[0]?.tool.name).toBe("write");
   });
 });
+
+describe("setApprovalListener explicit wiring", () => {
+  function approveAll(): (request: PermissionRequest) => Promise<boolean> {
+    return () => Promise.resolve(true);
+  }
+
+  async function createAskAgent(
+    root: string,
+    registry: AgentToolRegistry,
+    spine: ReturnType<typeof createSessionEffectSpine>,
+    events: AgentEvent[],
+  ): Promise<CodingAgent> {
+    return CodingAgent.create({
+      cwd: root,
+      model,
+      modelClient: unusedModelClient,
+      tools: registry.values(),
+      toolRegistry: registry,
+      permission: {
+        mode: "ask",
+        projectTrusted: false,
+        protectedPaths: [],
+        approve: () => {
+          throw new Error("session PermissionController must not prompt on the spine path");
+        },
+      },
+      sessionStore: new SessionStore("unused", false),
+      effectPort: spine.effectPort,
+      effectContext: spine.effectContext,
+      eventSink: (event) => events.push(event),
+    });
+  }
+
+  it("delivers approval notifications through the listener wired after agent creation", async () => {
+    const root = await createTestDirectory("effect-spine-listener");
+    const registry = new AgentToolRegistry([writeNoteTool()]);
+    const spine = createSessionEffectSpine({
+      cwd: root,
+      registry,
+      taskId: "task_spine_listener",
+      model,
+      permission: { mode: "ask", projectTrusted: false, protectedPaths: [] },
+      approve: approveAll(),
+    });
+    const events: AgentEvent[] = [];
+    // Explicit wiring replaces the old create-time closure: the spine is
+    // created without any reference to the agent, then the composition root
+    // connects the listener once the agent exists.
+    const agent = await createAskAgent(root, registry, spine, events);
+    spine.setApprovalListener((request) => agent.notifyApprovalRequired(request));
+
+    const result = await agent.runTool("write", { path: "wired.txt", content: "yes" });
+    expect(result.isError).toBeUndefined();
+    const approvalEvents = events.filter((event) => event.type === "approval_required");
+    expect(approvalEvents).toHaveLength(1);
+    expect(approvalEvents[0]).toMatchObject({
+      type: "approval_required",
+      request: { tool: { name: "write" }, risk: "medium" },
+    });
+  });
+
+  it("keeps approvals working when no listener is wired", async () => {
+    const root = await createTestDirectory("effect-spine-no-listener");
+    const registry = new AgentToolRegistry([writeNoteTool()]);
+    const approvals: PermissionRequest[] = [];
+    const spine = createSessionEffectSpine({
+      cwd: root,
+      registry,
+      taskId: "task_spine_no_listener",
+      model,
+      permission: { mode: "ask", projectTrusted: false, protectedPaths: [] },
+      approve: (request) => {
+        approvals.push(request);
+        return Promise.resolve(true);
+      },
+    });
+    const events: AgentEvent[] = [];
+    const agent = await createAskAgent(root, registry, spine, events);
+
+    // No setApprovalListener call: authorization must still work; only the
+    // approval_required notification is skipped.
+    const result = await agent.runTool("write", { path: "ok.txt", content: "yes" });
+    expect(result.isError).toBeUndefined();
+    expect(approvals).toHaveLength(1);
+    expect(events.filter((event) => event.type === "approval_required")).toHaveLength(0);
+  });
+
+  it("routes notifications to the most recently wired listener", async () => {
+    const root = await createTestDirectory("effect-spine-rebind");
+    const registry = new AgentToolRegistry([writeNoteTool()]);
+    const spine = createSessionEffectSpine({
+      cwd: root,
+      registry,
+      taskId: "task_spine_rebind",
+      model,
+      permission: { mode: "ask", projectTrusted: false, protectedPaths: [] },
+      approve: approveAll(),
+    });
+    const events: AgentEvent[] = [];
+    const agent = await createAskAgent(root, registry, spine, events);
+    const receivedA: PermissionRequest[] = [];
+    const receivedB: PermissionRequest[] = [];
+    spine.setApprovalListener((request) => {
+      receivedA.push(request);
+    });
+    spine.setApprovalListener((request) => {
+      receivedB.push(request);
+    });
+
+    const result = await agent.runTool("write", { path: "rebind.txt", content: "yes" });
+    expect(result.isError).toBeUndefined();
+    expect(receivedA).toHaveLength(0);
+    expect(receivedB).toHaveLength(1);
+    expect(receivedB[0]?.tool.name).toBe("write");
+  });
+});

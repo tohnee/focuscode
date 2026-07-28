@@ -131,4 +131,122 @@ describe("PrefixRuleEngine", () => {
       expect(engine2.check("docker run")).toBeUndefined();
     });
   });
+
+  describe("D6: argv edge cases", () => {
+    const engine = new PrefixRuleEngine([{ prefix: "git push", effect: "deny", reason: "test" }]);
+
+    describe("empty and whitespace", () => {
+      it("returns undefined for empty command", () => {
+        expect(engine.check("")).toBeUndefined();
+      });
+
+      it("returns undefined for whitespace-only command", () => {
+        expect(engine.check("   ")).toBeUndefined();
+      });
+
+      it("returns undefined for tab-only command", () => {
+        expect(engine.check("\t\t")).toBeUndefined();
+      });
+    });
+
+    describe("whitespace separators", () => {
+      it("matches tab-separated words", () => {
+        expect(engine.check("git\tpush origin main")?.effect).toBe("deny");
+      });
+
+      it("matches with multiple spaces between words", () => {
+        expect(engine.check("git  push origin")?.effect).toBe("deny");
+      });
+
+      it("matches command with leading whitespace", () => {
+        expect(engine.check("  git push")?.effect).toBe("deny");
+      });
+
+      it("matches command with trailing whitespace", () => {
+        expect(engine.check("git push   ")?.effect).toBe("deny");
+      });
+
+      it("matches command with newline separator", () => {
+        expect(engine.check("git\npush origin")?.effect).toBe("deny");
+      });
+    });
+
+    describe("shell quoting", () => {
+      it("matches double-quoted argument matching prefix word", () => {
+        expect(engine.check('git "push" origin')?.effect).toBe("deny");
+      });
+
+      it("matches single-quoted argument matching prefix word", () => {
+        expect(engine.check("git 'push' origin")?.effect).toBe("deny");
+      });
+
+      it("does not match when quoted argument differs from prefix word", () => {
+        expect(engine.check('git "status"')).toBeUndefined();
+      });
+    });
+
+    describe("escape characters", () => {
+      it("treats backslash-escaped space as part of a single word", () => {
+        // "git\ push" is a single token "git push" in shell semantics;
+        // it should NOT match prefix ["git", "push"].
+        expect(engine.check("git\\ push")).toBeUndefined();
+      });
+
+      it("handles backslash-escaped space in argument", () => {
+        // "git push origin\ main" → splitShellWords: ["git", "push", "origin main"]
+        // prefix ["git", "push"] still matches because we only check the first N words
+        expect(engine.check("git push origin\\ main")?.effect).toBe("deny");
+      });
+    });
+
+    describe("wildcards are literal", () => {
+      it("treats * as literal text, not glob", () => {
+        const eng = new PrefixRuleEngine([{ prefix: "git *", effect: "deny", reason: "wildcard" }]);
+        // * is literal: "git push" does NOT match "git *"
+        expect(eng.check("git push")).toBeUndefined();
+        // "git *" with literal * does match
+        expect(eng.check("git * origin")?.effect).toBe("deny");
+      });
+
+      it("treats ? as literal text, not glob", () => {
+        const eng = new PrefixRuleEngine([{ prefix: "git ?", effect: "deny", reason: "wildcard" }]);
+        expect(eng.check("git push")).toBeUndefined();
+        expect(eng.check("git ? origin")?.effect).toBe("deny");
+      });
+    });
+
+    describe("option flags are not skipped", () => {
+      it("does not match when flags are between command and prefix words", () => {
+        // "git -c foo push" → words: ["git", "-c", "foo", "push"]
+        // prefix ["git", "push"] does NOT match because word[1] is "-c" not "push"
+        expect(engine.check("git -c foo push")?.effect).toBeUndefined();
+      });
+
+      it("matches when flags appear after the full prefix", () => {
+        expect(engine.check("git push --force origin")?.effect).toBe("deny");
+      });
+    });
+
+    describe("env var prefixes", () => {
+      it("does not match when command starts with env var assignment", () => {
+        // FOO=bar git push → words: ["FOO=bar", "git", "push"]
+        // prefix ["git", "push"] does NOT match because word[0] is "FOO=bar"
+        expect(engine.check("FOO=bar git push")?.effect).toBeUndefined();
+      });
+    });
+
+    describe("empty prefix validation", () => {
+      it("throws when constructing a rule with empty prefix", () => {
+        expect(
+          () => new PrefixRuleEngine([{ prefix: "", effect: "deny", reason: "empty" }]),
+        ).toThrow(/empty.*prefix/i);
+      });
+
+      it("throws when constructing a rule with whitespace-only prefix", () => {
+        expect(
+          () => new PrefixRuleEngine([{ prefix: "   ", effect: "deny", reason: "ws" }]),
+        ).toThrow(/empty.*prefix/i);
+      });
+    });
+  });
 });

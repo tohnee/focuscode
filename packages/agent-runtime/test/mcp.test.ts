@@ -9,6 +9,7 @@ import {
   computeToolPin,
   registerMcpServers,
   verifyPins,
+  type McpClient,
   type McpServerSpec,
   type McpToolPinV1,
 } from "../src/mcp.js";
@@ -19,7 +20,7 @@ const fixture = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "fake-
 const spec: McpServerSpec = { id: "fake", command: process.execPath, args: [fixture] };
 
 describe("MCP stdio client", () => {
-  let clients: McpStdioClient[] = [];
+  let clients: McpClient[] = [];
 
   afterEach(async () => {
     await closeAll(clients);

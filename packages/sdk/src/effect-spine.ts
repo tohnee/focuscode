@@ -40,14 +40,15 @@ export interface SessionEffectSpineOptions {
   };
   /** Bridges PolicyEngine approvals to the session approval handler; omit to deny. */
   approve?: ApprovalHandler;
-  /**
-   * Invoked right before the approval handler runs. Composition roots wire
-   * this to CodingAgent.notifyApprovalRequired so spine approvals emit the
-   * same approval_required event (with audit fan-out) as the legacy path.
-   */
-  onApprovalRequired?: (request: PermissionRequest) => void | Promise<void>;
   workerId?: string;
 }
+
+/**
+ * Invoked right before the approval handler runs. Composition roots wire
+ * this to CodingAgent.notifyApprovalRequired so spine approvals emit the
+ * same approval_required event (with audit fan-out) as the legacy path.
+ */
+export type ApprovalListener = (request: PermissionRequest) => void | Promise<void>;
 
 export interface SessionEffectSpine {
   effectPort: EffectPort;
@@ -55,6 +56,16 @@ export interface SessionEffectSpine {
   runtime: LocalActionRuntime;
   /** Repoint the approval matrix when the session approval mode changes. */
   setApprovalMode(mode: ApprovalMode): void;
+  /**
+   * Wire the approval-required listener explicitly, after the agent exists.
+   * Replaces the removed create-time `onApprovalRequired` option: that option
+   * forced composition roots to close over a not-yet-assigned `agent`
+   * variable, an implicit timing contract that silently dropped notifications
+   * if the spine fired before assignment. A later call replaces the previous
+   * listener. When no listener is wired, approvals still work; only the
+   * approval_required notification is skipped.
+   */
+  setApprovalListener(listener: ApprovalListener): void;
 }
 
 /**
@@ -79,10 +90,11 @@ export function createSessionEffectSpine(options: SessionEffectSpineOptions): Se
   };
   sync();
   const policy = new PolicyEngine(sessionPolicyConfig(options.permission));
+  let approvalListener: ApprovalListener | undefined;
   const runtime = new LocalActionRuntime(
     tools,
     policy,
-    bridgeApproval(options.approve, definitions, options.onApprovalRequired),
+    bridgeApproval(options.approve, definitions, () => approvalListener),
   );
   const effectPort: EffectPort = {
     submit(intents, context, signal) {
@@ -95,6 +107,9 @@ export function createSessionEffectSpine(options: SessionEffectSpineOptions): Se
     effectContext: sessionEffectContext(options),
     runtime,
     setApprovalMode: (mode) => policy.setApprovalMode(mode),
+    setApprovalListener: (listener) => {
+      approvalListener = listener;
+    },
   };
 }
 
@@ -102,12 +117,14 @@ export function createSessionEffectSpine(options: SessionEffectSpineOptions): Se
  * One approval prompt per action: LocalActionRuntime calls this port at most
  * once per intent, and the bridge reuses the session's existing handler after
  * surfacing the approval_required signal. Without a handler (print/json/rpc
- * modes) approvals deny, mirroring PermissionController.authorize.
+ * modes) approvals deny, mirroring PermissionController.authorize. The
+ * listener is resolved lazily at request time so setApprovalListener can be
+ * called after the runtime is constructed.
  */
 function bridgeApproval(
   approve: ApprovalHandler | undefined,
   definitions: Map<string, ToolDefinition>,
-  onApprovalRequired: ((request: PermissionRequest) => void | Promise<void>) | undefined,
+  getListener: () => ApprovalListener | undefined,
 ): ApprovalPort {
   return {
     async request(request: ApprovalRequest): Promise<boolean> {
@@ -123,7 +140,7 @@ function bridgeApproval(
         reason: request.reason,
         risk: shellRisk?.risk ?? (definition.effect === "write" ? "medium" : "high"),
       };
-      await onApprovalRequired?.(permissionRequest);
+      await getListener()?.(permissionRequest);
       return approve(permissionRequest);
     },
   };

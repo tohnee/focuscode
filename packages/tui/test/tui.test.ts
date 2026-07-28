@@ -580,3 +580,120 @@ describe("Foxy companion experience", () => {
     expect(plain).toMatch(/[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] Running edit…/);
   });
 });
+
+describe("D10 vim mode persistence", () => {
+  it("TC-D10-01: vimEnabled option=true initializes vim mode on", () => {
+    const tui = new FullScreenTui({
+      input: new FakeInput() as unknown as ReadStream,
+      output: new FakeOutput() as unknown as WriteStream,
+      model: "test/model",
+      session: "s1",
+      approval: "ask",
+      sandbox: "docker",
+      vimEnabled: true,
+      onSubmit: async () => undefined,
+      onSteer: async () => undefined,
+      onAbort: () => undefined,
+    });
+    expect(tui.getVimState()).toBeDefined();
+  });
+
+  it("TC-D10-02: vimEnabled option=false (default) initializes vim mode off", () => {
+    const tui = new FullScreenTui({
+      input: new FakeInput() as unknown as ReadStream,
+      output: new FakeOutput() as unknown as WriteStream,
+      model: "test/model",
+      session: "s1",
+      approval: "ask",
+      sandbox: "docker",
+      onSubmit: async () => undefined,
+      onSteer: async () => undefined,
+      onAbort: () => undefined,
+    });
+    expect(tui.getVimState()).toBeUndefined();
+  });
+
+  it("TC-D10-03: onVimToggle callback is called when setVimEnabled changes state", () => {
+    const toggles: boolean[] = [];
+    const tui = new FullScreenTui({
+      input: new FakeInput() as unknown as ReadStream,
+      output: new FakeOutput() as unknown as WriteStream,
+      model: "test/model",
+      session: "s1",
+      approval: "ask",
+      sandbox: "docker",
+      onVimToggle: (enabled) => toggles.push(enabled),
+      onSubmit: async () => undefined,
+      onSteer: async () => undefined,
+      onAbort: () => undefined,
+    });
+    tui.setVimEnabled(true);
+    tui.setVimEnabled(false);
+    expect(toggles).toEqual([true, false]);
+  });
+
+  it("TC-D10-04: onVimToggle is NOT called during initialization with vimEnabled=true", () => {
+    const toggles: boolean[] = [];
+    new FullScreenTui({
+      input: new FakeInput() as unknown as ReadStream,
+      output: new FakeOutput() as unknown as WriteStream,
+      model: "test/model",
+      session: "s1",
+      approval: "ask",
+      sandbox: "docker",
+      vimEnabled: true,
+      onVimToggle: (enabled) => toggles.push(enabled),
+      onSubmit: async () => undefined,
+      onSteer: async () => undefined,
+      onAbort: () => undefined,
+    });
+    expect(toggles).toEqual([]);
+  });
+
+  it("TC-D10-05: onVimToggle receives the new enabled state", () => {
+    let lastToggle: boolean | undefined;
+    const tui = new FullScreenTui({
+      input: new FakeInput() as unknown as ReadStream,
+      output: new FakeOutput() as unknown as WriteStream,
+      model: "test/model",
+      session: "s1",
+      approval: "ask",
+      sandbox: "docker",
+      onVimToggle: (enabled) => {
+        lastToggle = enabled;
+      },
+      onSubmit: async () => undefined,
+      onSteer: async () => undefined,
+      onAbort: () => undefined,
+    });
+    tui.setVimEnabled(true);
+    expect(lastToggle).toBe(true);
+    tui.setVimEnabled(false);
+    expect(lastToggle).toBe(false);
+  });
+
+  it("TC-D10-06: toggle_vim action triggers onVimToggle callback", async () => {
+    const toggles: boolean[] = [];
+    const input = new FakeInput();
+    const output = new FakeOutput();
+    const tui = new FullScreenTui({
+      input: input as unknown as ReadStream,
+      output: output as unknown as WriteStream,
+      model: "test/model",
+      session: "s1",
+      approval: "ask",
+      sandbox: "docker",
+      onVimToggle: (enabled) => toggles.push(enabled),
+      onSubmit: async () => undefined,
+      onSteer: async () => undefined,
+      onAbort: () => undefined,
+    });
+    const running = tui.run();
+    // Ctrl+V = 0x16 = toggle_vim in DEFAULT_KEYMAP
+    input.emit("data", "\u0016");
+    await tick();
+    expect(toggles).toEqual([true]);
+    input.emit("data", "\u0004"); // Ctrl+D = exit
+    await running;
+  });
+});

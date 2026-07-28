@@ -99,6 +99,10 @@ export interface FullScreenTuiOptions {
   onSpecDecline?(specId: string): void;
   /** 命令面板确认回调。当用户从 palette 选择命令时调用。 */
   onPaletteCommand?(command: PaletteCommand): void;
+  /** 初始 vim 模式开关；默认 false。用于持久化恢复用户偏好。 */
+  vimEnabled?: boolean;
+  /** vim 模式切换回调（构造时不会触发，仅 setVimEnabled/toggle_vim 触发）。 */
+  onVimToggle?(enabled: boolean): void;
 }
 
 export class FullScreenTui {
@@ -180,6 +184,8 @@ export class FullScreenTui {
     this.approval = options.approval;
     this.keymap = options.keymap ?? DEFAULT_KEYMAP;
     this.inputDecoder = new TerminalInputDecoder(this.keymap);
+    // D10: restore vim mode from persisted preference (no callback during init).
+    if (options.vimEnabled) this.vimEnabled = true;
   }
 
   async run(): Promise<void> {
@@ -583,8 +589,11 @@ export class FullScreenTui {
 
   /** Toggle vim modal editing on/off. When off, vimState is reset but kept as a valid object. */
   setVimEnabled(enabled: boolean): void {
+    if (this.vimEnabled === enabled) return;
     this.vimEnabled = enabled;
     this.vimState = createVimState();
+    // D10: notify caller so it can persist the preference.
+    this.options.onVimToggle?.(enabled);
     this.render();
   }
 

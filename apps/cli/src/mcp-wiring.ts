@@ -11,8 +11,8 @@ import {
   closeAll,
   registerMcpServers,
   type AgentToolRegistry,
+  type McpClient,
   type McpServerSpec,
-  type McpStdioClient,
   type McpToolPinV1,
 } from "@focuscode/agent-runtime";
 
@@ -24,8 +24,8 @@ export interface WireMcpOptions {
 }
 
 export interface WiredMcpHandle {
-  /** Connected stdio clients; empty when no servers were registered. */
-  clients: McpStdioClient[];
+  /** Connected MCP clients (stdio or http); empty when no servers were registered. */
+  clients: McpClient[];
   /** Tool names registered into the registry (e.g. `mcp_fake_echo`). */
   registered: string[];
   /** Close all tracked clients. Idempotent — safe to call multiple times. */

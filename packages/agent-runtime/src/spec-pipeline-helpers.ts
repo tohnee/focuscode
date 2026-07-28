@@ -11,7 +11,10 @@ export function parseJsonResponse<T = unknown>(raw: string): T | null {
   const candidate = fenceMatch ? fenceMatch[1]! : trimmed;
   try {
     return JSON.parse(candidate) as T;
-  } catch {
+  } catch (error) {
+    console.warn(
+      `parseJsonResponse failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return null;
   }
 }

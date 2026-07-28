@@ -111,6 +111,22 @@ export interface ProviderCompatibility {
   reasoningEffortMap?: Partial<Record<ReasoningEffort, ReasoningEffort>>;
   anthropicThinking?: "omit" | "adaptive" | "enabled" | "disabled";
   anthropicThinkingBudgetTokens?: number;
+  /**
+   * 声明式缓存控制策略。决定客户端如何在请求中插入缓存断点以最大化
+   * Provider 侧的 prefix cache 命中率。未设置时回退到 "none"（向后兼容）。
+   */
+  cacheControl?: {
+    /**
+     * - "anthropic-ephemeral": 在 system block 上插入 cache_control: { type: "ephemeral" }，
+     *   适用于 Anthropic Messages 协议及兼容该协议的 Provider（如 MiniMax）。
+     * - "openai-prefix": 依赖 Provider 侧 prefix cache，客户端将 systemPromptParts.stable
+     *   独立为首条 system message，避免 dynamic 段污染前缀，适用于 OpenAI 兼容协议。
+     * - "none": 不插入任何缓存标记。
+     */
+    mode: "anthropic-ephemeral" | "openai-prefix" | "none";
+    /** OpenAI prefix cache 最小前缀 token 估算（仅用于日志阈值判断，不影响请求） */
+    minPrefixTokens?: number;
+  };
 }
 
 export interface ModelCapabilities {

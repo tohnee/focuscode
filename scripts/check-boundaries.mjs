@@ -56,6 +56,31 @@ const rules = [
     directory: "packages/protocols/src",
     forbidden: ["@focuscode/persistence", "@focuscode/action-backends", "@focuscode/harness-core"],
   },
+  {
+    // testkit is test infrastructure referenced by every package's tests and
+    // (as a production dependency) by sdk. It must stay low in the graph:
+    // contracts and harness-core are allowed; everything above them —
+    // especially sdk — is forbidden so the existing sdk → testkit edge can
+    // never become a cycle. Adding a new testkit dependency requires editing
+    // this rule deliberately.
+    directory: "packages/testkit/src",
+    forbidden: [
+      "@focuscode/action-backends",
+      "@focuscode/action-domain",
+      "@focuscode/agent-runtime",
+      "@focuscode/asset-plane",
+      "@focuscode/auth",
+      "@focuscode/context-compiler",
+      "@focuscode/ecosystem",
+      "@focuscode/model-gateway",
+      "@focuscode/persistence",
+      "@focuscode/protocols",
+      "@focuscode/sandbox",
+      "@focuscode/sdk",
+      "@focuscode/tui",
+      "@focuscode/verifier-eval",
+    ],
+  },
 ];
 
 const failures = [];

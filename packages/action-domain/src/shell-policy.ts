@@ -509,6 +509,9 @@ export class PrefixRuleEngine {
   constructor(rules: CommandPrefixRule[]) {
     this.rules = rules;
     for (const rule of rules) {
+      if (!rule.prefix.trim()) {
+        throw new Error(`Prefix rule has empty prefix: prefix must be a non-empty command string.`);
+      }
       const prefixWords = rule.prefix.trim().split(/\s+/);
       for (const example of rule.match ?? []) {
         if (!this.matchesPrefix(example, prefixWords)) {
@@ -546,11 +549,16 @@ export class PrefixRuleEngine {
    * Prefix matching: the command's first N words must equal the prefix words.
    * This is argv-prefix matching, NOT substring matching — "git" matches
    * "git status" but not "gitter". Option flags between the command and the
-   * prefix are NOT skipped (unlike Codex's execpolicy which uses argv arrays);
-   * this is a simpler text-word approach.
+   * prefix are NOT skipped (unlike Codex's execpolicy which uses argv arrays).
+   *
+   * Command words are split using the shell-aware `splitShellWords` tokenizer
+   * so that quoted arguments (`git "push" origin`) and escaped spaces
+   * (`git push origin\ main`) are parsed correctly. Prefix words use simple
+   * whitespace splitting since the prefix is a rule definition, not a shell
+   * command.
    */
   private matchesPrefix(command: string, prefixWords: string[]): boolean {
-    const commandWords = command.trim().split(/\s+/);
+    const commandWords = splitShellWords(command);
     if (commandWords.length < prefixWords.length) return false;
     for (let i = 0; i < prefixWords.length; i++) {
       if (commandWords[i] !== prefixWords[i]) return false;

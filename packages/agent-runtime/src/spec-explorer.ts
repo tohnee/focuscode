@@ -70,7 +70,10 @@ export async function exploreCodebase(params: ExploreCodebaseParams): Promise<Ex
     let response: ModelResponse;
     try {
       response = await params.modelClient.complete(request);
-    } catch {
+    } catch (error) {
+      console.warn(
+        `spec-explorer model call failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return emptyExplorerResult();
     }
 

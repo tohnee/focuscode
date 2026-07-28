@@ -2,7 +2,13 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { basename } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
-import type { ExtensionCommand, ExtensionHostLike, LoadedExtension } from "./extensions.js";
+import type {
+  BeforeToolContext,
+  BeforeToolResult,
+  ExtensionCommand,
+  ExtensionHostLike,
+  LoadedExtension,
+} from "./extensions.js";
 import type { AgentToolRegistry } from "./tools.js";
 import type { AgentEvent, AgentTool, ToolDefinition, ToolExecutionResult } from "./types.js";
 
@@ -24,6 +30,7 @@ type ChildToParent =
   | { type: "error"; message: string }
   | { type: "toolResult"; id: string; result?: ToolExecutionResult; error?: string }
   | { type: "commandResult"; id: string; result?: string | null; error?: string }
+  | { type: "beforeToolResult"; id: string; result?: BeforeToolResult; error?: string }
   | { type: "log"; message: string };
 
 type ParentToChild =
@@ -42,6 +49,7 @@ type ParentToChild =
       context: { sessionId: string; cwd: string };
     }
   | { type: "event"; event: AgentEvent }
+  | { type: "beforeToolCheck"; id: string; context: BeforeToolContext }
   | { type: "cancel"; id: string };
 
 /** Request payloads the host can invoke on a child; the id is added on send. */
@@ -57,7 +65,8 @@ type InvocationMessage =
       name: string;
       args: string;
       context: { sessionId: string; cwd: string };
-    };
+    }
+  | { type: "beforeToolCheck"; context: BeforeToolContext };
 
 interface PendingRequest {
   resolve(result: unknown): void;
@@ -170,6 +179,41 @@ export class ProcessExtensionHost implements ExtensionHostLike {
       if (extension.status !== "running" || !extension.wantsEvents) continue;
       this.send(extension, { type: "event", event });
     }
+  }
+
+  async checkBeforeTool(context: BeforeToolContext): Promise<BeforeToolResult | undefined> {
+    let checked = 0;
+    for (const extension of this.extensions) {
+      if (extension.status !== "running") continue;
+      checked++;
+      process.stderr.write(
+        `[beforeTool] request ext=${extension.name} pid=${extension.child.pid ?? "?"} tool=${context.toolName}\n`,
+      );
+      try {
+        const result = await this.invoke(
+          extension,
+          { type: "beforeToolCheck", context },
+          undefined,
+        );
+        if (result && typeof (result as BeforeToolResult).allow === "boolean") {
+          const veto = result as BeforeToolResult;
+          if (!veto.allow) {
+            process.stderr.write(
+              `[beforeTool] decision tool=${context.toolName} veto=${extension.name} checked=${checked}\n`,
+            );
+            return veto;
+          }
+        }
+      } catch (error) {
+        process.stderr.write(
+          `[beforeTool] timeout ext=${extension.name} tool=${context.toolName} error=${error instanceof Error ? error.message : String(error)}\n`,
+        );
+      }
+    }
+    process.stderr.write(
+      `[beforeTool] decision tool=${context.toolName} veto=none checked=${checked}\n`,
+    );
+    return undefined;
   }
 
   private spawnExtension(path: string): ExtensionProcess {
@@ -302,6 +346,7 @@ export class ProcessExtensionHost implements ExtensionHostLike {
         return;
       case "toolResult":
       case "commandResult":
+      case "beforeToolResult":
         this.settlePending(extension, message);
         return;
       case "log":

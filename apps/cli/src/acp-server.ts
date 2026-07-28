@@ -28,6 +28,7 @@ import {
 } from "@focuscode/agent-runtime";
 import type { AgentCliArgs } from "./agent-args.js";
 import { createAgentContext } from "./agent-context.js";
+import { dispatchAcpMethod, type AcpContext } from "./acp-handler.js";
 
 const ACP_PROTOCOL_VERSION = "1.0.0";
 
@@ -193,21 +194,26 @@ export async function runAcpServer(
     const req = message as JsonRpcRequest;
     const id = req.id ?? 0;
 
+    // D12: checkpoint-related methods are dispatched via the testable handler.
+    const acpCtx: AcpContext = {
+      sessions: sessions_,
+      currentSessionId,
+      config: { model: config.model },
+      cwd,
+      sessionStore: sessions,
+    };
+
     try {
       switch (req.method) {
         case "initialize": {
-          sendResponse(id, {
-            protocolVersion: ACP_PROTOCOL_VERSION,
-            server: "FocusCode",
-            version: "0.5.0",
-            capabilities: {
-              events: true,
-              diff: true,
-              approval: "coarse",
-              cancel: true,
-              checkpoint: false,
-            },
-          });
+          const result = await dispatchAcpMethod("initialize", req.params, acpCtx);
+          sendResponse(id, result);
+          break;
+        }
+
+        case "session/checkpoint": {
+          const result = await dispatchAcpMethod("session/checkpoint", req.params, acpCtx);
+          sendResponse(id, result);
           break;
         }
 

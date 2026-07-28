@@ -39,11 +39,68 @@ export interface SessionContext {
 export type StopReason = "stop" | "tool_use" | "length" | "aborted" | "error" | "max_rounds";
 
 /**
+ * Context passed to {@link AgentHooks.preCompact} when the agent runtime
+ * emits a `compaction` event. The hook fires as the compaction happens —
+ * integrators can observe the summary and dropped-message count.
+ */
+export interface CompactContext {
+  /** Working directory of the agent. */
+  cwd: string;
+  /** Human-readable summary produced by the compactor. */
+  summary: string;
+  /** Number of messages dropped by the compaction. */
+  droppedMessages: number;
+}
+
+/**
+ * Context passed to {@link AgentHooks.userPromptSubmit} when the integrator
+ * submits a prompt via `agent.submit()`. The hook may return `false` to veto
+ * the submission (integrator-controlled gate).
+ */
+export interface PromptSubmitContext {
+  /** The prompt text the user submitted. */
+  prompt: string;
+  /** Working directory of the agent. */
+  cwd: string;
+}
+
+/**
+ * Context passed to {@link AgentHooks.subagentStop} when a subagent session
+ * ends. Integrators that spawn subagents call this hook directly.
+ */
+export interface SubagentStopContext {
+  /** Subagent session identifier. */
+  sessionId: string;
+  /** Reason the subagent stopped (mirrors `AgentRunResult.stopped`). */
+  stopped: StopReason;
+  /** Working directory of the subagent. */
+  cwd: string;
+}
+
+/**
+ * Notification payload passed to {@link AgentHooks.notification}. Currently
+ * fired on `error` AgentEvents; the level reflects the event severity.
+ */
+export interface Notification {
+  /** Notification level. */
+  level: "info" | "warn" | "error";
+  /** Notification message. */
+  message: string;
+}
+
+/**
  * Lifecycle hooks for the SDK. Complementary to the existing `beforeTool`
  * veto hook: `beforeTool` decides whether a tool may run; `postToolUse`
  * observes the result. `sessionStart` / `sessionEnd` bracket the session
  * lifecycle, and `stop` fires once per `submit()` call when the agent
  * finishes.
+ *
+ * New hooks (P2-2, review §9.5 gap #2):
+ *   - `preCompact`         — fires on `compaction` events.
+ *   - `userPromptSubmit`   — fires when the integrator submits a prompt.
+ *                            May return `false` to veto.
+ *   - `subagentStop`       — fires when a subagent session ends.
+ *   - `notification`       — fires on `error` events.
  *
  * Hooks are optional; omit any you don't need. Hook errors propagate to the
  * caller (e.g. via `dispatchAgentEvent` rejection) so the agent loop can
@@ -58,6 +115,18 @@ export interface AgentHooks {
   sessionEnd?: (context: SessionContext) => void | Promise<void>;
   /** Called when the agent stops, with the stop reason. */
   stop?: (reason: StopReason) => void | Promise<void>;
+  /** Called when the agent runtime emits a compaction event. */
+  preCompact?: (context: CompactContext) => void | Promise<void>;
+  /**
+   * Called when the integrator submits a prompt via `agent.submit()`.
+   * Return `false` to veto the submission; any other return value (including
+   * `undefined`) allows it.
+   */
+  userPromptSubmit?: (context: PromptSubmitContext) => boolean | void | Promise<boolean | void>;
+  /** Called when a subagent session ends (integrators invoke directly). */
+  subagentStop?: (context: SubagentStopContext) => void | Promise<void>;
+  /** Called on notification-worthy events (e.g. `error`). */
+  notification?: (notification: Notification) => void | Promise<void>;
 }
 
 /**
@@ -98,9 +167,12 @@ export interface DispatchContext {
  * Behavior:
  *   - `tool_end` → `postToolUse` (with toolName, arguments, durationMs, result)
  *   - `agent_end` → `stop` (with `AgentRunResult.stopped` as StopReason)
+ *   - `compaction` → `preCompact` (with summary, droppedMessages, cwd)
+ *   - `error` → `notification` (with level "error" and the message)
  *   - Other event types are no-ops (no matching hook).
- *   - `sessionStart` / `sessionEnd` are NOT dispatched from events; integrators
- *     call them directly because session lifecycle doesn't emit a unique event.
+ *   - `sessionStart` / `sessionEnd` / `userPromptSubmit` / `subagentStop` are
+ *     NOT dispatched from events; integrators call them directly because
+ *     session/prompt/subagent lifecycle doesn't emit a unique event.
  *
  * @throws Rethrows any hook error so the agent loop can observe failures.
  */
@@ -126,6 +198,22 @@ export async function dispatchAgentEvent(
   if (event.type === "agent_end") {
     if (hooks.stop) {
       await hooks.stop(event.response.stopped as StopReason);
+    }
+    return;
+  }
+  if (event.type === "compaction") {
+    if (hooks.preCompact) {
+      await hooks.preCompact({
+        cwd: context.cwd,
+        summary: event.summary,
+        droppedMessages: event.droppedMessages,
+      });
+    }
+    return;
+  }
+  if (event.type === "error") {
+    if (hooks.notification) {
+      await hooks.notification({ level: "error", message: event.message });
     }
     return;
   }

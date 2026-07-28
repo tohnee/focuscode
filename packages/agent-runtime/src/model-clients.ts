@@ -227,13 +227,35 @@ export function createModelClient(options: {
   return new OpenAIChatClient(options);
 }
 
-function buildOpenAIRequest(
+export function buildOpenAIRequest(
   request: ModelRequest,
   compatibility: Required<ProviderCompatibility>,
 ): Record<string, unknown> {
+  const mode = compatibility.cacheControl.mode;
+  const parts = request.systemPromptParts;
+  let messages: unknown[];
+  if (mode === "openai-prefix" && parts) {
+    // 将 stable 段独立为首条 system message，dynamic 段作为第二条 system message，
+    // 确保 stable 前缀在所有轮次中保持不变，最大化 Provider 侧 prefix cache 命中率。
+    messages = [
+      { role: "system", content: parts.stable },
+      ...(parts.dynamic ? [{ role: "system", content: parts.dynamic }] : []),
+      ...request.messages.map((message) => toOpenAIMessageShape(message, compatibility)),
+    ];
+    process.stderr.write(
+      `[cache:openai-prefix] stable=${parts.stable.length}ch dynamic=${parts.dynamic.length}ch\n`,
+    );
+  } else {
+    if (mode === "openai-prefix" && !parts) {
+      process.stderr.write(
+        `[cache:none] reason=no-systemPromptParts mode=openai-prefix model=${request.model}\n`,
+      );
+    }
+    messages = toOpenAIMessages(request.systemPrompt, request.messages, compatibility);
+  }
   const body: Record<string, unknown> = {
     model: request.model,
-    messages: toOpenAIMessages(request.systemPrompt, request.messages, compatibility),
+    messages,
     stream: true,
   };
   if (request.tools.length > 0) {
@@ -277,7 +299,7 @@ function applyReasoningOptions(
   }
 }
 
-function compatibilityPolicy(options: ClientOptions): Required<ProviderCompatibility> {
+export function compatibilityPolicy(options: ClientOptions): Required<ProviderCompatibility> {
   return {
     supportsParallelToolCalls: options.compatibility?.supportsParallelToolCalls ?? true,
     supportsStreamUsage: options.compatibility?.supportsStreamUsage ?? true,
@@ -295,6 +317,12 @@ function compatibilityPolicy(options: ClientOptions): Required<ProviderCompatibi
     reasoningEffortMap: options.compatibility?.reasoningEffortMap ?? {},
     anthropicThinking: options.compatibility?.anthropicThinking ?? "omit",
     anthropicThinkingBudgetTokens: options.compatibility?.anthropicThinkingBudgetTokens ?? 16_384,
+    cacheControl: {
+      mode: options.compatibility?.cacheControl?.mode ?? "none",
+      ...(options.compatibility?.cacheControl?.minPrefixTokens !== undefined
+        ? { minPrefixTokens: options.compatibility.cacheControl.minPrefixTokens }
+        : {}),
+    },
   };
 }
 
@@ -662,46 +690,52 @@ function toOpenAIMessages(
 ): unknown[] {
   return [
     { role: "system", content: systemPrompt },
-    ...messages.map((message) => {
-      if (message.role === "tool") {
-        return {
-          role: "tool",
-          tool_call_id: message.toolCallId,
-          content: message.content,
-          ...(compatibility.requiresToolResultName && message.toolName
-            ? { name: message.toolName }
-            : {}),
-        };
-      }
-      if (message.role === "assistant") {
-        const output: Record<string, unknown> = {
-          role: "assistant",
-          content:
-            message.content ||
-            (message.toolCalls?.length && compatibility.requiresAssistantContentForToolCalls
-              ? ""
-              : null),
-        };
-        if (message.toolCalls?.length) {
-          output.tool_calls = message.toolCalls.map((call) => ({
-            id: call.id,
-            type: "function",
-            function: {
-              name: call.name,
-              arguments: call.rawArguments ?? JSON.stringify(call.arguments),
-            },
-          }));
-        }
-        if (message.providerState?.reasoningContent) {
-          output.reasoning_content = message.providerState.reasoningContent;
-        } else if (compatibility.requiresReasoningContentOnAssistantMessages) {
-          output.reasoning_content = "";
-        }
-        return output;
-      }
-      return { role: message.role, content: toOpenAIContent(message) };
-    }),
+    ...messages.map((message) => toOpenAIMessageShape(message, compatibility)),
   ];
+}
+
+/** Convert a single AgentMessage into the OpenAI chat message shape. */
+function toOpenAIMessageShape(
+  message: AgentMessage,
+  compatibility: Required<ProviderCompatibility>,
+): unknown {
+  if (message.role === "tool") {
+    return {
+      role: "tool",
+      tool_call_id: message.toolCallId,
+      content: message.content,
+      ...(compatibility.requiresToolResultName && message.toolName
+        ? { name: message.toolName }
+        : {}),
+    };
+  }
+  if (message.role === "assistant") {
+    const output: Record<string, unknown> = {
+      role: "assistant",
+      content:
+        message.content ||
+        (message.toolCalls?.length && compatibility.requiresAssistantContentForToolCalls
+          ? ""
+          : null),
+    };
+    if (message.toolCalls?.length) {
+      output.tool_calls = message.toolCalls.map((call) => ({
+        id: call.id,
+        type: "function",
+        function: {
+          name: call.name,
+          arguments: call.rawArguments ?? JSON.stringify(call.arguments),
+        },
+      }));
+    }
+    if (message.providerState?.reasoningContent) {
+      output.reasoning_content = message.providerState.reasoningContent;
+    } else if (compatibility.requiresReasoningContentOnAssistantMessages) {
+      output.reasoning_content = "";
+    }
+    return output;
+  }
+  return { role: message.role, content: toOpenAIContent(message) };
 }
 
 /**
@@ -710,7 +744,7 @@ function toOpenAIMessages(
  * Provider caches the stable portion across rounds. When absent, the plain
  * `systemPrompt` string is returned (backward compatible).
  */
-function anthropicSystemField(
+export function anthropicSystemField(
   request: ModelRequest,
 ): string | Array<{ type: "text"; text: string; cache_control?: { type: "ephemeral" } }> {
   const parts = request.systemPromptParts;
@@ -721,6 +755,9 @@ function anthropicSystemField(
   if (parts.dynamic) {
     blocks.push({ type: "text", text: parts.dynamic });
   }
+  process.stderr.write(
+    `[cache:anthropic-ephemeral] stable=${parts.stable.length}ch dynamic=${parts.dynamic.length}ch\n`,
+  );
   return blocks;
 }
 
@@ -869,21 +906,31 @@ function zeroUsage(): TokenUsage {
   return { inputTokens: 0, outputTokens: 0 };
 }
 
-function openAIUsage(value: Record<string, unknown>): TokenUsage {
+export function openAIUsage(value: Record<string, unknown>): TokenUsage {
   const details = objectOrUndefined(value.prompt_tokens_details);
   const cached = numberOrZero(details?.cached_tokens);
+  const inputTokens = numberOrZero(value.prompt_tokens);
+  if (cached > 0) {
+    const ratio = inputTokens > 0 ? Math.round((cached / inputTokens) * 100) : 0;
+    process.stderr.write(`[cache:hit] cached=${cached} input=${inputTokens} ratio=${ratio}%\n`);
+  }
   return {
-    inputTokens: numberOrZero(value.prompt_tokens),
+    inputTokens,
     outputTokens: numberOrZero(value.completion_tokens),
     ...(cached > 0 ? { cachedInputTokens: cached } : {}),
   };
 }
 
-function anthropicUsage(value: Record<string, unknown>): TokenUsage {
+export function anthropicUsage(value: Record<string, unknown>): TokenUsage {
   const cached = numberOrZero(value.cache_read_input_tokens);
+  const inputTokens =
+    numberOrZero(value.input_tokens) + numberOrZero(value.cache_creation_input_tokens) + cached;
+  if (cached > 0) {
+    const ratio = inputTokens > 0 ? Math.round((cached / inputTokens) * 100) : 0;
+    process.stderr.write(`[cache:hit] cached=${cached} input=${inputTokens} ratio=${ratio}%\n`);
+  }
   return {
-    inputTokens:
-      numberOrZero(value.input_tokens) + numberOrZero(value.cache_creation_input_tokens) + cached,
+    inputTokens,
     outputTokens: numberOrZero(value.output_tokens),
     ...(cached > 0 ? { cachedInputTokens: cached } : {}),
   };

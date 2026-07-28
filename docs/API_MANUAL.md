@@ -444,10 +444,10 @@ interface SessionEffectSpineOptions {
     protectedPaths: string[];
   };
   approve?: ApprovalHandler; // 桥接 PolicyEngine 审批到会话处理器
-  onApprovalRequired?: (req: PermissionRequest) => void | Promise<void>;
   workerId?: string;
 }
 
+// spine 创建时不持有任何 agent 引用
 const spine = createSessionEffectSpine({
   cwd,
   registry,
@@ -455,15 +455,17 @@ const spine = createSessionEffectSpine({
   model: profile,
   permission: { mode, projectTrusted, protectedPaths },
   approve,
-  onApprovalRequired: (req) => agent?.notifyApprovalRequired(req),
 });
 
-agent = await CodingAgent.create({
+const agent = await CodingAgent.create({
   // ...
   effectPort: spine.effectPort,
   effectContext: spine.effectContext,
   onApprovalModeChange: (mode) => spine.setApprovalMode(mode),
 });
+
+// agent 创建后显式接线审批通知
+spine.setApprovalListener((req) => agent.notifyApprovalRequired(req));
 ```
 
 返回：
@@ -474,6 +476,7 @@ interface SessionEffectSpine {
   effectContext: EffectContextV1; // 注入 CodingAgent.effectContext
   runtime: LocalActionRuntime; // 内部 LocalActionRuntime（可观测）
   setApprovalMode(mode: ApprovalMode): void; // 模式切换时同步 PolicyEngine
+  setApprovalListener(listener: ApprovalListener): void; // 显式接线审批通知；重复调用覆盖前值
 }
 ```
 
@@ -483,18 +486,19 @@ interface SessionEffectSpine {
 
 来源：[packages/sdk/src/effect-spine.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/effect-spine.ts#L29-L50)。
 
-| 字段                        | 类型                                                 | 默认                            | 必填 | 说明                                                                |
-| --------------------------- | ---------------------------------------------------- | ------------------------------- | ---- | ------------------------------------------------------------------- |
-| `cwd`                       | `string`                                             | —                               | ✅   | 工作目录（传给 `tool.execute({ cwd })`）                            |
-| `registry`                  | `AgentToolRegistry`                                  | —                               | ✅   | 会话工具注册表；spine 会 `sync()` 其所有工具到内部 `ToolRegistry`   |
-| `taskId`                    | `string`                                             | —                               | ✅   | 稳定任务 ID（通常用 `sessionId`）；写入 `ExecutionContextV1.taskId` |
-| `model`                     | `ModelProfile`                                       | —                               | ✅   | 模型画像；用于派生 `CertifiedModelRefV1`（development fingerprint） |
-| `permission.mode`           | `ApprovalMode`                                       | —                               | ✅   | 策略审批模式：`ask`/`auto-edit`/`full-auto`/`deny`                  |
-| `permission.projectTrusted` | `boolean`                                            | —                               | ✅   | 是否信任项目级配置；影响 `autoGrant*` 矩阵                          |
-| `permission.protectedPaths` | `string[]`                                           | —                               | ✅   | 受保护路径列表；写入策略配置                                        |
-| `approve`                   | `ApprovalHandler?`                                   | `undefined`（deny）             | ❌   | 桥接 PolicyEngine 审批到会话处理器；缺省则全部 deny                 |
-| `onApprovalRequired`        | `(req: PermissionRequest) => void \| Promise<void>?` | —                               | ❌   | 审批触发前的回调（用于 emit `approval_required` 事件）              |
-| `workerId`                  | `string?`                                            | `session-worker:${process.pid}` | ❌   | worker 标识                                                         |
+| 字段                        | 类型                | 默认                            | 必填 | 说明                                                                |
+| --------------------------- | ------------------- | ------------------------------- | ---- | ------------------------------------------------------------------- |
+| `cwd`                       | `string`            | —                               | ✅   | 工作目录（传给 `tool.execute({ cwd })`）                            |
+| `registry`                  | `AgentToolRegistry` | —                               | ✅   | 会话工具注册表；spine 会 `sync()` 其所有工具到内部 `ToolRegistry`   |
+| `taskId`                    | `string`            | —                               | ✅   | 稳定任务 ID（通常用 `sessionId`）；写入 `ExecutionContextV1.taskId` |
+| `model`                     | `ModelProfile`      | —                               | ✅   | 模型画像；用于派生 `CertifiedModelRefV1`（development fingerprint） |
+| `permission.mode`           | `ApprovalMode`      | —                               | ✅   | 策略审批模式：`ask`/`auto-edit`/`full-auto`/`deny`                  |
+| `permission.projectTrusted` | `boolean`           | —                               | ✅   | 是否信任项目级配置；影响 `autoGrant*` 矩阵                          |
+| `permission.protectedPaths` | `string[]`          | —                               | ✅   | 受保护路径列表；写入策略配置                                        |
+| `approve`                   | `ApprovalHandler?`  | `undefined`（deny）             | ❌   | 桥接 PolicyEngine 审批到会话处理器；缺省则全部 deny                 |
+| `workerId`                  | `string?`           | `session-worker:${process.pid}` | ❌   | worker 标识                                                         |
+
+> 审批通知（`approval_required` 事件）不再通过 options 传入，改为 agent 创建后调用 `spine.setApprovalListener(...)` 显式接线；未接线时授权照常工作，仅跳过事件通知。
 
 **派生的 `EffectContextV1`（由 spine 构造，不可注入）**
 
@@ -522,7 +526,7 @@ interface SessionEffectSpine {
 | -------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------- |
 | `registry` 中存在同名工具                          | `ToolRegistry.register` 抛 `Duplicate tool: <name>`                    | 在扩展加载阶段去重                        |
 | `approve` 缺省且 `permission.mode === "ask"`       | 所有写入工具被 deny，会话卡在 `WAITING_APPROVAL`                       | 注入 `ApprovalHandler` 或改用 `auto-edit` |
-| `onApprovalRequired` 抛错                          | 错误冒泡至 `effectPort.submit()`，工具执行失败                         | 在回调中加 try/catch                      |
+| `setApprovalListener` 的 listener 抛错             | 错误冒泡至 `effectPort.submit()`，工具执行失败                         | 在回调中加 try/catch                      |
 | `permission.protectedPaths` 与工具参数 `path` 冲突 | PolicyEngine 直接 deny，返回 `EffectReceiptV1` 带 `denied` disposition | 调整 `protectedPaths` 或工具参数          |
 | `taskId` 不稳定（每次 submit 变化）                | 审计日志无法关联，`EffectLedger` 快照混乱                              | 用 `sessionId` 作为 `taskId`              |
 | `model.provider`/`model.model` 为空字符串          | `CertifiedModelRefV1.modelId` 为 `"/"`，审计不可读                     | 确保 `ModelProfile` 完整                  |

@@ -209,6 +209,9 @@ importers:
       '@focuscode/asset-plane':
         specifier: workspace:*
         version: link:../asset-plane
+      '@focuscode/auth':
+        specifier: workspace:*
+        version: link:../auth
       '@focuscode/context-compiler':
         specifier: workspace:*
         version: link:../context-compiler
@@ -227,6 +230,9 @@ importers:
       '@focuscode/persistence':
         specifier: workspace:*
         version: link:../persistence
+      '@focuscode/protocols':
+        specifier: workspace:*
+        version: link:../protocols
       '@focuscode/sandbox':
         specifier: workspace:*
         version: link:../sandbox

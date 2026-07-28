@@ -280,6 +280,7 @@ const PRESETS: Record<string, ProviderPreset> = {
     capabilities: { input: ["text", "image"], reasoning: true, toolCalling: true },
     defaultContextWindow: 200_000,
     defaultMaxOutputTokens: 16_384,
+    compatibility: { cacheControl: { mode: "anthropic-ephemeral" } },
   },
   gemini: {
     id: "gemini",
@@ -315,6 +316,7 @@ const PRESETS: Record<string, ProviderPreset> = {
         high: "high",
         max: "max",
       },
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
     },
   },
   openrouter: {
@@ -336,7 +338,11 @@ const PRESETS: Record<string, ProviderPreset> = {
     defaultMaxOutputTokens: 65_536,
     defaultReasoningEffort: "high",
     capabilities: { input: ["text"], reasoning: true, toolCalling: true },
-    compatibility: { thinkingFormat: "qwen", supportsReasoningEffort: true },
+    compatibility: {
+      thinkingFormat: "qwen",
+      supportsReasoningEffort: true,
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
+    },
   },
   "qwen-intl": {
     id: "qwen-intl",
@@ -349,7 +355,11 @@ const PRESETS: Record<string, ProviderPreset> = {
     defaultMaxOutputTokens: 65_536,
     defaultReasoningEffort: "high",
     capabilities: { input: ["text"], reasoning: true, toolCalling: true },
-    compatibility: { thinkingFormat: "qwen", supportsReasoningEffort: true },
+    compatibility: {
+      thinkingFormat: "qwen",
+      supportsReasoningEffort: true,
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
+    },
   },
   kimi: {
     id: "kimi",
@@ -374,6 +384,7 @@ const PRESETS: Record<string, ProviderPreset> = {
         high: "max",
         max: "max",
       },
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
     },
   },
   "kimi-cn": {
@@ -399,6 +410,7 @@ const PRESETS: Record<string, ProviderPreset> = {
         high: "max",
         max: "max",
       },
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
     },
   },
   moonshot: {
@@ -424,6 +436,7 @@ const PRESETS: Record<string, ProviderPreset> = {
         high: "max",
         max: "max",
       },
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
     },
   },
   "kimi-coding": {
@@ -453,6 +466,7 @@ const PRESETS: Record<string, ProviderPreset> = {
       thinkingFormat: "zai",
       supportsReasoningEffort: true,
       zaiToolStream: true,
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
     },
   },
   ark: {
@@ -485,6 +499,7 @@ const PRESETS: Record<string, ProviderPreset> = {
       thinkingFormat: "zai",
       supportsReasoningEffort: true,
       zaiToolStream: true,
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
     },
   },
   minimax: {
@@ -497,7 +512,10 @@ const PRESETS: Record<string, ProviderPreset> = {
     defaultContextWindow: 1_000_000,
     defaultMaxOutputTokens: 131_072,
     capabilities: { input: ["text", "image"], reasoning: true, toolCalling: true },
-    compatibility: { anthropicThinking: "adaptive" },
+    compatibility: {
+      anthropicThinking: "adaptive",
+      cacheControl: { mode: "anthropic-ephemeral" },
+    },
   },
   "minimax-cn": {
     id: "minimax-cn",
@@ -509,7 +527,10 @@ const PRESETS: Record<string, ProviderPreset> = {
     defaultContextWindow: 1_000_000,
     defaultMaxOutputTokens: 131_072,
     capabilities: { input: ["text", "image"], reasoning: true, toolCalling: true },
-    compatibility: { anthropicThinking: "adaptive" },
+    compatibility: {
+      anthropicThinking: "adaptive",
+      cacheControl: { mode: "anthropic-ephemeral" },
+    },
   },
   ollama: {
     id: "ollama",
@@ -921,6 +942,8 @@ async function exists(path: string): Promise<boolean> {
     await access(path, constants.F_OK);
     return true;
   } catch {
+    // Path does not exist or is inaccessible; this is a normal control-flow
+    // signal for callers that probe for optional files. Debug-level only.
     return false;
   }
 }

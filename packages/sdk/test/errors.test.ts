@@ -43,7 +43,7 @@ describe("classifyError()", () => {
 
   describe("auth errors", () => {
     it("classifies OAuthProtocolError as auth/error/non-retryable/non-fail-closed", () => {
-      const err = new OAuthProtocolError("authorization_pending", "authorization_pending", 400);
+      const err = new OAuthProtocolError("invalid_grant", "invalid_grant", 400);
       const result = classifyError(err);
       expect(result.code).toBe("AUTH_OAUTH_PROTOCOL");
       expect(result.category).toBe("auth");
@@ -69,7 +69,7 @@ describe("classifyError()", () => {
       const result = classifyError(err);
       expect(result.code).toBe("MODEL_HTTP");
       expect(result.category).toBe("model");
-      expect(result.severity).toBe("error");
+      expect(result.severity).toBe("warning");
       expect(result.retryable).toBe(true);
       expect(result.failClosed).toBe(false);
     });

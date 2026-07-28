@@ -83,7 +83,10 @@ export async function loadSkillsFromDirectory(dir: string): Promise<Skill[]> {
   let entries: string[];
   try {
     entries = await readdir(dir);
-  } catch {
+  } catch (error) {
+    console.warn(
+      `skills load failed for ${dir}: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return [];
   }
   const skills: Skill[] = [];
