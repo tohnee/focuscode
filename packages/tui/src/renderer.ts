@@ -886,9 +886,17 @@ function renderToastOverlay(
   const clearArea = " ".repeat(visibleLen);
   return (
     "\u001b7" +
-    "\u001b[" + 2 + ";" + col + "H" +
+    "\u001b[" +
+    2 +
+    ";" +
+    col +
+    "H" +
     clearArea +
-    "\u001b[" + 2 + ";" + col + "H" +
+    "\u001b[" +
+    2 +
+    ";" +
+    col +
+    "H" +
     styled +
     "\u001b8"
   );

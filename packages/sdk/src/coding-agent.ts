@@ -22,6 +22,12 @@ import {
 import { ExtensionPackageManager } from "@focuscode/ecosystem";
 import { createSandbox } from "@focuscode/sandbox";
 import { createSessionEffectSpine } from "./effect-spine.js";
+import {
+  composeEventSink,
+  dispatchAgentEvent,
+  type AgentHooks,
+  type SessionContext,
+} from "./hooks.js";
 
 export interface CreateCodingAgentOptions extends AgentConfigOverrides {
   cwd: string;
@@ -36,6 +42,13 @@ export interface CreateCodingAgentOptions extends AgentConfigOverrides {
   shellExecutor?: ShellExecutor;
   /** Route tool calls through the EffectPort spine; defaults to config agent.effectSpine (true). */
   effectSpine?: boolean;
+  /**
+   * Lifecycle hooks dispatched from `onEvent`. The SDK routes `tool_end` →
+   * `postToolUse`, `agent_end` → `stop`, and calls `sessionStart`/`sessionEnd`
+   * directly around the session lifecycle. Hooks are optional and run in
+   * addition to (not instead of) `onEvent`.
+   */
+  hooks?: AgentHooks;
 }
 
 export interface CreatedCodingAgent {
@@ -159,6 +172,7 @@ export async function createCodingAgent(
         onApprovalRequired: (request) => agent?.notifyApprovalRequired(request),
       })
     : undefined;
+  const eventSink = composeEventSink({ cwd, onEvent: options.onEvent, hooks: options.hooks });
   agent = await CodingAgent.create({
     cwd,
     model: config.model,
@@ -181,7 +195,7 @@ export async function createCodingAgent(
     maxRounds: config.maxRounds,
     steeringMaximum: config.steeringMaximum,
     steeringDelivery: config.steeringDelivery,
-    ...(options.onEvent ? { eventSink: options.onEvent } : {}),
+    ...(eventSink ? { eventSink } : {}),
     extensionHost: extensions,
     ...(config.enterprise.enabled ? { auditJournal: createEnterpriseAudit(config) } : {}),
     ...(spine

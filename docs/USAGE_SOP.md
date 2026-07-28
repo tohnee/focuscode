@@ -32,23 +32,23 @@
 
 ### 1.1 适用角色
 
-| 角色 | 主要场景 | 推荐入口 |
-|---|---|---|
-| 个人开发者 | 日常交互式编码、代码审查 | `focuscode agent` (TUI) |
-| CI/CD 工程师 | 自动化任务、PR 验证 | `focuscode run` (审计 Harness) |
-| 平台/SRE | 部署 share-server、control-api、harness-worker | 各 `apps/*` 组合根 |
-| 嵌入式集成者 | 把 FocusCode 嵌入自家产品 | `@focuscode/sdk` |
-| 扩展开发者 | 编写 FocusCode 扩展 | `manifest.json` + `ExtensionHost` |
+| 角色         | 主要场景                                       | 推荐入口                          |
+| ------------ | ---------------------------------------------- | --------------------------------- |
+| 个人开发者   | 日常交互式编码、代码审查                       | `focuscode agent` (TUI)           |
+| CI/CD 工程师 | 自动化任务、PR 验证                            | `focuscode run` (审计 Harness)    |
+| 平台/SRE     | 部署 share-server、control-api、harness-worker | 各 `apps/*` 组合根                |
+| 嵌入式集成者 | 把 FocusCode 嵌入自家产品                      | `@focuscode/sdk`                  |
+| 扩展开发者   | 编写 FocusCode 扩展                            | `manifest.json` + `ExtensionHost` |
 
 ### 1.2 系统要求
 
-| 项 | 要求 | 校验命令 |
-|---|---|---|
-| Node.js | `>=22.12.0`（CI 固定 22.20.0） | `node --version` |
-| pnpm | corepack 固定 11.7.0（仅源码构建需要） | `corepack enable && pnpm --version` |
-| 操作系统 | macOS / Linux / Windows（WSL2 推荐） | `uname -a` |
-| Git | 任意近期版本（会话恢复依赖 worktree） | `git --version` |
-| 沙箱（可选） | Docker / gVisor / seatbelt（仅 macOS）/ SSH VM | 见 §7 |
+| 项           | 要求                                           | 校验命令                            |
+| ------------ | ---------------------------------------------- | ----------------------------------- |
+| Node.js      | `>=22.12.0`（CI 固定 22.20.0）                 | `node --version`                    |
+| pnpm         | corepack 固定 11.7.0（仅源码构建需要）         | `corepack enable && pnpm --version` |
+| 操作系统     | macOS / Linux / Windows（WSL2 推荐）           | `uname -a`                          |
+| Git          | 任意近期版本（会话恢复依赖 worktree）          | `git --version`                     |
+| 沙箱（可选） | Docker / gVisor / seatbelt（仅 macOS）/ SSH VM | 见 §7                               |
 
 > **源码构建**额外要求：`pnpm install --frozen-lockfile` 后 `pnpm verify` 必须通过。详见 [AGENTS.md](file:///Users/tohnee/Trae/Code/focuscode/AGENTS.md)。
 
@@ -175,15 +175,15 @@ focuscode agent --trust-project
 
 FocusCode 内置五系 11 个区域预设（详见 [OAUTH_AND_PROVIDERS.md](./OAUTH_AND_PROVIDERS.md)）：
 
-| Provider | 协议 | 默认 BaseURL |
-|---|---|---|
-| `kimi` (Moonshot CN) | `openai-chat` | `https://api.moonshot.cn/v1` |
-| `kimi-global` (Moonshot Global) | `openai-chat` | `https://api.moonshot.ai/v1` |
-| `qwen` (DashScope CN) | `openai-chat` | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| Provider                              | 协议          | 默认 BaseURL                                             |
+| ------------------------------------- | ------------- | -------------------------------------------------------- |
+| `kimi` (Moonshot CN)                  | `openai-chat` | `https://api.moonshot.cn/v1`                             |
+| `kimi-global` (Moonshot Global)       | `openai-chat` | `https://api.moonshot.ai/v1`                             |
+| `qwen` (DashScope CN)                 | `openai-chat` | `https://dashscope.aliyuncs.com/compatible-mode/v1`      |
 | `qwen-intl` (DashScope International) | `openai-chat` | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` |
-| `glm` (智谱 BigModel) | `openai-chat` | `https://open.bigmodel.cn/api/paas/v4` |
-| `deepseek` | `openai-chat` | `https://api.deepseek.com/v1` |
-| `minimax` | `openai-chat` | `https://api.minimax.chat/v1` |
+| `glm` (智谱 BigModel)                 | `openai-chat` | `https://open.bigmodel.cn/api/paas/v4`                   |
+| `deepseek`                            | `openai-chat` | `https://api.deepseek.com/v1`                            |
+| `minimax`                             | `openai-chat` | `https://api.minimax.chat/v1`                            |
 
 可使用 `focuscode auth login` 走 OAuth 流程，或直接通过 `apiKeyEnv` 注入 API Key。
 
@@ -215,14 +215,14 @@ focuscode agent --fork <entryId>
 
 ### 4.2 五种运行模式
 
-| 模式 | 启用方式 | 适用场景 |
-|---|---|---|
-| `tui` | 默认 / `--mode tui` | 全屏交互（推荐） |
-| `interactive` | `--mode interactive` | 行式 REPL |
-| `print` | `--mode print` 或 `-p` | 一次性输出（脚本） |
-| `json` | `--mode json` 或 `--json` | NDJSON 流（程序消费） |
-| `rpc` | `--mode rpc` | JSON-RPC over stdio（IDE 集成） |
-| `acp` | `--mode acp` | Agent Client Protocol（编辑器集成） |
+| 模式          | 启用方式                  | 适用场景                            |
+| ------------- | ------------------------- | ----------------------------------- |
+| `tui`         | 默认 / `--mode tui`       | 全屏交互（推荐）                    |
+| `interactive` | `--mode interactive`      | 行式 REPL                           |
+| `print`       | `--mode print` 或 `-p`    | 一次性输出（脚本）                  |
+| `json`        | `--mode json` 或 `--json` | NDJSON 流（程序消费）               |
+| `rpc`         | `--mode rpc`              | JSON-RPC over stdio（IDE 集成）     |
+| `acp`         | `--mode acp`              | Agent Client Protocol（编辑器集成） |
 
 ### 4.3 审批模式
 
@@ -239,14 +239,14 @@ focuscode agent --approval deny       # 全部拒绝（只读模式）
 
 在 TUI/interactive 模式下，agent 正在执行时可以注入指令：
 
-| 操作 | TUI 快捷键 | 含义 |
-|---|---|---|
-| Append | `Ctrl+A` 然后输入 | 当前轮结束后注入补充说明 |
-| Interrupt | `Ctrl+I` 然后输入 | 立即打断当前轮，下轮注入新指令 |
-| Follow-up | `Ctrl+F` 然后输入 | 当前 submit 完成后自动启动新一轮 |
-| List steering | `Ctrl+L` | 查看队列 |
-| Unsteer | `Ctrl+U` | 取消最近一条 |
-| Abort | `Ctrl+C` | 完全中止当前 submit |
+| 操作          | TUI 快捷键        | 含义                             |
+| ------------- | ----------------- | -------------------------------- |
+| Append        | `Ctrl+A` 然后输入 | 当前轮结束后注入补充说明         |
+| Interrupt     | `Ctrl+I` 然后输入 | 立即打断当前轮，下轮注入新指令   |
+| Follow-up     | `Ctrl+F` 然后输入 | 当前 submit 完成后自动启动新一轮 |
+| List steering | `Ctrl+L`          | 查看队列                         |
+| Unsteer       | `Ctrl+U`          | 取消最近一条                     |
+| Abort         | `Ctrl+C`          | 完全中止当前 submit              |
 
 编程接口：
 
@@ -327,17 +327,17 @@ focuscode run \
 
 参数说明：
 
-| 参数 | 必填 | 含义 |
-|---|---|---|
-| `--repo` | ✓ | 仓库根 |
-| `--task` | ✓ | 任务目标文本 |
-| `--model` + `--base-url` | 二选一 | 真实模型 或 `--script` 确定性回放 |
-| `--approval` | 默认 `deny` | `deny` / `prompt`（需 TTY）/ `auto-safe` |
-| `--mode` | 默认 `change` | `explore` / `change` / `review` / `verify` |
-| `--profile` | 默认 `balanced` | `balanced` / `quality` / `local` / `fast` |
-| `--task-id` | 可选 | 指定后可幂等恢复 |
-| `--trust-repo-config` | 可选 | 信任 `.focuscode/` 中的 verification 命令白名单 |
-| `--state-dir` | 默认 `<repo>/.focuscode-state` | 状态目录 |
+| 参数                     | 必填                           | 含义                                            |
+| ------------------------ | ------------------------------ | ----------------------------------------------- |
+| `--repo`                 | ✓                              | 仓库根                                          |
+| `--task`                 | ✓                              | 任务目标文本                                    |
+| `--model` + `--base-url` | 二选一                         | 真实模型 或 `--script` 确定性回放               |
+| `--approval`             | 默认 `deny`                    | `deny` / `prompt`（需 TTY）/ `auto-safe`        |
+| `--mode`                 | 默认 `change`                  | `explore` / `change` / `review` / `verify`      |
+| `--profile`              | 默认 `balanced`                | `balanced` / `quality` / `local` / `fast`       |
+| `--task-id`              | 可选                           | 指定后可幂等恢复                                |
+| `--trust-repo-config`    | 可选                           | 信任 `.focuscode/` 中的 verification 命令白名单 |
+| `--state-dir`            | 默认 `<repo>/.focuscode-state` | 状态目录                                        |
 
 退出码：
 
@@ -428,7 +428,7 @@ export MOONSHOT_API_KEY=sk-...
 focuscode agent --provider kimi --model kimi-k2
 
 # 通过 CLI 参数（不推荐，会进 shell history）
-focuscode agent --api-key sk-... 
+focuscode agent --api-key sk-...
 
 # 通过配置文件
 # .focuscode/agent.json: { "apiKeyEnv": "MOONSHOT_API_KEY" }
@@ -492,14 +492,14 @@ createCodingAgent({
 
 ### 7.1 沙箱类型
 
-| 类型 | 隔离强度 | 适用平台 | 启用 |
-|---|---|---|---|
-| `auto` | 自动选择 | 全平台 | 默认 |
-| `gvisor` | 强 | Linux + runsc | `--sandbox gvisor` |
-| `docker` | 中 | Docker | `--sandbox docker` |
-| `seatbelt` | 中 | 仅 macOS | `--sandbox seatbelt` |
-| `vm` | 强 | SSH 可达远程 VM | `--sandbox vm` |
-| `host` | **无**（兼容路径） | 全平台 | 仅 `--allow-host-fallback` 时 |
+| 类型       | 隔离强度           | 适用平台        | 启用                          |
+| ---------- | ------------------ | --------------- | ----------------------------- |
+| `auto`     | 自动选择           | 全平台          | 默认                          |
+| `gvisor`   | 强                 | Linux + runsc   | `--sandbox gvisor`            |
+| `docker`   | 中                 | Docker          | `--sandbox docker`            |
+| `seatbelt` | 中                 | 仅 macOS        | `--sandbox seatbelt`          |
+| `vm`       | 强                 | SSH 可达远程 VM | `--sandbox vm`                |
+| `host`     | **无**（兼容路径） | 全平台          | 仅 `--allow-host-fallback` 时 |
 
 ### 7.2 `auto` 选择链
 
@@ -629,20 +629,20 @@ pnpm --filter @focuscode/share-server start --port 8787
 
 ### 9.1 企业模式清单
 
-| 项 | 要求 | 校验 |
-|---|---|---|
-| 沙箱 | `docker` / `gvisor` / `vm`（非 Host） | `focuscode doctor --enterprise` |
-| 镜像 digest | 必须 `@sha256:<64-hex>` | `init --enterprise --sandbox-image ...` |
-| `--pull never` | 镜像预拉取 | `focuscode sandbox doctor` |
-| Audit HMAC key | ≥32 字节 | `echo -n "$FOCUSCODE_AUDIT_HMAC_KEY" | wc -c` |
-| Provider allowlist | `enterprise.allowedProviders` | 配置文件 |
-| Model allowlist | `enterprise.allowedModels` | 配置文件 |
-| Extension allowlist | `enterprise.allowedExtensions` | 配置文件 |
-| 扩展权限 | 不得包含 `network`/`shell` | 启动时校验 |
-| 扩展签名 | `requireExtensionSignatures: true` | 启动时校验 |
-| 远程图片 | `media.allowRemoteImages: false` | 配置文件 |
-| 项目扩展 | `allowProjectExtensions: false` | 配置文件 |
-| MCP pins | 所有 MCP tool 必须有 pin | 启动时 fail-closed |
+| 项                  | 要求                                  | 校验                                    |
+| ------------------- | ------------------------------------- | --------------------------------------- |
+| 沙箱                | `docker` / `gvisor` / `vm`（非 Host） | `focuscode doctor --enterprise`         |
+| 镜像 digest         | 必须 `@sha256:<64-hex>`               | `init --enterprise --sandbox-image ...` |
+| `--pull never`      | 镜像预拉取                            | `focuscode sandbox doctor`              |
+| Audit HMAC key      | ≥32 字节                              | `echo -n "$FOCUSCODE_AUDIT_HMAC_KEY"    | wc -c` |
+| Provider allowlist  | `enterprise.allowedProviders`         | 配置文件                                |
+| Model allowlist     | `enterprise.allowedModels`            | 配置文件                                |
+| Extension allowlist | `enterprise.allowedExtensions`        | 配置文件                                |
+| 扩展权限            | 不得包含 `network`/`shell`            | 启动时校验                              |
+| 扩展签名            | `requireExtensionSignatures: true`    | 启动时校验                              |
+| 远程图片            | `media.allowRemoteImages: false`      | 配置文件                                |
+| 项目扩展            | `allowProjectExtensions: false`       | 配置文件                                |
+| MCP pins            | 所有 MCP tool 必须有 pin              | 启动时 fail-closed                      |
 
 ### 9.2 部署 control-api（只读控制面）
 
@@ -699,35 +699,35 @@ focuscode agent --theme foxglow --mascot foxy
 
 四种布局模式（按终端尺寸自适应）：
 
-| 模式 | 终端宽度 | 布局 |
-|---|---|---|
-| `classic` | < 100 列 | 单列：messages + input |
-| `split` | 100-160 列 | 左 messages，右 companion/todo |
-| `focus` | 任意 | 仅 messages（隐藏 chrome） |
-| `wide` | > 160 列 | 三列：messages + companion + tools |
+| 模式      | 终端宽度   | 布局                               |
+| --------- | ---------- | ---------------------------------- |
+| `classic` | < 100 列   | 单列：messages + input             |
+| `split`   | 100-160 列 | 左 messages，右 companion/todo     |
+| `focus`   | 任意       | 仅 messages（隐藏 chrome）         |
+| `wide`    | > 160 列   | 三列：messages + companion + tools |
 
 手动切换：`/layout classic|split|focus|wide`。
 
 ### 10.2 核心快捷键
 
-| 键 | 动作 |
-|---|---|
-| `Enter` | 发送消息 |
-| `Shift+Enter` | 换行 |
-| `Ctrl+C` | 中断当前 submit |
-| `Ctrl+L` | 清屏 |
-| `Ctrl+A` | Steering: append |
-| `Ctrl+I` | Steering: interrupt |
-| `Ctrl+F` | Steering: follow-up |
-| `Ctrl+U` | 取消最近 steering |
-| `Ctrl+Z` | Undo（恢复 checkpoint） |
-| `Ctrl+P` | 命令面板 |
-| `Ctrl+T` | 切换主题 |
-| `Ctrl+M` | 切换 mascot |
-| `Ctrl+W` | 切换布局 |
-| `Esc` | 取消当前输入 / 关闭面板 |
-| `Tab` | 自动补全 |
-| `↑` / `↓` | 历史消息导航 |
+| 键            | 动作                    |
+| ------------- | ----------------------- |
+| `Enter`       | 发送消息                |
+| `Shift+Enter` | 换行                    |
+| `Ctrl+C`      | 中断当前 submit         |
+| `Ctrl+L`      | 清屏                    |
+| `Ctrl+A`      | Steering: append        |
+| `Ctrl+I`      | Steering: interrupt     |
+| `Ctrl+F`      | Steering: follow-up     |
+| `Ctrl+U`      | 取消最近 steering       |
+| `Ctrl+Z`      | Undo（恢复 checkpoint） |
+| `Ctrl+P`      | 命令面板                |
+| `Ctrl+T`      | 切换主题                |
+| `Ctrl+M`      | 切换 mascot             |
+| `Ctrl+W`      | 切换布局                |
+| `Esc`         | 取消当前输入 / 关闭面板 |
+| `Tab`         | 自动补全                |
+| `↑` / `↓`     | 历史消息导航            |
 
 可通过 `--keymap ./my-keymap.json` 自定义。
 
@@ -735,25 +735,25 @@ focuscode agent --theme foxglow --mascot foxy
 
 在 TUI 输入框中输入 `/` 开头的命令：
 
-| 命令 | 含义 |
-|---|---|
-| `/help` | 帮助 |
-| `/status` | 当前会话状态 |
-| `/sessions` | 列出所有会话 |
-| `/model <provider/model>` | 切换模型 |
-| `/approval <mode>` | 切换审批模式 |
-| `/compact` | 手动压缩上下文 |
-| `/undo` | 撤销最近编辑 |
-| `/fork <entryId>` | 从指定 entry 分叉 |
-| `/export <path>` | 导出会话 |
-| `/share` | 分享当前会话 |
-| `/theme <name>` | 切换主题 |
-| `/mascot <name>` | 切换伙伴 |
-| `/layout <mode>` | 切换布局 |
-| `/tools` | 列出已注册工具 |
-| `/skills` | 列出已加载技能 |
-| `/diagnostics` | 切换 LSP 诊断显示 |
-| `/exit` 或 `/quit` | 退出 |
+| 命令                      | 含义              |
+| ------------------------- | ----------------- |
+| `/help`                   | 帮助              |
+| `/status`                 | 当前会话状态      |
+| `/sessions`               | 列出所有会话      |
+| `/model <provider/model>` | 切换模型          |
+| `/approval <mode>`        | 切换审批模式      |
+| `/compact`                | 手动压缩上下文    |
+| `/undo`                   | 撤销最近编辑      |
+| `/fork <entryId>`         | 从指定 entry 分叉 |
+| `/export <path>`          | 导出会话          |
+| `/share`                  | 分享当前会话      |
+| `/theme <name>`           | 切换主题          |
+| `/mascot <name>`          | 切换伙伴          |
+| `/layout <mode>`          | 切换布局          |
+| `/tools`                  | 列出已注册工具    |
+| `/skills`                 | 列出已加载技能    |
+| `/diagnostics`            | 切换 LSP 诊断显示 |
+| `/exit` 或 `/quit`        | 退出              |
 
 ### 10.4 命令面板
 
@@ -800,13 +800,13 @@ focuscode agent --spec-engine --spec-auto-trigger
 
 ### 11.2 五阶段管线
 
-| 阶段 | 模型 | 输入 | 输出 |
-|---|---|---|---|
-| Classifier | 1-2B | 用户输入 | `vague` / `clear` / `decision` |
-| Explorer | 主模型 | 输入 + 仓库 | 仓库上下文摘要 |
-| Drafter | 3-7B | 输入 + 探索结果 | spec 草稿 |
-| Decision Detector | 1-2B | spec 草稿 | 是否含未决断点 |
-| Enhancer | 3-7B | spec + 上下文 | enhanced prompt + 初始 todos |
+| 阶段              | 模型   | 输入            | 输出                           |
+| ----------------- | ------ | --------------- | ------------------------------ |
+| Classifier        | 1-2B   | 用户输入        | `vague` / `clear` / `decision` |
+| Explorer          | 主模型 | 输入 + 仓库     | 仓库上下文摘要                 |
+| Drafter           | 3-7B   | 输入 + 探索结果 | spec 草稿                      |
+| Decision Detector | 1-2B   | spec 草稿       | 是否含未决断点                 |
+| Enhancer          | 3-7B   | spec + 上下文   | enhanced prompt + 初始 todos   |
 
 ### 11.3 使用方式
 
@@ -949,36 +949,36 @@ focuscode agent --skills ./my-skills.json
 
 ### 14.1 启动失败
 
-| 症状 | 可能原因 | 解决 |
-|---|---|---|
-| `Enterprise mode rejects non-isolated shell executor: host` | 企业模式沙箱为 host | 改用 docker/gvisor/vm |
-| `Enterprise mode requires a 32+ byte audit key` | 未设置 HMAC key | `export FOCUSCODE_AUDIT_HMAC_KEY=$(openssl rand -hex 32)` |
-| `McpSchemaChangedError` | MCP pin 漂移 | 重新计算 pin 并更新配置 |
-| `Model system_fingerprint drift` | 模型版本变化 | 更新 `expectedSystemFingerprint` 或设 `systemFingerprintPolicy: "warn"` |
-| `Sandbox unavailable` | auto 链全部不可用 | 安装 Docker/gVisor 或配置 VM |
-| `Unsigned extensions are disabled` | 企业模式未签名扩展 | 对扩展签名或从 allowlist 移除 |
-| `Enterprise extensions may not request network or shell` | 扩展权限越界 | 移除高危权限或换扩展 |
+| 症状                                                        | 可能原因            | 解决                                                                    |
+| ----------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------- |
+| `Enterprise mode rejects non-isolated shell executor: host` | 企业模式沙箱为 host | 改用 docker/gvisor/vm                                                   |
+| `Enterprise mode requires a 32+ byte audit key`             | 未设置 HMAC key     | `export FOCUSCODE_AUDIT_HMAC_KEY=$(openssl rand -hex 32)`               |
+| `McpSchemaChangedError`                                     | MCP pin 漂移        | 重新计算 pin 并更新配置                                                 |
+| `Model system_fingerprint drift`                            | 模型版本变化        | 更新 `expectedSystemFingerprint` 或设 `systemFingerprintPolicy: "warn"` |
+| `Sandbox unavailable`                                       | auto 链全部不可用   | 安装 Docker/gVisor 或配置 VM                                            |
+| `Unsigned extensions are disabled`                          | 企业模式未签名扩展  | 对扩展签名或从 allowlist 移除                                           |
+| `Enterprise extensions may not request network or shell`    | 扩展权限越界        | 移除高危权限或换扩展                                                    |
 
 ### 14.2 运行时错误
 
-| 症状 | 可能原因 | 解决 |
-|---|---|---|
-| `Model is not configured for image input` | 模型不支持多模态 | 切换支持 image 的模型或移除 `--image` |
-| `Agent is already processing a prompt` | 重复调用 submit | 用 `steer()` 而非 `submit()` |
-| `Cannot change model during a running turn` | 运行中切换模型 | 先 `abort()` 或等待完成 |
-| `Session workspace is X, not requested workspace Y` | cwd 与会话记录不符 | 用 `--cwd` 指定正确目录或新建会话 |
-| `Prompt must not be empty` | 空输入 | 提供非空文本或 attachments |
-| `Enterprise policy forbids ad-hoc extension paths` | 企业模式传 extensionPaths | 通过 allowlist 安装 |
+| 症状                                                | 可能原因                  | 解决                                  |
+| --------------------------------------------------- | ------------------------- | ------------------------------------- |
+| `Model is not configured for image input`           | 模型不支持多模态          | 切换支持 image 的模型或移除 `--image` |
+| `Agent is already processing a prompt`              | 重复调用 submit           | 用 `steer()` 而非 `submit()`          |
+| `Cannot change model during a running turn`         | 运行中切换模型            | 先 `abort()` 或等待完成               |
+| `Session workspace is X, not requested workspace Y` | cwd 与会话记录不符        | 用 `--cwd` 指定正确目录或新建会话     |
+| `Prompt must not be empty`                          | 空输入                    | 提供非空文本或 attachments            |
+| `Enterprise policy forbids ad-hoc extension paths`  | 企业模式传 extensionPaths | 通过 allowlist 安装                   |
 
 ### 14.3 模型调用失败
 
-| 症状 | 可能原因 | 解决 |
-|---|---|---|
-| `ModelHttpError: 401` | API Key 无效 | 检查环境变量 / 重新登录 |
-| `ModelHttpError: 429` | 限流 | 配置 fallbackModels / 降低并发 |
-| `ModelHttpError: 5xx` | Provider 故障 | FallbackModelClient 自动降级 |
-| 超时 | `reliability.timeoutMs` 太短 | 调整为 600000（10 分钟） |
-| 熔断 | `circuitThreshold` 触发 | 等待 `circuitCooldownMs` 或重启 |
+| 症状                  | 可能原因                     | 解决                            |
+| --------------------- | ---------------------------- | ------------------------------- |
+| `ModelHttpError: 401` | API Key 无效                 | 检查环境变量 / 重新登录         |
+| `ModelHttpError: 429` | 限流                         | 配置 fallbackModels / 降低并发  |
+| `ModelHttpError: 5xx` | Provider 故障                | FallbackModelClient 自动降级    |
+| 超时                  | `reliability.timeoutMs` 太短 | 调整为 600000（10 分钟）        |
+| 熔断                  | `circuitThreshold` 触发      | 等待 `circuitCooldownMs` 或重启 |
 
 ### 14.4 沙箱问题
 
@@ -1064,15 +1064,15 @@ find ~/.focuscode/checkpoints -maxdepth 2 -type d -mtime +7 -exec rm -rf {} \;
 
 ### 15.3 信任边界
 
-| 边界 | 信任级别 | 说明 |
-|---|---|---|
-| CLI 主进程 | 完全可信 | 持有凭据、Session、OAuth |
-| 沙箱内进程 | 不完全可信 | 仅获得精简环境 |
-| MCP server 子进程 | 不完全可信 | 不接触 Provider token |
-| 扩展（in-process） | 显式可信 | 与主进程同权限 |
-| 扩展（process host） | 显式可信 + 崩溃隔离 | 子进程崩溃不影响主进程 |
-| 项目 Instructions/Skills/Extensions | 仅 `--trust-project` 后可信 | 默认不加载 |
-| 会话分享内容 | 不信任内容 | 仅验签，导入前人工审查 |
+| 边界                                | 信任级别                    | 说明                     |
+| ----------------------------------- | --------------------------- | ------------------------ |
+| CLI 主进程                          | 完全可信                    | 持有凭据、Session、OAuth |
+| 沙箱内进程                          | 不完全可信                  | 仅获得精简环境           |
+| MCP server 子进程                   | 不完全可信                  | 不接触 Provider token    |
+| 扩展（in-process）                  | 显式可信                    | 与主进程同权限           |
+| 扩展（process host）                | 显式可信 + 崩溃隔离         | 子进程崩溃不影响主进程   |
+| 项目 Instructions/Skills/Extensions | 仅 `--trust-project` 后可信 | 默认不加载               |
+| 会话分享内容                        | 不信任内容                  | 仅验签，导入前人工审查   |
 
 ---
 
@@ -1159,20 +1159,255 @@ focuscode mascots
 focuscode skins list/apply/import/export/remove
 ```
 
+## 17. SDK 嵌入式集成 SOP
+
+面向将 `@focuscode/sdk` 作为库依赖嵌入到自有服务、CI runner 或 IDE 后端的集成者。CLI 用户可跳过本节。
+
+### 17.1 环境准备
+
+```bash
+# 1. Node >=22.12.0（CI 固定 22.20.0）
+node --version
+
+# 2. 安装 SDK
+npm install @focuscode/sdk
+
+# 3.（可选）安装沙箱依赖
+#    gVisor: 需要 Docker + gVisor 镜像
+#    Docker: 需要 Docker daemon
+#    Seatbelt: 仅 macOS,无需额外依赖
+#    SSH VM: 需要远程 SSH 主机
+```
+
+### 17.2 最小示例：会话型 Agent
+
+```typescript
+import { createCodingAgent } from "@focuscode/sdk";
+
+const { agent } = await createCodingAgent({
+  cwd: process.cwd(),
+  provider: "kimi", // kimi | qwen | glm | deepseek | minimax | openai | anthropic | gemini | ollama | custom
+  model: "kimi-k2",
+  baseUrl: "https://api.moonshot.cn/v1",
+  apiKeyEnv: "MOONSHOT_API_KEY", // 仅 env 名,不传 secret 本身
+  approval: "ask", // ask | auto-edit | full-auto | deny
+  sandbox: { kind: "auto" }, // gvisor | docker | seatbelt | vm | host
+});
+
+const result = await agent.submit("解释当前目录下的入口文件");
+console.log(result.text);
+```
+
+### 17.3 最小示例：审计型 Harness
+
+```typescript
+import { createLocalHarness } from "@focuscode/sdk";
+
+const harness = await createLocalHarness({
+  repoRoot: "/path/to/repo",
+  stateDirectory: "/path/to/.focuscode-state",
+  approvalMode: "auto-safe", // deny | prompt | auto-safe
+  trustRepoConfig: true, // 信任 .focuscode/config.json 中的验证命令
+  model: {
+    kind: "openai-compatible",
+    modelId: "kimi-k2",
+    baseUrl: "https://api.moonshot.cn/v1",
+    apiKey: process.env.MOONSHOT_API_KEY,
+  },
+});
+
+const result = await harness.run({
+  schemaVersion: "task-spec.v1",
+  repoId: "/path/to/repo",
+  baseRef: "HEAD",
+  mode: "change",
+  objective: "修复 src/math.js 中的加法运算符错误",
+  acceptanceCriteria: [{ id: "tests", description: "npm test 通过" }],
+});
+
+console.log(result.checkpoint.state); // "REVIEW_READY" | "ACCEPTED" | ...
+console.log(result.verification?.conclusion); // "PASS" | "FAIL" | undefined
+```
+
+### 17.4 配置与凭据
+
+**凭据注入优先级（高 → 低）**：
+
+1. `accessTokenProvider`（OAuth refresh token 回调）
+2. `apiKey`（直接传 secret,仅 SDK 场景）
+3. `apiKeyEnv` 指向的环境变量
+4. Provider preset 默认值
+
+**安全红线**：
+
+- **永远不要**将 secret 写入配置文件或日志
+- CLI 路径禁用 `apiKey` 字段,只接受 `apiKeyEnv`
+- OAuth `client_secret` 必须放在 `FOCUSCODE_<PROVIDER>_CLIENT_SECRET` 环境变量
+- 企业模式下,`apiKey` 必须通过受管 secret store 注入
+
+### 17.5 工作流：Session 恢复
+
+```typescript
+// 第一次调用:创建 session
+const first = await createCodingAgent({
+  cwd: repoRoot,
+  sessionDirectory: "/path/to/sessions",
+  persistentSession: true,
+  // ...其他选项
+});
+const sessionId = first.agent.sessionId;
+
+// 后续调用:恢复同一 session
+const resumed = await createCodingAgent({
+  cwd: repoRoot,
+  sessionDirectory: "/path/to/sessions",
+  sessionId, // 传入已有 sessionId
+  persistentSession: true,
+  // ...其他选项
+});
+expect(resumed.agent.sessionId).toBe(sessionId);
+```
+
+**注意事项**：
+
+- `sessionId` 必须在同一个 `sessionDirectory` 下
+- 恢复时 `cwd` 必须与原 session 一致,否则抛 `Session workspace is X, not requested workspace Y`
+- `persistentSession: false` 时 session 关闭即删,无法恢复
+
+### 17.6 工作流：OAuth Token 注入
+
+```typescript
+const { agent } = await createCodingAgent({
+  cwd: repoRoot,
+  provider: "kimi",
+  model: "kimi-k2",
+  baseUrl: "https://api.moonshot.cn/v1",
+  authType: "bearer", // 启用 OAuth bearer 模式
+  accessTokenProvider: async () => {
+    // 在这里实现 token 刷新逻辑
+    const token = await myOAuthClient.getAccessToken();
+    return token;
+  },
+  // ...
+});
+```
+
+**行为契约**：
+
+- `accessTokenProvider` 在 `createCodingAgent` 时**不会**被调用
+- 每次 `agent.submit()` 触发模型请求时**才会**调用
+- `authType: "none"` 时,`accessTokenProvider` 永远不会被调用
+- provider 抛错会冒泡到 `submit()` 的 rejection
+
+### 17.7 工作流：自定义审批
+
+```typescript
+const { agent } = await createCodingAgent({
+  cwd: repoRoot,
+  approval: "ask",
+  approve: async (request) => {
+    // request.tool: ToolDefinition
+    // request.arguments: 工具参数
+    // request.risk: "low" | "medium" | "high"
+    console.log(`审批请求: ${request.tool.name} (${request.risk})`);
+    const allowed = await myApprovalUI.confirm(request);
+    return allowed;
+  },
+  // ...
+});
+```
+
+### 17.8 工作流：事件流订阅
+
+```typescript
+const { agent } = await createCodingAgent({
+  cwd: repoRoot,
+  onEvent: (event) => {
+    switch (event.type) {
+      case "streaming":
+        process.stdout.write(event.delta);
+        break;
+      case "tool_call":
+        console.log(`\n[工具调用] ${event.tool}`);
+        break;
+      case "approval_required":
+        console.log(`\n[审批请求] ${event.tool}`);
+        break;
+      case "error":
+        console.error(`\n[错误] ${event.message}`);
+        break;
+    }
+  },
+  // ...
+});
+```
+
+### 17.9 故障排查
+
+| 症状                                                        | 可能原因                 | 修复                                                      |
+| ----------------------------------------------------------- | ------------------------ | --------------------------------------------------------- |
+| `Cannot find package '@focuscode/sdk'`                      | 未安装或未构建           | `npm install @focuscode/sdk`;源码场景用 `pnpm build`      |
+| `Enterprise mode rejects non-isolated shell executor: host` | 企业模式 + Host 沙箱     | 切换到 `docker`/`gvisor`/`vm`                             |
+| `Session workspace is X, not requested workspace Y`         | resume 时 cwd 不匹配     | 确保 `cwd` 与原 session 一致                              |
+| `Enterprise mode requires a 32+ byte audit key`             | 缺 HMAC 密钥             | `export FOCUSCODE_AUDIT_HMAC_KEY=$(openssl rand -hex 32)` |
+| `Unsupported Model Pack version`                            | modelPackPath 指向坏文件 | 用 `pnpm schemas` 重新生成;或回退默认 pack                |
+| `OAuth refresh failed`                                      | accessTokenProvider 抛错 | 在 provider 中加 try/catch + 日志                         |
+| `No sandbox available`                                      | `auto` 链路无可用沙箱    | 安装 Docker/gVisor;或显式 `kind: "host"`                  |
+| `Duplicate tool: <name>`                                    | 注册表冲突               | 在扩展加载阶段去重                                        |
+| 模型请求超时                                                | baseUrl 不可达或网络代理 | 检查 `baseUrl`、代理设置、`apiKey`                        |
+
+### 17.10 测试策略
+
+SDK 自身测试位于 [packages/sdk/test/](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/test/)：
+
+| 测试文件                       | 覆盖场景                                                 |
+| ------------------------------ | -------------------------------------------------------- |
+| `e2e.test.ts`                  | Agent 构造、审计循环、企业扩展策略                       |
+| `effect-spine.test.ts`         | EffectSpine grant linkage、权限控制                      |
+| `session-spine-parity.test.ts` | legacy 路径与 spine 路径行为一致性                       |
+| `session-resume.test.ts`       | session resume / missing / cwd-mismatch                  |
+| `oauth-token.test.ts`          | accessTokenProvider lazy 调用 / 错误冒泡 / authType=none |
+| `model-pack-failure.test.ts`   | Model Pack ENOENT / schema 断言 / 无效 JSON              |
+
+**确定性测试**：使用 `kind: "scripted"` model,无需 API Key：
+
+```typescript
+const harness = await createLocalHarness({
+  repoRoot,
+  stateDirectory,
+  model: {
+    kind: "scripted",
+    steps: [
+      { kind: "tool_intent_template", intents: [...] },
+      { kind: "completion_candidate", summary: "done", evidence: [], residualRisks: [] },
+    ],
+  },
+});
+```
+
+### 17.11 参考文档
+
+- [docs/API_MANUAL.md §3](file:///Users/tohnee/Trae/Code/focuscode/docs/API_MANUAL.md) —— SDK 组合根完整 API
+- [examples/sdk/quickstart.mjs](file:///Users/tohnee/Trae/Code/focuscode/examples/sdk/quickstart.mjs) —— 可运行示例
+- [packages/sdk/test/](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/test/) —— 测试用例集
+- [docs/schemas/](file:///Users/tohnee/Trae/Code/focuscode/docs/schemas/) —— JSON Schema
+
+---
+
 ## 附录 B：环境变量速查
 
-| 变量 | 用途 |
-|---|---|
-| `FOCUSCODE_MODEL` | 默认模型 ID |
-| `FOCUSCODE_MODEL_BASE_URL` | 默认 baseUrl |
-| `FOCUSCODE_MODEL_API_KEY` | 默认 API Key |
-| `FOCUSCODE_AUDIT_HMAC_KEY` | 企业审计 HMAC key（≥32 字节） |
-| `MOONSHOT_API_KEY` | Kimi/Moonshot API Key |
-| `DASHSCOPE_API_KEY` | Qwen/DashScope API Key |
-| `ZHIPU_API_KEY` | GLM/智谱 API Key |
-| `DEEPSEEK_API_KEY` | DeepSeek API Key |
-| `MINIMAX_API_KEY` | MiniMax API Key |
-| `FOCUSCODE_<PROVIDER>_CLIENT_SECRET` | OAuth client secret |
+| 变量                                 | 用途                          |
+| ------------------------------------ | ----------------------------- |
+| `FOCUSCODE_MODEL`                    | 默认模型 ID                   |
+| `FOCUSCODE_MODEL_BASE_URL`           | 默认 baseUrl                  |
+| `FOCUSCODE_MODEL_API_KEY`            | 默认 API Key                  |
+| `FOCUSCODE_AUDIT_HMAC_KEY`           | 企业审计 HMAC key（≥32 字节） |
+| `MOONSHOT_API_KEY`                   | Kimi/Moonshot API Key         |
+| `DASHSCOPE_API_KEY`                  | Qwen/DashScope API Key        |
+| `ZHIPU_API_KEY`                      | GLM/智谱 API Key              |
+| `DEEPSEEK_API_KEY`                   | DeepSeek API Key              |
+| `MINIMAX_API_KEY`                    | MiniMax API Key               |
+| `FOCUSCODE_<PROVIDER>_CLIENT_SECRET` | OAuth client secret           |
 
 ## 附录 C：参考文档
 

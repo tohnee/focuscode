@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "session-effect-spine-options.v1",
+  "title": "SessionEffectSpineOptions",
+  "description": "Options for createSessionEffectSpine(). Wires the session tool loop into the audited Policy -> Grant -> Receipt spine.",
+  "additionalProperties": false,
+  "type": "object",
+  "required": ["cwd", "registry", "taskId", "model", "permission"],
+  "properties": {
+    "cwd": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Working directory passed to session tools."
+    },
+    "registry": {
+      "type": "object",
+      "description": "TypeScript injection point: AgentToolRegistry. The same AgentTool instances back the spine. Not JSON-serializable."
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable task identifier for the spine. Composition roots use the session id."
+    },
+    "model": {
+      "type": "object",
+      "description": "ModelProfile from @focuscode/agent-runtime: { provider, model, baseUrl, ... }. Not fully JSON-serializable (may carry functions).",
+      "required": ["provider", "model", "baseUrl"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "baseUrl": { "type": "string", "minLength": 1 }
+      }
+    },
+    "permission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "projectTrusted", "protectedPaths"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["ask", "auto-edit", "full-auto", "deny"],
+          "description": "agent-runtime ApprovalMode (distinct from HarnessApprovalMode)."
+        },
+        "projectTrusted": {
+          "type": "boolean",
+          "description": "Whether --trust-project was passed."
+        },
+        "protectedPaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns for write-protected paths."
+        }
+      }
+    },
+    "approve": {
+      "type": "object",
+      "description": "TypeScript injection point: ApprovalHandler. Bridges PolicyEngine approvals to the session handler. Omit to deny all. Not JSON-serializable."
+    },
+    "onApprovalRequired": {
+      "type": "object",
+      "description": "TypeScript injection point: (request: PermissionRequest) => void | Promise<void>. Fires before approve(). Not JSON-serializable."
+    },
+    "workerId": {
+      "type": "string",
+      "description": "Worker identifier. Defaults to `session-worker:${process.pid}`."
+    }
+  }
+}

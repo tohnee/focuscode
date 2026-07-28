@@ -18,8 +18,10 @@ import {
   type CertifiedModelRefV1,
   type DecisionPort,
   type ExecutionContextV1,
+  type FactPort,
   type KernelCheckpointV1,
   type TaskSpecV1,
+  type VerifyPort,
 } from "@focuscode/contracts";
 import { FocusKernel, type KernelRunResult } from "@focuscode/harness-core";
 import {
@@ -27,6 +29,7 @@ import {
   OpenAICompatibleTransport,
   createDevelopmentModelRef,
   loadModelPack,
+  type LoadedModelPack,
 } from "@focuscode/model-gateway";
 import { FileFactStore } from "@focuscode/persistence";
 import { ScriptedDecisionPort, type ScriptedStep } from "@focuscode/testkit";
@@ -49,7 +52,23 @@ function resolveDefaultPackPath(): string {
   return fileURLToPath(candidates[candidates.length - 1]!);
 }
 
-export type ApprovalMode = "deny" | "prompt" | "auto-safe";
+/**
+ * Canonical approval modes for the audit-style LocalHarness.
+ *
+ * The SDK surface historically called this `ApprovalMode`, which collided
+ * with the agent-runtime `ApprovalMode` union (`ask | auto-edit | full-auto |
+ * deny`) once both were re-exported from composition roots. The
+ * disambiguated alias `HarnessApprovalMode` is now the canonical name; the
+ * legacy alias is retained for backwards compatibility.
+ *
+ * `HARNESS_APPROVAL_MODES` is the runtime source of truth — the type is
+ * derived from it so external tooling (JSON Schema, runtime validators) can
+ * stay in lockstep with the TypeScript union without drift.
+ */
+export const HARNESS_APPROVAL_MODES = ["deny", "prompt", "auto-safe"] as const;
+export type HarnessApprovalMode = (typeof HARNESS_APPROVAL_MODES)[number];
+/** @deprecated Use {@link HarnessApprovalMode} to avoid colliding with agent-runtime's ApprovalMode. */
+export type ApprovalMode = HarnessApprovalMode;
 
 interface LocalHarnessBaseOptions {
   repoRoot: string;
@@ -59,6 +78,25 @@ interface LocalHarnessBaseOptions {
   approval?: ApprovalPort;
   trustRepoConfig?: boolean;
   workerId?: string;
+  /**
+   * Override the default {@link FileFactStore} with a custom {@link FactPort}
+   * implementation (e.g., a Postgres-backed fact store). When omitted, the
+   * harness constructs a `FileFactStore` rooted at `stateDirectory`.
+   */
+  factStore?: FactPort;
+  /**
+   * Override the default {@link RegisteredCommandVerifier} with a custom
+   * {@link VerifyPort}. When omitted, the harness wires the registered
+   * command verifier using `trustRepoConfig` and the repo profile.
+   */
+  verifier?: VerifyPort;
+  /**
+   * Override the decision port entirely, bypassing the `model.kind` switch.
+   * Use this when the integrator has a pre-configured `GatewayDecisionPort`,
+   * a custom circuit-breaker wrapper, or any other `DecisionPort` that
+   * cannot be expressed via the `model` option.
+   */
+  decision?: DecisionPort;
 }
 
 export interface ScriptedHarnessOptions extends LocalHarnessBaseOptions {
@@ -87,7 +125,7 @@ export interface RunTaskOptions {
 
 export class LocalHarness {
   constructor(
-    readonly facts: FileFactStore,
+    readonly facts: FactPort,
     readonly memory: FileMemoryStore,
     readonly actions: LocalActionRuntime,
     readonly profile: RepoProfileV1,
@@ -146,27 +184,19 @@ export async function createLocalHarness(options: LocalHarnessOptions): Promise<
   };
   const approval = options.approval ?? denyApproval;
   const actions = new LocalActionRuntime(registry, new PolicyEngine(policyConfig), approval);
-  const facts = new FileFactStore(options.stateDirectory);
+  const facts: FactPort = options.factStore ?? new FileFactStore(options.stateDirectory);
   const memory = new FileMemoryStore(options.stateDirectory);
-  const verifier = new RegisteredCommandVerifier(
-    runner,
-    options.trustRepoConfig ? profile.verificationCommandIds : [],
-  );
+  const verifier: VerifyPort =
+    options.verifier ??
+    new RegisteredCommandVerifier(
+      runner,
+      options.trustRepoConfig ? profile.verificationCommandIds : [],
+    );
   const loadedPack = await loadModelPack(options.modelPackPath ?? DEFAULT_PACK_PATH);
   const modelId = options.model.kind === "scripted" ? "scripted-model" : options.model.modelId;
   const model = createDevelopmentModelRef(loadedPack, modelId);
   const decision: DecisionPort =
-    options.model.kind === "scripted"
-      ? new ScriptedDecisionPort(options.model.steps)
-      : new GatewayDecisionPort({
-          loadedPack,
-          contextCompiler: new ContextCompiler(profile),
-          transport: new OpenAICompatibleTransport({
-            baseUrl: options.model.baseUrl,
-            ...(options.model.apiKey ? { apiKey: options.model.apiKey } : {}),
-            ...(options.model.extraHeaders ? { extraHeaders: options.model.extraHeaders } : {}),
-          }),
-        });
+    options.decision ?? buildDecisionPort(options, loadedPack, profile);
   const kernel = new FocusKernel({
     decision,
     effects: actions,
@@ -183,3 +213,29 @@ const denyApproval: ApprovalPort = {
     return false;
   },
 };
+
+/**
+ * Build the default {@link DecisionPort} from the `model` option. Called only
+ * when the integrator has not supplied a `decision` override; the override
+ * short-circuits this branch so custom decision ports (e.g., a
+ * circuit-breaker wrapper or a remote gateway) can be wired without going
+ * through the scripted/openai-compatible dichotomy.
+ */
+function buildDecisionPort(
+  options: LocalHarnessOptions,
+  loadedPack: LoadedModelPack,
+  profile: RepoProfileV1,
+): DecisionPort {
+  if (options.model.kind === "scripted") {
+    return new ScriptedDecisionPort(options.model.steps);
+  }
+  return new GatewayDecisionPort({
+    loadedPack,
+    contextCompiler: new ContextCompiler(profile),
+    transport: new OpenAICompatibleTransport({
+      baseUrl: options.model.baseUrl,
+      ...(options.model.apiKey ? { apiKey: options.model.apiKey } : {}),
+      ...(options.model.extraHeaders ? { extraHeaders: options.model.extraHeaders } : {}),
+    }),
+  });
+}

@@ -806,8 +806,14 @@ export class CodingAgent {
     return this.registry.definitions();
   }
 
-  setEventSink(sink: AgentRuntimeOptions["eventSink"]): void {
+  /**
+   * Replace the event sink. Returns the previously-installed sink so callers
+   * (such as the SDK's `streamSubmit` wrapper) can save and restore it.
+   */
+  setEventSink(sink: AgentRuntimeOptions["eventSink"]): AgentRuntimeOptions["eventSink"] {
+    const previous = this.eventSink;
     this.eventSink = sink;
+    return previous;
   }
 
   /**

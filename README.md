@@ -4,8 +4,8 @@
 
 **A model-portable, policy-controlled Coding Agent Harness.**
 
-*不是某家模型的薄包装。Provider、上下文、会话、工具、权限、执行隔离与扩展资产都有稳定边界——
-换模型，不丢本地会话，不丢 Harness 资产。*
+_不是某家模型的薄包装。Provider、上下文、会话、工具、权限、执行隔离与扩展资产都有稳定边界——
+换模型，不丢本地会话，不丢 Harness 资产。_
 
 `v0.5.0` · TypeScript ESM · pnpm monorepo · Apache-2.0
 
@@ -21,12 +21,14 @@ FocusCode 是一个**可嵌入式、可审计、模型可迁移**的 Coding Agen
 CLI / SDK 可运行链路。
 
 它**不是**：
+
 - 不是某个模型的薄壳；
 - 不是"在 prompt 里塞个 system 角色就完事"的 wrapper；
 - 不假装在真实任务基准上已优于 Pi / Claude Code / Codex / OpenCode / grok-build ——
   但在**可移植设计纪律**与**双路径可审计性**两条维度上，它走在了前面。
 
 它**是**：
+
 - 一份可移植的工程参考实现（对照九方 Harness 报告逐条落地 14/15 条可移植设计）；
 - 一条**会话型 Coding Agent**（低延迟交互）与**审计型 Focus Kernel**（可重放、Effect Receipt、
   确定性完成 Gate）并存的双轨链路；
@@ -36,15 +38,15 @@ CLI / SDK 可运行链路。
 
 ## v0.5.0 三十秒速览
 
-| 类别 | 现已实现的可执行结果 |
-|---|---|
-| **模型可移植** | 五系 11 区域 Profile（Kimi/Qwen/GLM/DeepSeek/MiniMax + OpenAI/Anthropic/Gemini/Ollama）· 四种原生协议（OpenAI Chat/Responses/Anthropic/Gemini）· reasoning 状态回放·Retry-After·模型级覆盖·**G3 stable/dynamic prompt 分界**·**G9 Anthropic `cache_control: ephemeral`** |
-| **会话控制** | **G1 截断拒执**（`stopReason=length` 整批拒绝执行，不再"半截代码进文件"）· **G2 doom-loop 检测**（同一工具连续失败 3 次自动止损）· 三模式 mid-turn steering（append / interrupt / follow-up）· Fallback 装饰器（429/5xx/熔断自动切换，不丢在飞请求） |
-| **执行安全** | deny-first 顺序求值·**G8 execpolicy 前缀规则 + 加载期 match/notMatch 自测**· Docker/gVisor/Seatbelt/SSH-VM 四类沙箱·默认断网·企业强制非 Host + 镜像 digest + `--pull never` |
-| **扩展生态** | **G5 beforeTool 拦截 hooks**（扩展可 veto 工具执行）· **G4 ACP 服务器**（Agent Control Protocol）· **G6 delegate 结构化 metadata**·npm pack/install/signature·MCP stdio + pin fail-closed·只读 eventSink |
-| **可审计性** | HMAC 审计日志·append-only Fact Store·Grant→Receipt→Verifier 完成链·JSONL Session + Ed25519 签名分享·**G7 SpecEngine** 多阶段需求澄清（classifier/drafter/enhancer/confirm）|
-| **TUI 体验** | 全屏 alternate-screen · 6 主题 + 4 套皮肤包（sakura/ocean/arcade/matcha）· 7 只伙伴 · Foxy 九级尾巴成长 · 像素游戏风帧动画 · Model 选择器（Tab 切 provider / Alt+S 仅会话 / ←→ 切 reasoning effort）· `/model` `/character` `/skin` `/cost` `/todo` `/mcp` `/diagnostics` |
-| **真实隔离** | SSH disposable-VM adapter·gVisor·Docker·macOS Seatbelt（`(deny default)` 基线）·沙箱只包 Bash 子进程，凭据/Session/扩展 Host 留在主进程 |
+| 类别           | 现已实现的可执行结果                                                                                                                                                                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **模型可移植** | 五系 11 区域 Profile（Kimi/Qwen/GLM/DeepSeek/MiniMax + OpenAI/Anthropic/Gemini/Ollama）· 四种原生协议（OpenAI Chat/Responses/Anthropic/Gemini）· reasoning 状态回放·Retry-After·模型级覆盖·**G3 stable/dynamic prompt 分界**·**G9 Anthropic `cache_control: ephemeral`**  |
+| **会话控制**   | **G1 截断拒执**（`stopReason=length` 整批拒绝执行，不再"半截代码进文件"）· **G2 doom-loop 检测**（同一工具连续失败 3 次自动止损）· 三模式 mid-turn steering（append / interrupt / follow-up）· Fallback 装饰器（429/5xx/熔断自动切换，不丢在飞请求）                      |
+| **执行安全**   | deny-first 顺序求值·**G8 execpolicy 前缀规则 + 加载期 match/notMatch 自测**· Docker/gVisor/Seatbelt/SSH-VM 四类沙箱·默认断网·企业强制非 Host + 镜像 digest + `--pull never`                                                                                               |
+| **扩展生态**   | **G5 beforeTool 拦截 hooks**（扩展可 veto 工具执行）· **G4 ACP 服务器**（Agent Control Protocol）· **G6 delegate 结构化 metadata**·npm pack/install/signature·MCP stdio + pin fail-closed·只读 eventSink                                                                  |
+| **可审计性**   | HMAC 审计日志·append-only Fact Store·Grant→Receipt→Verifier 完成链·JSONL Session + Ed25519 签名分享·**G7 SpecEngine** 多阶段需求澄清（classifier/drafter/enhancer/confirm）                                                                                               |
+| **TUI 体验**   | 全屏 alternate-screen · 6 主题 + 4 套皮肤包（sakura/ocean/arcade/matcha）· 7 只伙伴 · Foxy 九级尾巴成长 · 像素游戏风帧动画 · Model 选择器（Tab 切 provider / Alt+S 仅会话 / ←→ 切 reasoning effort）· `/model` `/character` `/skin` `/cost` `/todo` `/mcp` `/diagnostics` |
+| **真实隔离**   | SSH disposable-VM adapter·gVisor·Docker·macOS Seatbelt（`(deny default)` 基线）·沙箱只包 Bash 子进程，凭据/Session/扩展 Host 留在主进程                                                                                                                                   |
 
 ---
 
@@ -54,22 +56,22 @@ FocusCode v0.5.0 对照九方 Coding Agent Harness 的 15 条可移植设计已�
 是运行时 veto 完整性，已通过 G5 beforeTool 部分补足）。下表节选自
 [docs/compare/focuscode-v0.5.0-gap-review.md](docs/compare/focuscode-v0.5.0-gap-review.md)：
 
-| 设计 | 出处 | v0.4 | v0.5 |
-|---|---|---|---|
-| 稳定前缀 + prompt-cache 纪律 | mini/Codex | ⚠ | ✅ G3 + G9 |
-| 信任决策先于内容加载 | Pi | ✅ | ✅ |
-| 文件操作跨压缩累积 | Pi | ✅ 超越 | ✅ 六维追踪 |
-| 非破坏性压缩优先 | OpenCode | ✅ 更优 | ✅ 投影式 |
-| **stopReason=length 整批拒执** | Pi | ❌ | ✅ **G1** |
-| steering 插话 | Pi | ✅ | ✅ 三模式 |
-| 批准不跨 session 沉淀 | OpenCode | ✅ | ✅ |
-| 结构化编辑格式 | Codex/OMP | ⚠ | ✅ `apply_patch` + `git apply --check` 干运行 |
-| LSP 诊断注入编辑回路 | OpenCode/OMP | ✅ | ✅ TS/Python/Go/Rust + LSP 模式 |
-| **子代理回传 schema 化** | OMP | ❌ | ✅ **G6** JSON metadata |
-| **默认断网 + 前缀规则自测** | Codex | ⚠ | ✅ **G8** |
-| 规则冲突 deny-first | Claude Code | ✅ | ✅ |
-| **事件钩子 + 插件程序化裁决** | OpenCode | ❌ 只读 | ✅ **G5 beforeTool veto** |
-| 两层扩展上下文 | Pi | ⚠ | ⚡ 部分（已补 beforeTool） |
+| 设计                           | 出处         | v0.4    | v0.5                                          |
+| ------------------------------ | ------------ | ------- | --------------------------------------------- |
+| 稳定前缀 + prompt-cache 纪律   | mini/Codex   | ⚠       | ✅ G3 + G9                                    |
+| 信任决策先于内容加载           | Pi           | ✅      | ✅                                            |
+| 文件操作跨压缩累积             | Pi           | ✅ 超越 | ✅ 六维追踪                                   |
+| 非破坏性压缩优先               | OpenCode     | ✅ 更优 | ✅ 投影式                                     |
+| **stopReason=length 整批拒执** | Pi           | ❌      | ✅ **G1**                                     |
+| steering 插话                  | Pi           | ✅      | ✅ 三模式                                     |
+| 批准不跨 session 沉淀          | OpenCode     | ✅      | ✅                                            |
+| 结构化编辑格式                 | Codex/OMP    | ⚠       | ✅ `apply_patch` + `git apply --check` 干运行 |
+| LSP 诊断注入编辑回路           | OpenCode/OMP | ✅      | ✅ TS/Python/Go/Rust + LSP 模式               |
+| **子代理回传 schema 化**       | OMP          | ❌      | ✅ **G6** JSON metadata                       |
+| **默认断网 + 前缀规则自测**    | Codex        | ⚠       | ✅ **G8**                                     |
+| 规则冲突 deny-first            | Claude Code  | ✅      | ✅                                            |
+| **事件钩子 + 插件程序化裁决**  | OpenCode     | ❌ 只读 | ✅ **G5 beforeTool veto**                     |
+| 两层扩展上下文                 | Pi           | ⚠       | ⚡ 部分（已补 beforeTool）                    |
 
 完整对比见 [docs/compare/harness-report.v2.md](docs/compare/harness-report.v2.md)。
 
@@ -90,10 +92,10 @@ flowchart TD
     P -.不可反向依赖.-> R
 ```
 
-| 路径 | 入口 | 优化目标 | 核心状态 |
-|---|---|---|---|
-| **Conversational Coding Agent** | `fox` / `focuscode agent` / RPC / SDK | 低延迟、多轮探索、即时 steering | Session tree · Context · Tool loop · Permission |
-| **Audited Focus Kernel** | `focuscode run` / `createLocalHarness()` | 可重放 · Decision/Effect 分离 · 验证后完成 | TaskSpec · Checkpoint · Intent · Grant · Receipt · Verifier |
+| 路径                            | 入口                                     | 优化目标                                   | 核心状态                                                    |
+| ------------------------------- | ---------------------------------------- | ------------------------------------------ | ----------------------------------------------------------- |
+| **Conversational Coding Agent** | `fox` / `focuscode agent` / RPC / SDK    | 低延迟、多轮探索、即时 steering            | Session tree · Context · Tool loop · Permission             |
+| **Audited Focus Kernel**        | `focuscode run` / `createLocalHarness()` | 可重放 · Decision/Effect 分离 · 验证后完成 | TaskSpec · Checkpoint · Intent · Grant · Receipt · Verifier |
 
 会话路径默认走单一 Policy → Grant → Receipt spine（`agent.effectSpine` 默认 true），
 规则语义单源 `action-domain` 的 `PolicyEngine`；Kernel 内环闭环（Grant 落链、
@@ -162,6 +164,90 @@ focuscode --provider ollama --model qwen3-coder \
 
 ---
 
+## SDK 快速开始
+
+FocusCode 提供 `@focuscode/sdk` 作为**唯一组合根**，把会话型 Agent 与审计型 Harness
+两条路径统一暴露为可编程 API。适合把 FocusCode 嵌入自家产品、CI 流水线或自定义 IDE。
+
+### 安装
+
+```bash
+npm install @focuscode/sdk
+```
+
+> 单包即可使用，**无需** pnpm 或 monorepo。Node `>=22.12.0`。
+
+### 最小示例：会话型 Agent
+
+```typescript
+import { createCodingAgent } from "@focuscode/sdk";
+
+const { agent } = await createCodingAgent({
+  cwd: process.cwd(),
+  provider: "kimi", // kimi | qwen | glm | deepseek | minimax | openai | anthropic | gemini | ollama | custom
+  model: "kimi-k2",
+  baseUrl: "https://api.moonshot.cn/v1",
+  apiKeyEnv: "MOONSHOT_API_KEY", // 仅 env 名,不传 secret 本身
+  approval: "ask", // ask | auto-edit | full-auto | deny
+  sandbox: { kind: "auto" }, // gvisor | docker | seatbelt | vm | host
+});
+
+// submit 返回 Promise;事件流通过 onEvent 回调订阅
+const result = await agent.submit("解释当前目录下的入口文件");
+console.log(result.text);
+```
+
+### 最小示例：审计型 Harness（CI / 批处理）
+
+```typescript
+import { createLocalHarness } from "@focuscode/sdk";
+
+const harness = await createLocalHarness({
+  repoRoot: "/path/to/repo",
+  stateDirectory: "/path/to/.focuscode-state",
+  approvalMode: "auto-safe", // deny | prompt | auto-safe
+  trustRepoConfig: true, // 信任 .focuscode/ 中的 verification 命令白名单
+  model: {
+    kind: "openai-compatible",
+    modelId: "kimi-k2",
+    baseUrl: "https://api.moonshot.cn/v1",
+    apiKey: process.env.MOONSHOT_API_KEY,
+  },
+});
+
+const result = await harness.run(
+  {
+    schemaVersion: "task-spec.v1",
+    repoId: "/path/to/repo",
+    baseRef: "WORKTREE",
+    mode: "change", // explore | change | review | verify
+    objective: "为 utils.ts 补齐单元测试",
+    acceptanceCriteria: [{ id: "test", description: "pnpm test 通过" }],
+  },
+  { taskId: `ci-${Date.now()}` }, // 指定 taskId 可幂等恢复
+);
+
+console.log(result.checkpoint.state); // REVIEW_READY / FAILED / ...
+console.log(result.verification?.conclusion); // PASS / FAIL / REGRESSION
+```
+
+### 核心导出
+
+| 工厂函数                            | 用途                                            | 返回                                                      |
+| ----------------------------------- | ----------------------------------------------- | --------------------------------------------------------- |
+| `createCodingAgent(options)`        | 会话型 Agent（低延迟交互、steering、流式）      | `{ agent, sessions, extensions, resources, config }`      |
+| `createLocalHarness(options)`       | 审计型 Kernel（可重放、Grant→Receipt→Verifier） | `LocalHarness`（含 `run`/`inspect`）                      |
+| `createSessionEffectSpine(options)` | 桥接会话工具循环到审计型 EffectPort             | `{ effectPort, effectContext, runtime, setApprovalMode }` |
+
+完整 API 参数表、错误模式与 cookbook 示例见：
+
+- [docs/API_MANUAL.md §3](docs/API_MANUAL.md) —— SDK 组合根完整参数表
+- [docs/USAGE_SOP.md §17](docs/USAGE_SOP.md) —— SDK 嵌入式集成 SOP
+- [examples/sdk/](examples/sdk/) —— 可运行示例与 cookbook
+- [docs/reviews/sdk-review-2026-07-28.md](docs/reviews/sdk-review-2026-07-28.md) —— SDK 深度 review 报告
+
+---
+
 ## 核心能力巡礼
 
 ### SpecEngine：多阶段需求澄清
@@ -186,11 +272,11 @@ TUI 中 `/spec` 命令查看进度，`spec-progress` widget 可视化当前阶�
 
 ### Mid-turn Steering：三模式插话
 
-| 模式 | 时机 | 典型用途 |
-|---|---|---|
-| `append` | 排入 FIFO，模型当前生成完成后处理 | "顺便再写个测试" |
-| `interrupt` | 立即打断当前生成，仅生成内容已渲染的部分保留 | "停，方向不对" |
-| `followup` | 当前响应完成后再追加一轮 | "下一步做 X" |
+| 模式        | 时机                                         | 典型用途         |
+| ----------- | -------------------------------------------- | ---------------- |
+| `append`    | 排入 FIFO，模型当前生成完成后处理            | "顺便再写个测试" |
+| `interrupt` | 立即打断当前生成，仅生成内容已渲染的部分保留 | "停，方向不对"   |
+| `followup`  | 当前响应完成后再追加一轮                     | "下一步做 X"     |
 
 TUI 直接打字即默认 `append`；`/interrupt <text>` 与 `/followup <text>` 显式切换。
 
@@ -311,18 +397,18 @@ focuscode share import review.focuscode-share.json --repo /path/to/repo
 
 ## Provider 矩阵
 
-| Provider | 协议 | 默认区域 | 备注 |
-|---|---|---|---|
-| `openai` | OpenAI Chat / Responses | global | gpt-5 / o3 系列 |
-| `anthropic` | Anthropic Messages | global | claude-sonnet/opus，**支持 `cache_control: ephemeral`**（G9）|
-| `gemini` | Gemini | global | gemini-2.5 系列 |
-| `kimi` | OpenAI Chat 兼容 | cn | moonshot，**reasoning state 回放** |
-| `qwen` | OpenAI Chat 兼容 | cn | dashscope |
-| `glm` | OpenAI Chat 兼容 | cn | zhipu |
-| `deepseek` | OpenAI Chat 兼容 | cn | deepseek-v3/r1 |
-| `minimax` | OpenAI Chat 兼容 | cn | minimax |
-| `ollama` | OpenAI Chat 兼容 | local | 本地推理 |
-| 自定义 | OpenAI Chat 兼容 | — | `.focuscode/agent.json` 显式配置 |
+| Provider    | 协议                    | 默认区域 | 备注                                                          |
+| ----------- | ----------------------- | -------- | ------------------------------------------------------------- |
+| `openai`    | OpenAI Chat / Responses | global   | gpt-5 / o3 系列                                               |
+| `anthropic` | Anthropic Messages      | global   | claude-sonnet/opus，**支持 `cache_control: ephemeral`**（G9） |
+| `gemini`    | Gemini                  | global   | gemini-2.5 系列                                               |
+| `kimi`      | OpenAI Chat 兼容        | cn       | moonshot，**reasoning state 回放**                            |
+| `qwen`      | OpenAI Chat 兼容        | cn       | dashscope                                                     |
+| `glm`       | OpenAI Chat 兼容        | cn       | zhipu                                                         |
+| `deepseek`  | OpenAI Chat 兼容        | cn       | deepseek-v3/r1                                                |
+| `minimax`   | OpenAI Chat 兼容        | cn       | minimax                                                       |
+| `ollama`    | OpenAI Chat 兼容        | local    | 本地推理                                                      |
+| 自定义      | OpenAI Chat 兼容        | —        | `.focuscode/agent.json` 显式配置                              |
 
 非兼容协议实现 `ModelClient` 接口即可，**不要**把 Provider 条件写进 `CodingAgent`。
 
@@ -332,13 +418,13 @@ focuscode share import review.focuscode-share.json --repo /path/to/repo
 
 四类沙箱可替换端口，**默认 `auto`** 选择链：gVisor → Docker → fail。
 
-| 沙箱 | 隔离强度 | 适用平台 | 备注 |
-|---|---|---|---|
-| `gvisor` | 强 | Linux | runsc，需 root 或 user namespace |
-| `docker` | 强 | Linux/macOS/Windows | 镜像 digest pin、`--pull never`、默认断网 |
-| `seatbelt` | 中 | macOS only | `sandbox-exec` + seatbelt profile language，`(deny default)` 基线 |
-| `vm` | 极强 | Linux + SSH | disposable-VM adapter，每次任务起一份新 VM |
-| `host` | **不是沙箱** | 全平台 | 兼容路径，仅 `allowHostFallback: true` 时回退 |
+| 沙箱       | 隔离强度     | 适用平台            | 备注                                                              |
+| ---------- | ------------ | ------------------- | ----------------------------------------------------------------- |
+| `gvisor`   | 强           | Linux               | runsc，需 root 或 user namespace                                  |
+| `docker`   | 强           | Linux/macOS/Windows | 镜像 digest pin、`--pull never`、默认断网                         |
+| `seatbelt` | 中           | macOS only          | `sandbox-exec` + seatbelt profile language，`(deny default)` 基线 |
+| `vm`       | 极强         | Linux + SSH         | disposable-VM adapter，每次任务起一份新 VM                        |
+| `host`     | **不是沙箱** | 全平台              | 兼容路径，仅 `allowHostFallback: true` 时回退                     |
 
 容器只包住 Bash 及其子进程；Provider/OAuth/Session/Extension Host 留在 CLI 主进程，
 模型凭据**不进入**不可信执行环境，Tool 子进程只获得精简环境。
@@ -529,6 +615,6 @@ Apache-2.0。
 
 **[🦉 文档](docs/) · [🛡 安全](SECURITY.md) · [📦 发布](docs/NPM_RELEASE.md) · [🏗 架构](docs/ARCHITECTURE.md)**
 
-*FocusCode is engineered with discipline, not magic.*
+_FocusCode is engineered with discipline, not magic._
 
 </div>

@@ -34,25 +34,25 @@
 
 FocusCode 是 pnpm monorepo，`apps/*` 是组合根（不发布为库），`packages/*` 是可被外部依赖的库。所有包以 ESM 发布，入口 `dist/index.js`，类型在 `dist/index.d.ts`。
 
-| 包 | 角色 | 关键导出 |
-|---|---|---|
-| `@focuscode/contracts` | 规范契约（typebox schema） | `TaskSpecV1`、`EffectPort`、`DecisionPort`、`Execution*`、`*Schema`、`assertSchema` |
-| `@focuscode/protocols` | 协议边界映射 | `McpToolPinV1`、`assertMcpToolPin`、`negotiateAcpCapabilities`、`DelegationSpecV1` |
-| `@focuscode/action-domain` | 策略域（纯函数） | `PolicyEngine`、`ApprovalMode`、`CommandPrefixRule`、`EffectLedger` |
-| `@focuscode/action-backends` | 本地工具执行面 | `LocalActionRuntime`、`ToolRegistry`、`SafeCommandRunner`、`WorkspaceGuard`、`createLocalToolRegistry` |
-| `@focuscode/harness-core` | 可恢复 Kernel | `FocusKernel`、`KernelRunResult`、状态机 |
-| `@focuscode/model-gateway` | Atomic Decision | `GatewayDecisionPort`、`OpenAICompatibleTransport`、`loadModelPack`、`createDevelopmentModelRef` |
-| `@focuscode/agent-runtime` | 会话循环 | `CodingAgent`、`SessionStore`、`ModelClient`、`ModelProfile`、Provider 客户端、Spec Engine |
-| `@focuscode/persistence` | append-only 事实 | `FileFactStore` |
-| `@focuscode/asset-plane` | 记忆与可移植资产 | `FileMemoryStore` |
-| `@focuscode/context-compiler` | Canonical Context | `ContextCompiler`、`buildRepoProfile`、`RepoProfileV1` |
-| `@focuscode/verifier-eval` | baseline/target 验证 | `RegisteredCommandVerifier` |
-| `@focuscode/auth` | OAuth/加密凭据 | `OAuthClient`、`EncryptedCredentialStore`、`OAuthProfile`、Provider 预设 |
-| `@focuscode/sandbox` | 执行隔离 | `createSandbox`、`SandboxExecutor`、`SandboxConfig` |
-| `@focuscode/ecosystem` | 扩展与会话分享 | `ExtensionPackageManager`、`SessionShareService` |
-| `@focuscode/tui` | 终端 UI | `App`、`Renderer`、`Themes`、`Companion`、`Skins` |
-| `@focuscode/sdk` | 组合 API | `createLocalHarness`、`createCodingAgent`、`createSessionEffectSpine` |
-| `@focuscode/testkit` | 测试工具（不计入覆盖率） | `ScriptedDecisionPort`、`ScriptedStep` |
+| 包                            | 角色                       | 关键导出                                                                                               |
+| ----------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `@focuscode/contracts`        | 规范契约（typebox schema） | `TaskSpecV1`、`EffectPort`、`DecisionPort`、`Execution*`、`*Schema`、`assertSchema`                    |
+| `@focuscode/protocols`        | 协议边界映射               | `McpToolPinV1`、`assertMcpToolPin`、`negotiateAcpCapabilities`、`DelegationSpecV1`                     |
+| `@focuscode/action-domain`    | 策略域（纯函数）           | `PolicyEngine`、`ApprovalMode`、`CommandPrefixRule`、`EffectLedger`                                    |
+| `@focuscode/action-backends`  | 本地工具执行面             | `LocalActionRuntime`、`ToolRegistry`、`SafeCommandRunner`、`WorkspaceGuard`、`createLocalToolRegistry` |
+| `@focuscode/harness-core`     | 可恢复 Kernel              | `FocusKernel`、`KernelRunResult`、状态机                                                               |
+| `@focuscode/model-gateway`    | Atomic Decision            | `GatewayDecisionPort`、`OpenAICompatibleTransport`、`loadModelPack`、`createDevelopmentModelRef`       |
+| `@focuscode/agent-runtime`    | 会话循环                   | `CodingAgent`、`SessionStore`、`ModelClient`、`ModelProfile`、Provider 客户端、Spec Engine             |
+| `@focuscode/persistence`      | append-only 事实           | `FileFactStore`                                                                                        |
+| `@focuscode/asset-plane`      | 记忆与可移植资产           | `FileMemoryStore`                                                                                      |
+| `@focuscode/context-compiler` | Canonical Context          | `ContextCompiler`、`buildRepoProfile`、`RepoProfileV1`                                                 |
+| `@focuscode/verifier-eval`    | baseline/target 验证       | `RegisteredCommandVerifier`                                                                            |
+| `@focuscode/auth`             | OAuth/加密凭据             | `OAuthClient`、`EncryptedCredentialStore`、`OAuthProfile`、Provider 预设                               |
+| `@focuscode/sandbox`          | 执行隔离                   | `createSandbox`、`SandboxExecutor`、`SandboxConfig`                                                    |
+| `@focuscode/ecosystem`        | 扩展与会话分享             | `ExtensionPackageManager`、`SessionShareService`                                                       |
+| `@focuscode/tui`              | 终端 UI                    | `App`、`Renderer`、`Themes`、`Companion`、`Skins`                                                      |
+| `@focuscode/sdk`              | 组合 API                   | `createLocalHarness`、`createCodingAgent`、`createSessionEffectSpine`                                  |
+| `@focuscode/testkit`          | 测试工具（不计入覆盖率）   | `ScriptedDecisionPort`、`ScriptedStep`                                                                 |
 
 ### 依赖边界（`scripts/check-boundaries.mjs` 强制）
 
@@ -97,14 +97,14 @@ export interface EffectPort {
 
 export interface AppendRequestV1 {
   taskId: string;
-  expectedVersion: number;        // 乐观并发：必须匹配 facts 当前最新 seq
+  expectedVersion: number; // 乐观并发：必须匹配 facts 当前最新 seq
   events: NewDomainEventV1[];
 }
 
 export interface AppendAckV1 {
   firstSeq: number;
   lastSeq: number;
-  events: DomainEventV1[];        // 已落盘并补完 eventId/seq 的事件
+  events: DomainEventV1[]; // 已落盘并补完 eventId/seq 的事件
 }
 
 export interface FactPort {
@@ -117,7 +117,7 @@ export interface FactPort {
 export interface VerificationRequestV1 {
   taskId: string;
   phase: "baseline" | "target";
-  baseline?: VerificationReportV1;   // target 阶段用于回归比对
+  baseline?: VerificationReportV1; // target 阶段用于回归比对
 }
 
 export interface VerifyPort {
@@ -155,7 +155,7 @@ assertSchema(TaskSpecSchema, task, "task spec"); // 失败抛错
 ### 2.3 标识与摘要工具
 
 ```typescript
-export function newId(prefix: string): string;      // 如 "task_a1b2c3..."
+export function newId(prefix: string): string; // 如 "task_a1b2c3..."
 export function sha256Digest(value: unknown): Digest; // 规范化 JSON 后 sha256
 ```
 
@@ -179,7 +179,7 @@ import { createLocalHarness, type LocalHarnessOptions } from "@focuscode/sdk";
 const harness = await createLocalHarness({
   repoRoot: "/path/to/repo",
   stateDirectory: "/path/to/.focuscode-state",
-  approvalMode: "deny",            // "deny" | "prompt" | "auto-safe"
+  approvalMode: "deny", // "deny" | "prompt" | "auto-safe"
   // approval: myApprovalPort,     // 可选：自定义 ApprovalPort
   // trustRepoConfig: true,        // 信任 .focuscode/ 中的 verification 命令白名单
   // workerId: "ci-runner-1",
@@ -188,8 +188,8 @@ const harness = await createLocalHarness({
     kind: "openai-compatible",
     modelId: "kimi-k2",
     baseUrl: "https://api.moonshot.cn/v1",
-    apiKey: process.env.MOONSHOT_API_KEY,         // 可选
-    extraHeaders: { "X-Custom": "value" },         // 可选
+    apiKey: process.env.MOONSHOT_API_KEY, // 可选
+    extraHeaders: { "X-Custom": "value" }, // 可选
   },
 });
 
@@ -213,13 +213,13 @@ class LocalHarness {
 
 `RunTaskOptions`：
 
-| 字段 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `taskId` | `string?` | `newId("task")` | 任务 ID；指定后可幂等恢复 |
-| `tenantId` | `string?` | `"local"` | 多租户隔离键 |
-| `actorId` | `string?` | `"local-user"` | 触发者 ID |
-| `dataClass` | `"standard" \| "restricted"?` | `"standard"` | 数据敏感度等级 |
-| `budget` | `Partial<BudgetV1>?` | 见下 | 资源预算 |
+| 字段        | 类型                          | 默认            | 说明                      |
+| ----------- | ----------------------------- | --------------- | ------------------------- |
+| `taskId`    | `string?`                     | `newId("task")` | 任务 ID；指定后可幂等恢复 |
+| `tenantId`  | `string?`                     | `"local"`       | 多租户隔离键              |
+| `actorId`   | `string?`                     | `"local-user"`  | 触发者 ID                 |
+| `dataClass` | `"standard" \| "restricted"?` | `"standard"`    | 数据敏感度等级            |
+| `budget`    | `Partial<BudgetV1>?`          | 见下            | 资源预算                  |
 
 默认预算：
 
@@ -237,13 +237,48 @@ class LocalHarness {
 
 ```typescript
 interface KernelRunResult {
-  checkpoint: KernelCheckpointV1;       // 任务终态快照（含 status / budget / model）
-  events: DomainEventV1[];              // 本次 run 产生的全部 DomainEvent
-  verification?: VerificationReportV1;  // 注册验证命令的结果（未配置则缺省）
+  checkpoint: KernelCheckpointV1; // 任务终态快照（含 status / budget / model）
+  events: DomainEventV1[]; // 本次 run 产生的全部 DomainEvent
+  verification?: VerificationReportV1; // 注册验证命令的结果（未配置则缺省）
 }
 ```
 
 > 任务状态通过 `checkpoint.state` 读取（`TaskStateV1` 枚举共 17 个值：`"CREATED" | "PREFLIGHT" | "WAITING_INPUT" | "READY" | "RUNNING" | "WAITING_APPROVAL" | "PAUSED" | "VERIFYING" | "REVIEW_READY" | "RECONCILING" | "BLOCKED" | "ACCEPTED" | "REJECTED" | "CANCELLING" | "CANCELLED" | "FAILED" | "EXPIRED"`）；`taskId` 在 `checkpoint.taskId` 与每个 `DomainEvent.taskId` 中。Effect 收据作为 `DomainEventV1` 包含在 `events` 数组里。终态：`ACCEPTED` / `REJECTED` / `CANCELLED` / `FAILED` / `EXPIRED`。
+
+#### 3.1.1 `LocalHarnessOptions` 完整参数表
+
+来源：[packages/sdk/src/local-harness.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/local-harness.ts#L54-L78)。
+
+**基类字段（`LocalHarnessBaseOptions`，两种 model 变体共享）**
+
+| 字段              | 类型                                 | 默认                                        | 必填 | 说明                                                                                             |
+| ----------------- | ------------------------------------ | ------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------ |
+| `repoRoot`        | `string`                             | —                                           | ✅   | 待审计仓库根目录（绝对路径）                                                                     |
+| `stateDirectory`  | `string`                             | —                                           | ✅   | FactStore/MemoryStore 持久化目录（append-only）                                                  |
+| `modelPackPath`   | `string?`                            | 内置 `model-packs/generic-openai/pack.json` | ❌   | Model Pack 路径，覆盖默认 pack                                                                   |
+| `approvalMode`    | `"deny" \| "prompt" \| "auto-safe"?` | `"deny"`                                    | ❌   | 策略审批模式：`deny`=全部拒绝；`prompt`=交互式（仅 TTY）；`auto-safe`=自动放行安全写入与注册命令 |
+| `approval`        | `ApprovalPort?`                      | `denyApproval`                              | ❌   | 自定义审批端口，优先级高于 `approvalMode`                                                        |
+| `trustRepoConfig` | `boolean?`                           | `false`                                     | ❌   | 是否信任仓库 `.focuscode/config.json` 中的 `verificationCommandIds`                              |
+| `workerId`        | `string?`                            | `local-worker:${process.pid}`               | ❌   | worker 标识，写入审计上下文                                                                      |
+
+**model 变体（联合类型，二选一）**
+
+| 变体                           | 字段                                                                                                                      | 类型                      | 必填                                                         | 说明 |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------ | ---- |
+| `ScriptedHarnessOptions.model` | `{ kind: "scripted"; steps: ScriptedStep[] }`                                                                             | ✅                        | 确定性回放，无网络调用；用于测试与 demo                      |
+| `OpenAIHarnessOptions.model`   | `{ kind: "openai-compatible"; modelId: string; baseUrl: string; apiKey?: string; extraHeaders?: Record<string, string> }` | ✅ `kind/modelId/baseUrl` | OpenAI 兼容协议；`apiKey` 可缺省（由 transport 从 env 推导） |
+
+#### 3.1.2 `createLocalHarness` 错误模式
+
+| 触发条件                                                         | 错误信息                                                                            | 修复建议                                                                                                                     |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `repoRoot` 不存在或不可读                                        | `WorkspaceGuard.create` 抛 `ENOENT`/`EACCES`                                        | 检查路径权限，使用绝对路径                                                                                                   |
+| `stateDirectory` 不可写                                          | `FileFactStore` 构造抛 `EACCES`/`EROFS`                                             | 确保目录可写且为 append-only 文件系统                                                                                        |
+| `modelPackPath` 指向不存在的 pack                                | `loadModelPack` 抛 `ENOENT` 或 schema 校验错误                                      | 用 `pnpm schemas` 重新生成；或回退默认 pack                                                                                  |
+| `options.model.kind === "openai-compatible"` 且 `baseUrl` 不可达 | `OpenAICompatibleTransport` 在 `decide()` 阶段抛 `fetch failed`/`ECONNREFUSED`      | 检查 `baseUrl`、网络代理、`apiKey`                                                                                           |
+| `approvalMode === "prompt"` 且非 TTY                             | `ApprovalPort.request` 永远返回 `false`，任务进入 `WAITING_APPROVAL` 后转 `BLOCKED` | 改用 `auto-safe` 或自定义 `approval` 端口                                                                                    |
+| `task` 未通过 `TaskSpecSchema` 校验                              | `assertSchema` 抛 `SchemaError`，列出违规字段                                       | 参考 [docs/schemas/task-spec.v1.schema.json](file:///Users/tohnee/Trae/Code/focuscode/docs/schemas/task-spec.v1.schema.json) |
+| `budget` 超限                                                    | `FocusKernel` 在 `RECONCILING` 后转入 `FAILED`，`checkpoint.state === "FAILED"`     | 调高 `RunTaskOptions.budget` 或缩小任务范围                                                                                  |
 
 ### 3.2 `createCodingAgent` —— 会话型 Agent
 
@@ -263,7 +298,7 @@ interface CreateCodingAgentOptions extends AgentConfigOverrides {
   onEvent?: (event: AgentEvent) => void | Promise<void>;
   accessTokenProvider?: () => Promise<string | undefined>;
   shellExecutor?: ShellExecutor;
-  effectSpine?: boolean;              // 默认 config.agent.effectSpine (true)
+  effectSpine?: boolean; // 默认 config.agent.effectSpine (true)
 }
 
 const created = await createCodingAgent({
@@ -293,6 +328,102 @@ const { agent, sessions, config } = created;
 
 > 注意：CLI 通过 `apps/cli/src/agent-command.ts` 内部组装 `CodingAgent.create()`；SDK 暴露的 `createCodingAgent` 是其可编程等价物。底层都走 `CodingAgent.create()`，参数同形（见 §4.1）。
 
+#### 3.2.1 `CreateCodingAgentOptions` 完整参数表
+
+来源：[packages/sdk/src/coding-agent.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/coding-agent.ts#L26-L39)、[packages/agent-runtime/src/config.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/agent-runtime/src/config.ts#L66-L211)。
+
+**SDK 自身字段**
+
+| 字段                  | 类型                                            | 默认                                     | 必填 | 说明                                                       |
+| --------------------- | ----------------------------------------------- | ---------------------------------------- | ---- | ---------------------------------------------------------- |
+| `cwd`                 | `string`                                        | —                                        | ✅   | Agent 工作目录（绝对路径）                                 |
+| `sessionDirectory`    | `string?`                                       | `~/.focuscode/sessions/<cwd-hash>`       | ❌   | Session JSONL 持久化目录                                   |
+| `sessionId`           | `string?`                                       | 自动创建                                 | ❌   | 恢复已有 session；与 `persistentSession` 配合可实现 resume |
+| `sessionName`         | `string?`                                       | 时间戳                                   | ❌   | 可读的 session 名称                                        |
+| `persistentSession`   | `boolean?`                                      | `true`                                   | ❌   | `false` 时 session 关闭即删                                |
+| `extensionPaths`      | `string[]?`                                     | `[]`                                     | ❌   | ad-hoc 扩展路径；企业模式下抛错                            |
+| `approve`             | `ApprovalHandler?`                              | 配置驱动                                 | ❌   | 自定义审批处理器，覆盖 `approval` 配置                     |
+| `onEvent`             | `(event: AgentEvent) => void \| Promise<void>?` | —                                        | ❌   | 事件回调（streaming、approval_required、tool_call 等）     |
+| `accessTokenProvider` | `() => Promise<string \| undefined>?`           | —                                        | ❌   | OAuth access token 注入点（用于 Provider 鉴权）            |
+| `shellExecutor`       | `ShellExecutor?`                                | `createSandbox(config.sandbox)`          | ❌   | 自定义沙箱执行器；企业模式必须是 `docker`/`gvisor`/`vm`    |
+| `effectSpine`         | `boolean?`                                      | `config.agent.effectSpine` (默认 `true`) | ❌   | 是否将会话工具循环桥接到审计 EffectPort                    |
+
+**`AgentConfigOverrides` 字段（继承自 `AgentConfigFile`）—— 常用项**
+
+| 字段                | 类型                                                    | 默认                           | 说明                                                                                                    |
+| ------------------- | ------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `provider`          | `string?`                                               | —                              | Provider 标识：`kimi`/`qwen`/`glm`/`deepseek`/`minimax`/`openai`/`anthropic`/`gemini`/`ollama`/`custom` |
+| `model`             | `string?`                                               | —                              | 模型 ID，如 `kimi-k2`                                                                                   |
+| `revision`          | `string?`                                               | —                              | 模型版本指纹；与 `expectedSystemFingerprint` 联动做供应链校验                                           |
+| `baseUrl`           | `string?`                                               | Provider preset                | OpenAI 兼容端点                                                                                         |
+| `apiKeyEnv`         | `string?`                                               | Provider preset                | API Key 环境变量名（**仅 env 名，不传 secret 本身**）                                                   |
+| `apiKey`            | `string?`                                               | —                              | 直接传 secret；仅用于 SDK 嵌入式场景，CLI 路径禁用                                                      |
+| `authType`          | `"api-key" \| "oauth" \| "none"?`                       | Provider preset                | 鉴权方式                                                                                                |
+| `oauthAccount`      | `string?`                                               | —                              | OAuth 账号标识，配合 `@focuscode/auth`                                                                  |
+| `protocol`          | `"openai" \| "anthropic" \| "gemini" \| "qwen"?`        | Provider preset                | 原生协议选择                                                                                            |
+| `approval`          | `ApprovalMode?`                                         | `"ask"`                        | `ask`/`auto-edit`/`full-auto`/`deny`                                                                    |
+| `maxRounds`         | `number?`                                               | 50                             | 单轮对话最大轮次                                                                                        |
+| `steeringMaximum`   | `number?`                                               | 3                              | mid-turn steering 最大次数                                                                              |
+| `steeringDelivery`  | `"all" \| "one-at-a-time"?`                             | `"all"`                        | steering 消息投递策略                                                                                   |
+| `protectedPaths`    | `string[]?`                                             | `[".git", ".focuscode"]`       | 受保护路径，写入需审批                                                                                  |
+| `instructions`      | `string[]?`                                             | —                              | 附加系统 prompt                                                                                         |
+| `enabledTools`      | `string[]?`                                             | 全部                           | 工具白名单                                                                                              |
+| `disabledTools`     | `string[]?`                                             | `[]`                           | 工具黑名单（优先级高于 `enabledTools`）                                                                 |
+| `fallbackModels`    | `FallbackModelPreset[]?`                                | `[]`                           | 主模型失败时的回退链                                                                                    |
+| `sandbox`           | 见下                                                    | `{ kind: "auto" }`             | 沙箱配置                                                                                                |
+| `enterprise`        | 见下                                                    | `{ enabled: false }`           | 企业模式配置                                                                                            |
+| `mcp`               | `{ servers?: McpServerSpec[]; pins?: McpToolPinV1[] }?` | —                              | MCP 服务器与 fail-closed pins                                                                           |
+| `skills`            | `{ manifest?: string \| SkillManifest }?`               | —                              | Skills 清单                                                                                             |
+| `loop`              | `{ maxIterations?; tokenBudget? }?`                     | —                              | 自迭代循环上限                                                                                          |
+| `graph`             | `{ maxConcurrency?; continueOnError? }?`                | —                              | 任务图执行上限                                                                                          |
+| `team`              | `{ maxConcurrency?; continueOnError?; maxTasks? }?`     | —                              | 多 Agent 团队上限                                                                                       |
+| `pricing`           | `Record<string, ModelPricing>?`                         | —                              | 成本核算（USD/1M tokens）                                                                               |
+| `projectTrusted`    | `boolean?`                                              | `false`                        | 是否信任项目级配置/Skills/Extensions                                                                    |
+| `globalConfigPath`  | `string?`                                               | `~/.focuscode/config.json`     | 全局配置路径（测试用）                                                                                  |
+| `projectConfigPath` | `string?`                                               | `<cwd>/.focuscode/config.json` | 项目配置路径（测试用）                                                                                  |
+
+**`sandbox` 子表**
+
+| 字段                 | 类型                                                              | 默认            | 说明                                                  |
+| -------------------- | ----------------------------------------------------------------- | --------------- | ----------------------------------------------------- |
+| `kind`               | `"host" \| "docker" \| "gvisor" \| "vm" \| "seatbelt" \| "auto"?` | `"auto"`        | 沙箱类型；`auto` 按可用性降级                         |
+| `image`              | `string?`                                                         | —               | Docker 镜像（企业模式必须为 `name@sha256:<64>` 形式） |
+| `network`            | `"none" \| "bridge"?`                                             | `"none"`        | 网络策略；默认断网                                    |
+| `allowHostFallback`  | `boolean?`                                                        | `false`         | `auto` 链路终点是否回退 Host（不推荐）                |
+| `requireImageDigest` | `boolean?`                                                        | `false`         | 强制镜像 digest（企业模式隐式为 `true`）              |
+| `vmHost`             | `string?`                                                         | —               | SSH VM 主机                                           |
+| `vmWorkspace`        | `string?`                                                         | —               | SSH VM 远程工作目录                                   |
+| `vmIdentityFile`     | `string?`                                                         | `~/.ssh/id_rsa` | SSH 身份文件                                          |
+
+**`enterprise` 子表**
+
+| 字段                     | 类型        | 默认                         | 说明               |
+| ------------------------ | ----------- | ---------------------------- | ------------------ |
+| `enabled`                | `boolean?`  | `false`                      | 启用企业模式       |
+| `allowedProviders`       | `string[]?` | 全部                         | Provider 白名单    |
+| `allowedModels`          | `string[]?` | 全部                         | 模型白名单         |
+| `requireIsolatedSandbox` | `boolean?`  | `true`（当 `enabled`）       | 强制非 Host 沙箱   |
+| `auditDirectory`         | `string?`   | `~/.focuscode/audit`         | HMAC 审计日志目录  |
+| `auditHmacKeyEnv`        | `string?`   | `"FOCUSCODE_AUDIT_HMAC_KEY"` | HMAC 密钥 env 名   |
+| `allowProjectExtensions` | `boolean?`  | `false`                      | 是否加载项目级扩展 |
+| `allowedExtensions`      | `string[]?` | `[]`                         | 扩展包白名单       |
+
+#### 3.2.2 `createCodingAgent` 错误模式
+
+| 触发条件                                            | 错误信息                                                                    | 修复建议                                                                 |
+| --------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `cwd` 不存在                                        | `resolveAgentConfig` 抛 `ENOENT`                                            | 使用存在的绝对路径                                                       |
+| `config.sandbox.kind === "auto"` 且无可用沙箱       | `createSandbox` 抛 `No sandbox available`                                   | 安装 Docker/gVisor；或显式 `kind: "host"` 并设 `allowHostFallback: true` |
+| 企业模式 + 沙箱非 `docker`/`gvisor`/`vm`            | `Enterprise mode rejects non-isolated shell executor: <kind>`               | 切换沙箱类型或关闭企业模式                                               |
+| 企业模式 + `extensionPaths` 非空                    | `Enterprise policy forbids ad-hoc extension paths`                          | 通过 `allowedExtensions` + 锁文件安装                                    |
+| `requireExtensionSignatures` + 未签名扩展           | `Unsigned extensions are disabled`                                          | 用 `focuscode extensions sign` 重新签名                                  |
+| 企业模式 + 扩展声明 `network`/`shell` 权限          | `Enterprise extensions may not request network or shell permissions`        | 移除敏感权限或换扩展                                                     |
+| 企业模式 + 缺 `FOCUSCODE_AUDIT_HMAC_KEY`            | `Enterprise mode requires a 32+ byte audit key in FOCUSCODE_AUDIT_HMAC_KEY` | 设置 ≥32 字节 HMAC 密钥                                                  |
+| `mcp.pins` 声明后 schema/transport 漂移             | `MCP tool pin mismatch: <detail>`                                           | 更新 pin 或回滚 server                                                   |
+| `provider` 未在 `providers` preset 中且无 `baseUrl` | `resolveAgentConfig` 抛 `Unknown provider`                                  | 显式传 `baseUrl` 或注册 preset                                           |
+| `oauthAccount` 指向未登录账号                       | `createModelClient` 抛 `OAuth account not authenticated`                    | 运行 `focuscode login <provider>`                                        |
+| `accessTokenProvider` 抛错                          | 错误冒泡至 `agent.submit()` 调用方                                          | 在 provider 中加 try/catch 并返回 `undefined`                            |
+
 ### 3.3 `createSessionEffectSpine` —— 策略执行脊
 
 来源：[packages/sdk/src/effect-spine.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/effect-spine.ts)。
@@ -304,15 +435,15 @@ import { createSessionEffectSpine } from "@focuscode/sdk";
 
 interface SessionEffectSpineOptions {
   cwd: string;
-  registry: AgentToolRegistry;        // 会话工具注册表
-  taskId: string;                     // 稳定任务 ID（一般用 sessionId）
+  registry: AgentToolRegistry; // 会话工具注册表
+  taskId: string; // 稳定任务 ID（一般用 sessionId）
   model: ModelProfile;
   permission: {
     mode: ApprovalMode;
     projectTrusted: boolean;
     protectedPaths: string[];
   };
-  approve?: ApprovalHandler;          // 桥接 PolicyEngine 审批到会话处理器
+  approve?: ApprovalHandler; // 桥接 PolicyEngine 审批到会话处理器
   onApprovalRequired?: (req: PermissionRequest) => void | Promise<void>;
   workerId?: string;
 }
@@ -339,14 +470,62 @@ agent = await CodingAgent.create({
 
 ```typescript
 interface SessionEffectSpine {
-  effectPort: EffectPort;             // 注入 CodingAgent.effectPort
-  effectContext: EffectContextV1;     // 注入 CodingAgent.effectContext
-  runtime: LocalActionRuntime;        // 内部 LocalActionRuntime（可观测）
-  setApprovalMode(mode: ApprovalMode): void;  // 模式切换时同步 PolicyEngine
+  effectPort: EffectPort; // 注入 CodingAgent.effectPort
+  effectContext: EffectContextV1; // 注入 CodingAgent.effectContext
+  runtime: LocalActionRuntime; // 内部 LocalActionRuntime（可观测）
+  setApprovalMode(mode: ApprovalMode): void; // 模式切换时同步 PolicyEngine
 }
 ```
 
 会话级预算宽裕（`maxTurns: 200`、`maxActions: 2000`、`maxChangedFiles: 1000`），硬拒绝来自 PolicyEngine 矩阵本身（受保护路径、critical 命令）。
+
+#### 3.3.1 `SessionEffectSpineOptions` 完整参数表
+
+来源：[packages/sdk/src/effect-spine.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/effect-spine.ts#L29-L50)。
+
+| 字段                        | 类型                                                 | 默认                            | 必填 | 说明                                                                |
+| --------------------------- | ---------------------------------------------------- | ------------------------------- | ---- | ------------------------------------------------------------------- |
+| `cwd`                       | `string`                                             | —                               | ✅   | 工作目录（传给 `tool.execute({ cwd })`）                            |
+| `registry`                  | `AgentToolRegistry`                                  | —                               | ✅   | 会话工具注册表；spine 会 `sync()` 其所有工具到内部 `ToolRegistry`   |
+| `taskId`                    | `string`                                             | —                               | ✅   | 稳定任务 ID（通常用 `sessionId`）；写入 `ExecutionContextV1.taskId` |
+| `model`                     | `ModelProfile`                                       | —                               | ✅   | 模型画像；用于派生 `CertifiedModelRefV1`（development fingerprint） |
+| `permission.mode`           | `ApprovalMode`                                       | —                               | ✅   | 策略审批模式：`ask`/`auto-edit`/`full-auto`/`deny`                  |
+| `permission.projectTrusted` | `boolean`                                            | —                               | ✅   | 是否信任项目级配置；影响 `autoGrant*` 矩阵                          |
+| `permission.protectedPaths` | `string[]`                                           | —                               | ✅   | 受保护路径列表；写入策略配置                                        |
+| `approve`                   | `ApprovalHandler?`                                   | `undefined`（deny）             | ❌   | 桥接 PolicyEngine 审批到会话处理器；缺省则全部 deny                 |
+| `onApprovalRequired`        | `(req: PermissionRequest) => void \| Promise<void>?` | —                               | ❌   | 审批触发前的回调（用于 emit `approval_required` 事件）              |
+| `workerId`                  | `string?`                                            | `session-worker:${process.pid}` | ❌   | worker 标识                                                         |
+
+**派生的 `EffectContextV1`（由 spine 构造，不可注入）**
+
+| 字段        | 来源                                                    | 说明                                                |
+| ----------- | ------------------------------------------------------- | --------------------------------------------------- |
+| `execution` | 由 `taskId`/`permission` 派生                           | `ExecutionContextV1`，包含宽裕预算                  |
+| `model`     | 由 `options.model` 派生                                 | `CertifiedModelRefV1`，使用 `sha256Digest` 作为指纹 |
+| `workerId`  | `options.workerId ?? \`session-worker:${process.pid}\`` | worker 标识                                         |
+
+**会话级默认预算（hard-coded in `sessionPolicyConfig`/`sessionEffectContext`）**
+
+```typescript
+{
+  maxTurns: 200,
+  maxActions: 2_000,
+  maxWallTimeMs: 3_600_000,    // 1 小时
+  maxChangedFiles: 1_000,
+  maxChangedLines: 1_000_000,
+}
+```
+
+#### 3.3.2 `createSessionEffectSpine` 错误模式
+
+| 触发条件                                           | 错误信息                                                               | 修复建议                                  |
+| -------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------- |
+| `registry` 中存在同名工具                          | `ToolRegistry.register` 抛 `Duplicate tool: <name>`                    | 在扩展加载阶段去重                        |
+| `approve` 缺省且 `permission.mode === "ask"`       | 所有写入工具被 deny，会话卡在 `WAITING_APPROVAL`                       | 注入 `ApprovalHandler` 或改用 `auto-edit` |
+| `onApprovalRequired` 抛错                          | 错误冒泡至 `effectPort.submit()`，工具执行失败                         | 在回调中加 try/catch                      |
+| `permission.protectedPaths` 与工具参数 `path` 冲突 | PolicyEngine 直接 deny，返回 `EffectReceiptV1` 带 `denied` disposition | 调整 `protectedPaths` 或工具参数          |
+| `taskId` 不稳定（每次 submit 变化）                | 审计日志无法关联，`EffectLedger` 快照混乱                              | 用 `sessionId` 作为 `taskId`              |
+| `model.provider`/`model.model` 为空字符串          | `CertifiedModelRefV1.modelId` 为 `"/"`，审计不可读                     | 确保 `ModelProfile` 完整                  |
 
 ---
 
@@ -368,10 +547,7 @@ class CodingAgent {
   get specEngineInstance(): SpecEngine | undefined;
 
   // 主循环
-  submit(
-    input: string | AgentPromptInput,
-    externalSignal?: AbortSignal,
-  ): Promise<AgentRunResult>;
+  submit(input: string | AgentPromptInput, externalSignal?: AbortSignal): Promise<AgentRunResult>;
 
   // 中断当前 submit()
   abort(reason?: string): boolean;
@@ -400,48 +576,48 @@ class CodingAgent {
 
 **`CodingAgentOptions`**（继承 `AgentRuntimeOptions`）：
 
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `cwd` | `string` | ✓ | 工作区根 |
-| `model` | `ModelProfile` | ✓ | 模型描述符 |
-| `modelClient` | `ModelClient` | ✓ | 模型调用客户端 |
-| `tools` | `AgentTool[]` | ✓ | 工具列表 |
-| `toolRegistry` | `AgentToolRegistry?` | | 自定义注册表；省略则用 `new AgentToolRegistry(tools)` |
-| `permission` | `{ mode, projectTrusted, protectedPaths, approve?, prefixRules? }` | ✓ | 权限配置 |
-| `sessionStore` | `SessionStore` | ✓ | 会话持久化 |
-| `sessionId` | `string?` | | 加载已有会话；不传则新建 |
-| `sessionName` | `string?` | | 会话名 |
-| `systemPrompt` | `string?` | | 覆盖默认 system prompt |
-| `instructions` | `string[]?` | | 追加到 system prompt |
-| `maxRounds` | `number?` | `40` | 单次 `submit()` 的最大轮数 |
-| `steeringMaximum` | `number?` | `32` | Steering 队列上限 |
-| `steeringDelivery` | `"all" \| "one-at-a-time"?` | `"all"` | Steering 投递模式 |
-| `eventSink` | `(event: AgentEvent) => void \| Promise<void>?` | | 事件订阅 |
-| `extensionHost` | `ExtensionHostLike?` | | 扩展宿主 |
-| `auditJournal` | `AuditJournal?` | | HMAC 审计日志 |
-| `onApprovalRequired` | `(req: PermissionRequest) => void \| Promise<void>?` | | 审批提示钩子 |
-| `onApprovalModeChange` | `(mode: ApprovalMode) => void?` | | 模式切换通知 |
-| `effectPort` | `EffectPort?` | | 启用策略执行脊 |
-| `effectContext` | `EffectContextV1?` | | 启用执行脊时必填 |
-| `checkpoints` | `boolean?` | `true` | 文件级 undo 快照 |
-| `checkpointDirectory` | `string?` | | 默认 `~/.focuscode/checkpoints/<sessionId>` |
-| `diagnostics` | `{ enabled: boolean; providers: string[] \| undefined }?` | | 编辑后追加 LSP 诊断 |
-| `enableDelegate` | `boolean?` | `true` | 子代理工具 |
-| `enableGoal` | `boolean?` | `true` | 目标状态工具 |
-| `enableGraph` | `boolean?` | `true` | 任务图 DAG 工具 |
-| `graph` | `{ maxConcurrency, continueOnError }?` | | 图工具默认值 |
-| `enableTeam` | `boolean?` | `true` | Agent Team 工具 |
-| `team` | `{ maxConcurrency, continueOnError, maxTasks }?` | | Team 工具默认值 |
-| `skills` | `Skill[]?` | | 声明式技能注入 |
-| `specEngine` | `SpecEngineOptions?` | | 需求澄清引擎 |
-| `specEngineDeps` | `SpecEngineDeps?` | | 启用 specEngine 时必填 |
+| 字段                   | 类型                                                               | 必填    | 说明                                                  |
+| ---------------------- | ------------------------------------------------------------------ | ------- | ----------------------------------------------------- |
+| `cwd`                  | `string`                                                           | ✓       | 工作区根                                              |
+| `model`                | `ModelProfile`                                                     | ✓       | 模型描述符                                            |
+| `modelClient`          | `ModelClient`                                                      | ✓       | 模型调用客户端                                        |
+| `tools`                | `AgentTool[]`                                                      | ✓       | 工具列表                                              |
+| `toolRegistry`         | `AgentToolRegistry?`                                               |         | 自定义注册表；省略则用 `new AgentToolRegistry(tools)` |
+| `permission`           | `{ mode, projectTrusted, protectedPaths, approve?, prefixRules? }` | ✓       | 权限配置                                              |
+| `sessionStore`         | `SessionStore`                                                     | ✓       | 会话持久化                                            |
+| `sessionId`            | `string?`                                                          |         | 加载已有会话；不传则新建                              |
+| `sessionName`          | `string?`                                                          |         | 会话名                                                |
+| `systemPrompt`         | `string?`                                                          |         | 覆盖默认 system prompt                                |
+| `instructions`         | `string[]?`                                                        |         | 追加到 system prompt                                  |
+| `maxRounds`            | `number?`                                                          | `40`    | 单次 `submit()` 的最大轮数                            |
+| `steeringMaximum`      | `number?`                                                          | `32`    | Steering 队列上限                                     |
+| `steeringDelivery`     | `"all" \| "one-at-a-time"?`                                        | `"all"` | Steering 投递模式                                     |
+| `eventSink`            | `(event: AgentEvent) => void \| Promise<void>?`                    |         | 事件订阅                                              |
+| `extensionHost`        | `ExtensionHostLike?`                                               |         | 扩展宿主                                              |
+| `auditJournal`         | `AuditJournal?`                                                    |         | HMAC 审计日志                                         |
+| `onApprovalRequired`   | `(req: PermissionRequest) => void \| Promise<void>?`               |         | 审批提示钩子                                          |
+| `onApprovalModeChange` | `(mode: ApprovalMode) => void?`                                    |         | 模式切换通知                                          |
+| `effectPort`           | `EffectPort?`                                                      |         | 启用策略执行脊                                        |
+| `effectContext`        | `EffectContextV1?`                                                 |         | 启用执行脊时必填                                      |
+| `checkpoints`          | `boolean?`                                                         | `true`  | 文件级 undo 快照                                      |
+| `checkpointDirectory`  | `string?`                                                          |         | 默认 `~/.focuscode/checkpoints/<sessionId>`           |
+| `diagnostics`          | `{ enabled: boolean; providers: string[] \| undefined }?`          |         | 编辑后追加 LSP 诊断                                   |
+| `enableDelegate`       | `boolean?`                                                         | `true`  | 子代理工具                                            |
+| `enableGoal`           | `boolean?`                                                         | `true`  | 目标状态工具                                          |
+| `enableGraph`          | `boolean?`                                                         | `true`  | 任务图 DAG 工具                                       |
+| `graph`                | `{ maxConcurrency, continueOnError }?`                             |         | 图工具默认值                                          |
+| `enableTeam`           | `boolean?`                                                         | `true`  | Agent Team 工具                                       |
+| `team`                 | `{ maxConcurrency, continueOnError, maxTasks }?`                   |         | Team 工具默认值                                       |
+| `skills`               | `Skill[]?`                                                         |         | 声明式技能注入                                        |
+| `specEngine`           | `SpecEngineOptions?`                                               |         | 需求澄清引擎                                          |
+| `specEngineDeps`       | `SpecEngineDeps?`                                                  |         | 启用 specEngine 时必填                                |
 
 **`AgentPromptInput`**：
 
 ```typescript
 interface AgentPromptInput {
   text: string;
-  attachments?: AgentAttachment[];   // ImageAttachment[]
+  attachments?: AgentAttachment[]; // ImageAttachment[]
 }
 ```
 
@@ -454,7 +630,7 @@ interface AgentRunResult {
   content: string;
   rounds: number;
   toolCalls: number;
-  usage: TokenUsage;                 // { inputTokens, outputTokens, cachedInputTokens? }
+  usage: TokenUsage; // { inputTokens, outputTokens, cachedInputTokens? }
   stopped: ModelStopReason | "max_rounds";
   // ModelStopReason = "stop" | "tool_use" | "length" | "aborted" | "error"
 }
@@ -466,9 +642,9 @@ interface AgentRunResult {
 
 ```typescript
 interface ModelProfile {
-  provider: string;                   // "kimi" | "qwen" | "glm" | "deepseek" | "minimax" | 自定义
-  model: string;                      // 模型别名
-  revision?: string;                  // 版本 pin
+  provider: string; // "kimi" | "qwen" | "glm" | "deepseek" | "minimax" | 自定义
+  model: string; // 模型别名
+  revision?: string; // 版本 pin
   expectedSystemFingerprint?: string; // OpenAI-compatible system_fingerprint
   systemFingerprintPolicy?: "fail" | "warn" | "off";
   protocol: "openai-chat" | "openai-responses" | "anthropic-messages" | "google-gemini";
@@ -476,13 +652,13 @@ interface ModelProfile {
   apiKey?: string;
   apiKeyEnv?: string;
   authType?: "api-key" | "bearer" | "none";
-  oauthAccount?: string;              // OAuth 账户名
+  oauthAccount?: string; // OAuth 账户名
   extraHeaders?: Record<string, string>;
   contextWindow: number;
   maxOutputTokens: number;
   temperature: number;
   toolMode: "native" | "prompt-json" | "auto";
-  reasoningEffort: ReasoningEffort;   // "off"|"minimal"|"low"|"medium"|"high"|"max"
+  reasoningEffort: ReasoningEffort; // "off"|"minimal"|"low"|"medium"|"high"|"max"
   capabilities: ModelCapabilities;
   compatibility: ProviderCompatibility;
   reliability: ModelReliabilityPolicy;
@@ -503,13 +679,13 @@ interface ModelClient {
 
 `agent-runtime` 内置五系 Provider 方言客户端：
 
-| Provider | 协议 | 关键差异 |
-|---|---|---|
-| Kimi (Moonshot) | `openai-chat` | 6-letter prefix、tool-argument 任意分片 |
-| Qwen (DashScope) | `openai-chat` | `enable_search`、`tool_choice` 兼容 |
-| GLM (智谱) | `openai-chat` | `thinking` 格式、zai tool stream |
-| DeepSeek | `openai-chat` | `reasoning_content` 字段 |
-| MiniMax | `openai-chat` | 多模态扩展 |
+| Provider         | 协议          | 关键差异                                |
+| ---------------- | ------------- | --------------------------------------- |
+| Kimi (Moonshot)  | `openai-chat` | 6-letter prefix、tool-argument 任意分片 |
+| Qwen (DashScope) | `openai-chat` | `enable_search`、`tool_choice` 兼容     |
+| GLM (智谱)       | `openai-chat` | `thinking` 格式、zai tool stream        |
+| DeepSeek         | `openai-chat` | `reasoning_content` 字段                |
+| MiniMax          | `openai-chat` | 多模态扩展                              |
 
 原生协议客户端：
 
@@ -559,8 +735,8 @@ class SessionStore {
 
 ```typescript
 interface SessionSnapshot {
-  header: SessionHeader;       // sessionId, cwd, createdAt, updatedAt, name?, model, forkedFrom?
-  entries: SessionEntry[];     // 树形：entryId, parentId?, message, usage?
+  header: SessionHeader; // sessionId, cwd, createdAt, updatedAt, name?, model, forkedFrom?
+  entries: SessionEntry[]; // 树形：entryId, parentId?, message, usage?
   activeLeafId?: string;
   compaction?: SessionCompaction;
 }
@@ -589,7 +765,7 @@ interface ToolDefinition {
   name: string;
   label: string;
   description: string;
-  parameters: Record<string, unknown>;   // JSON Schema
+  parameters: Record<string, unknown>; // JSON Schema
   effect: "read" | "write" | "shell" | "git" | "network";
 }
 ```
@@ -688,7 +864,7 @@ interface McpServerSpec {
 
 // 加载与 pin 验证：
 const mcpTools = await loadMcpTools(config.mcp.servers, {
-  pins: config.mcp.pins,  // McpToolPinV1[]
+  pins: config.mcp.pins, // McpToolPinV1[]
   // 失败时抛 McpSchemaChangedError，CLI 非零退出
 });
 ```
@@ -743,11 +919,11 @@ Kernel 是**可恢复、可重放**的任务状态机。状态转换由 `Decisio
 export interface FocusKernelDependencies {
   decision: DecisionPort;
   effects: EffectPort;
-  facts: FactPort;                    // 注意：FactPort（不是 FactStore）
-  verifier: VerifyPort;               // 注意：VerifyPort（不是 VerifierPort）
+  facts: FactPort; // 注意：FactPort（不是 FactStore）
+  verifier: VerifyPort; // 注意：VerifyPort（不是 VerifierPort）
   tools: ToolSpecV1[];
-  workerId: string;                   // 必填，非可选
-  now?: () => Date;                   // 注入时钟用于测试
+  workerId: string; // 必填，非可选
+  now?: () => Date; // 注入时钟用于测试
 }
 
 export interface KernelRunRequest {
@@ -765,9 +941,9 @@ export class FocusKernel {
 }
 
 export interface KernelRunResult {
-  checkpoint: KernelCheckpointV1;       // 任务终态快照（含 state/turn/actionCount/budget/model）
-  events: DomainEventV1[];              // 本次 run 产生的全部 DomainEvent（含 effect 收据）
-  verification?: VerificationReportV1;  // 注册验证命令的结果（未配置则缺省）
+  checkpoint: KernelCheckpointV1; // 任务终态快照（含 state/turn/actionCount/budget/model）
+  events: DomainEventV1[]; // 本次 run 产生的全部 DomainEvent（含 effect 收据）
+  verification?: VerificationReportV1; // 注册验证命令的结果（未配置则缺省）
 }
 ```
 
@@ -864,9 +1040,9 @@ function createDevelopmentModelRef(pack: LoadedModelPack, modelId: string): Cert
 export type PolicyDisposition = "grant" | "approval_required" | "deny";
 
 export interface PolicyDecision {
-  disposition: PolicyDisposition;   // 不是 kind，值也不是 "prompt" 而是 "approval_required"
+  disposition: PolicyDisposition; // 不是 kind，值也不是 "prompt" 而是 "approval_required"
   reason: string;
-  riskScore: number;                 // 数值风险分，不是 "low"|"medium"|"high"|"critical" 枚举
+  riskScore: number; // 数值风险分，不是 "low"|"medium"|"high"|"critical" 枚举
 }
 
 export interface PolicyConfig {
@@ -878,8 +1054,8 @@ export interface PolicyConfig {
   allowSecrets: boolean;
   autoGrantRegisteredCommands: boolean;
   autoGrantSafeWrites: boolean;
-  approvalMode?: ApprovalMode;        // 会话审批矩阵选择器（会话路径用，Kernel 路径不设）
-  projectTrusted?: boolean;            // 仓库验证命令信任闸门（仅 approvalMode="auto-edit" 时相关）
+  approvalMode?: ApprovalMode; // 会话审批矩阵选择器（会话路径用，Kernel 路径不设）
+  projectTrusted?: boolean; // 仓库验证命令信任闸门（仅 approvalMode="auto-edit" 时相关）
 }
 
 export interface ApprovalRequest {
@@ -891,7 +1067,7 @@ export interface ApprovalRequest {
 }
 
 export interface ApprovalPort {
-  request(request: ApprovalRequest): Promise<boolean>;   // 入参是单个 ApprovalRequest 对象
+  request(request: ApprovalRequest): Promise<boolean>; // 入参是单个 ApprovalRequest 对象
 }
 
 export class PolicyEngine {
@@ -920,8 +1096,8 @@ export class LocalActionRuntime implements EffectPort {
     registry: ToolRegistry,
     policy: PolicyEngine,
     approval: ApprovalPort,
-    now?: () => Date,           // 注入时钟用于测试
-    journal?: ReceiptJournal,    // 可选审计日志（HMAC journal）
+    now?: () => Date, // 注入时钟用于测试
+    journal?: ReceiptJournal, // 可选审计日志（HMAC journal）
   );
 
   submit(
@@ -1146,7 +1322,11 @@ AES-256-GCM 加密 + scrypt 派生密钥。
 class EncryptedCredentialStore {
   constructor(options: { directory: string; passphrase?: string; now?: () => Date });
 
-  set(provider: string, account: string, value: Omit<StoredCredential, "provider"|"account"|"createdAt"|"updatedAt">): Promise<StoredCredential>;
+  set(
+    provider: string,
+    account: string,
+    value: Omit<StoredCredential, "provider" | "account" | "createdAt" | "updatedAt">,
+  ): Promise<StoredCredential>;
   get(provider: string, account?: string): Promise<StoredCredential | undefined>;
   delete(provider: string, account?: string): Promise<boolean>;
   list(): Promise<Array<Omit<StoredCredential, "token"> & { expiresAt?: number }>>;
@@ -1170,7 +1350,7 @@ class EncryptedCredentialStore {
 export type SandboxKind = "host" | "docker" | "gvisor" | "vm" | "seatbelt" | "auto";
 
 export interface SandboxLimits {
-  memory: string;        // 如 "512m"
+  memory: string; // 如 "512m"
   cpus: number;
   pids: number;
   maxOutputChars: number;
@@ -1226,17 +1406,17 @@ export async function createSandbox(config: SandboxConfig): Promise<SandboxExecu
 
 **`SandboxConfig` 字段说明**：
 
-| 字段 | 默认 | 说明 |
-|---|---|---|
-| `kind` | — | 沙箱类型；`auto` 按选择链降级 |
-| `workspaceRoot` | — | 工作区根路径，bind-mount 到沙箱内 |
-| `image` | 见 Dockerfile | Docker/gVisor 镜像；企业模式要求 digest pin |
-| `network` | `"none"` | `"none"` 禁网 / `"bridge"` 允许容器网络 |
-| `readOnlyWorkspace` | `false` | 工作区只读 mount |
-| `requireImageDigest` | `false` | 强制镜像 digest 验证（企业模式必开） |
-| `allowHostFallback` | `false` | `auto` 降级时是否允许落到 Host |
-| `vm` | — | VM 模式必填，见 `VmSandboxOptions` |
-| `limits` | 见 Dockerfile | 资源限制覆盖 |
+| 字段                 | 默认          | 说明                                        |
+| -------------------- | ------------- | ------------------------------------------- |
+| `kind`               | —             | 沙箱类型；`auto` 按选择链降级               |
+| `workspaceRoot`      | —             | 工作区根路径，bind-mount 到沙箱内           |
+| `image`              | 见 Dockerfile | Docker/gVisor 镜像；企业模式要求 digest pin |
+| `network`            | `"none"`      | `"none"` 禁网 / `"bridge"` 允许容器网络     |
+| `readOnlyWorkspace`  | `false`       | 工作区只读 mount                            |
+| `requireImageDigest` | `false`       | 强制镜像 digest 验证（企业模式必开）        |
+| `allowHostFallback`  | `false`       | `auto` 降级时是否允许落到 Host              |
+| `vm`                 | —             | VM 模式必填，见 `VmSandboxOptions`          |
+| `limits`             | 见 Dockerfile | 资源限制覆盖                                |
 
 `VmSandboxOptions`：`workspaceRoot`、`host`、`remoteWorkspace`、`sshBinary?`、`identityFile?`、`port?`、`strictHostKeyChecking?`、`processRunner?`、`limits?`。
 
@@ -1273,7 +1453,7 @@ export async function createSandbox(config: SandboxConfig): Promise<SandboxExecu
 // 来自 packages/ecosystem/src/extensions.ts
 export interface FocusCodeExtensionManifest {
   apiVersion: "focuscode.extension.v1";
-  entry: string;                          // 必须是包内相对路径（不能是绝对路径）
+  entry: string; // 必须是包内相对路径（不能是绝对路径）
   displayName?: string;
   description?: string;
   permissions?: Array<"tools" | "commands" | "events" | "network" | "shell">;
@@ -1285,15 +1465,15 @@ export interface InstalledExtension {
   version: string;
   path: string;
   entryPath: string;
-  integrity?: string;                     // 来自 package-lock.json 的 subresource integrity
-  signed: boolean;                        // 是否通过 npm audit signatures
+  integrity?: string; // 来自 package-lock.json 的 subresource integrity
+  signed: boolean; // 是否通过 npm audit signatures
   manifest: FocusCodeExtensionManifest;
 }
 
 export interface ExtensionManagerOptions {
-  directory: string;                      // 扩展安装根目录
-  npmBinary?: string;                     // 默认 "npm"
-  runner?: CommandRunner;                 // 可注入自定义执行器
+  directory: string; // 扩展安装根目录
+  npmBinary?: string; // 默认 "npm"
+  runner?: CommandRunner; // 可注入自定义执行器
 }
 
 export type CommandRunner = (
@@ -1308,7 +1488,7 @@ export class ExtensionPackageManager {
   install(
     spec: string,
     options?: {
-      requireSignature?: boolean;                                   // 默认 = 远程包 true
+      requireSignature?: boolean; // 默认 = 远程包 true
       allowedPermissions?: FocusCodeExtensionManifest["permissions"]; // 默认 ["tools","commands","events"]
     },
   ): Promise<InstalledExtension>;
@@ -1343,20 +1523,20 @@ export function validateExtensionPackage(directory: string): Promise<FocusCodeEx
 // 来自 packages/ecosystem/src/share.ts
 export interface SessionShareBundle {
   schemaVersion: "focuscode-share.v1";
-  shareId: string;                        // "share_" + UUID
+  shareId: string; // "share_" + UUID
   createdAt: string;
-  workspaceHint: string;                  // 默认为 cwd basename
-  session: Record<string, unknown>;       // 脱敏后的 session 快照
+  workspaceHint: string; // 默认为 cwd basename
+  session: Record<string, unknown>; // 脱敏后的 session 快照
   attachments?: Array<{ name: string; mediaType: string; data: string }>;
-  redactions: number;                     // 脱敏字段计数
+  redactions: number; // 脱敏字段计数
   signer: { algorithm: "Ed25519"; publicKey: string };
-  signature: string;                      // base64 Ed25519 签名
+  signature: string; // base64 Ed25519 签名
 }
 
 export interface SessionShareOptions {
-  identityDirectory: string;              // Ed25519 密钥对存储目录
-  fetchImplementation?: typeof fetch;     // 默认 globalThis.fetch
-  now?: () => Date;                       // 注入时钟用于测试
+  identityDirectory: string; // Ed25519 密钥对存储目录
+  fetchImplementation?: typeof fetch; // 默认 globalThis.fetch
+  now?: () => Date; // 注入时钟用于测试
 }
 
 export class SessionShareService {
@@ -1367,12 +1547,12 @@ export class SessionShareService {
     options?: {
       workspace?: string;
       attachments?: Array<{ name: string; mediaType: string; data: string }>;
-      includeToolOutput?: boolean;        // 默认 false（脱敏）
-      includeImages?: boolean;            // 默认 false（脱敏）
+      includeToolOutput?: boolean; // 默认 false（脱敏）
+      includeImages?: boolean; // 默认 false（脱敏）
     },
   ): Promise<SessionShareBundle>;
 
-  verify(bundle: SessionShareBundle): boolean;                 // 同步验签
+  verify(bundle: SessionShareBundle): boolean; // 同步验签
   import(bundle: SessionShareBundle, workspace: string): Record<string, unknown>;
   write(bundle: SessionShareBundle, path: string): Promise<void>;
   read(path: string): Promise<SessionShareBundle>;
@@ -1463,23 +1643,23 @@ interface VerificationReportV1 {
 
 字段含义：
 
-| 字段 | 说明 |
-|---|---|
-| `conclusion` | 不是 `pass: boolean`，而是 5 值枚举 |
-| `phase` | `"baseline"` 或 `"target"`，与 request 一致 |
-| `results` | 不是 `checks`；每项含 `commandId`、`exitCode`、`stdout`、`stderr`、`timedOut`、`durationMs`、`digest` |
-| `summary` | 人类可读总结 |
+| 字段         | 说明                                                                                                  |
+| ------------ | ----------------------------------------------------------------------------------------------------- |
+| `conclusion` | 不是 `pass: boolean`，而是 5 值枚举                                                                   |
+| `phase`      | `"baseline"` 或 `"target"`，与 request 一致                                                           |
+| `results`    | 不是 `checks`；每项含 `commandId`、`exitCode`、`stdout`、`stderr`、`timedOut`、`durationMs`、`digest` |
+| `summary`    | 人类可读总结                                                                                          |
 
 ### 14.2 `conclusion` 判定逻辑
 
-| 条件 | conclusion |
-|---|---|
-| `commandIds.length === 0` | `"PARTIAL"`（无注册命令） |
-| 任一 `exitCode === null`（命令无法启动） | `"BLOCKED"` |
-| 全部 `exitCode === 0 && !timedOut` | `"PASS"` |
-| `phase === "baseline"` 且存在失败 | `"BASELINE_FAIL"` |
+| 条件                                            | conclusion                    |
+| ----------------------------------------------- | ----------------------------- |
+| `commandIds.length === 0`                       | `"PARTIAL"`（无注册命令）     |
+| 任一 `exitCode === null`（命令无法启动）        | `"BLOCKED"`                   |
+| 全部 `exitCode === 0 && !timedOut`              | `"PASS"`                      |
+| `phase === "baseline"` 且存在失败               | `"BASELINE_FAIL"`             |
 | `phase === "target"` 且失败与 baseline 完全一致 | `"BASELINE_FAIL"`（不算回归） |
-| `phase === "target"` 且失败模式有变化 | `"REGRESSION"` |
+| `phase === "target"` 且失败模式有变化           | `"REGRESSION"`                |
 
 `hadSameFailures()` 比对 baseline 与 target 的 `(commandId, exitCode)` 集合；只要 target 失败集是 baseline 失败集的子集且非空，就判 `BASELINE_FAIL`。
 
@@ -1531,16 +1711,16 @@ function buildRepoProfile(repoRoot: string): Promise<RepoProfileV1>;
 
 按 priority 降序排列的 8 个 frame（priority 越高越不可丢弃）：
 
-| Frame kind | Priority | Trust | 内容 |
-|---|---|---|---|
-| `harness.contract` | 100 | system | 5 条不可变约束 |
-| `policy.snapshot` | 100 | system | policySnapshot / dataClass / budget |
-| `tools.schemas` | 95 | system | toolSpecs JSON |
-| `repo.profile` | 90 | owner | languages / manifests / protectedPaths / digest |
-| `task` | 100 | owner | task spec JSON |
-| `kernel.state` | 90 | system | state / turn / publicPlan |
-| `recent.effects` | 85 | tool | 截断到 `maxToolOutputChars` |
-| `recent.events` | 70 | system | 截断到 `maxToolOutputChars` |
+| Frame kind         | Priority | Trust  | 内容                                            |
+| ------------------ | -------- | ------ | ----------------------------------------------- |
+| `harness.contract` | 100      | system | 5 条不可变约束                                  |
+| `policy.snapshot`  | 100      | system | policySnapshot / dataClass / budget             |
+| `tools.schemas`    | 95       | system | toolSpecs JSON                                  |
+| `repo.profile`     | 90       | owner  | languages / manifests / protectedPaths / digest |
+| `task`             | 100      | owner  | task spec JSON                                  |
+| `kernel.state`     | 90       | system | state / turn / publicPlan                       |
+| `recent.effects`   | 85       | tool   | 截断到 `maxToolOutputChars`                     |
+| `recent.events`    | 70       | system | 截断到 `maxToolOutputChars`                     |
 
 ### 15.2 溢出回收策略
 
@@ -1554,7 +1734,7 @@ interface RepoProfileV1 {
   digest: Digest;
   root: string;
   languages: string[];
-  manifests: Record<string, string>;            // package.json/tsconfig/go.mod/Cargo.toml 等
+  manifests: Record<string, string>; // package.json/tsconfig/go.mod/Cargo.toml 等
   protectedPaths: string[];
   verificationCommandIds: string[];
   // ...
@@ -1605,15 +1785,15 @@ export function deactivate?(): void | Promise<void>;
 
 ## 17. 错误码与失败模式
 
-| 错误 | 来源 | 含义 | 处理 |
-|---|---|---|---|
-| `OAuthProtocolError` | `@focuscode/auth` | OAuth 流程错误（`authorization_pending`、`slow_down`、`expired_token` 等） | Device Code 自动重试，其他抛出 |
-| `ModelHttpError` | `@focuscode/agent-runtime` | 模型 HTTP 错误，含 status 与 body | 按 `reliability` 重试，超过阈值熔断 |
-| `ModelResponseDriftError` | `@focuscode/agent-runtime` | `system_fingerprint` 漂移 | 按 `systemFingerprintPolicy` fail/warn/off |
-| `McpSchemaChangedError` | `@focuscode/protocols` | MCP tool schema/transport 漂移 | fail-closed，CLI 非零退出 |
-| `assertReadOnlyDelegation` 抛错 | `@focuscode/protocols` | A2A 写能力或深度超限 | Alpha 网关拒绝 |
-| Kernel `verifier-rejected` | `@focuscode/harness-core` | Verifier 评估未通过 | 任务标记 failed，可 resume |
-| `Sandbox unavailable` | `@focuscode/sandbox` | `auto` 链全部不可用且未允许 Host fallback | 抛错；安装 Docker/gVisor 或配置 VM |
+| 错误                            | 来源                       | 含义                                                                       | 处理                                       |
+| ------------------------------- | -------------------------- | -------------------------------------------------------------------------- | ------------------------------------------ |
+| `OAuthProtocolError`            | `@focuscode/auth`          | OAuth 流程错误（`authorization_pending`、`slow_down`、`expired_token` 等） | Device Code 自动重试，其他抛出             |
+| `ModelHttpError`                | `@focuscode/agent-runtime` | 模型 HTTP 错误，含 status 与 body                                          | 按 `reliability` 重试，超过阈值熔断        |
+| `ModelResponseDriftError`       | `@focuscode/agent-runtime` | `system_fingerprint` 漂移                                                  | 按 `systemFingerprintPolicy` fail/warn/off |
+| `McpSchemaChangedError`         | `@focuscode/protocols`     | MCP tool schema/transport 漂移                                             | fail-closed，CLI 非零退出                  |
+| `assertReadOnlyDelegation` 抛错 | `@focuscode/protocols`     | A2A 写能力或深度超限                                                       | Alpha 网关拒绝                             |
+| Kernel `verifier-rejected`      | `@focuscode/harness-core`  | Verifier 评估未通过                                                        | 任务标记 failed，可 resume                 |
+| `Sandbox unavailable`           | `@focuscode/sandbox`       | `auto` 链全部不可用且未允许 Host fallback                                  | 抛错；安装 Docker/gVisor 或配置 VM         |
 
 ### Fail-closed 边界
 

@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "local-harness-options.v1",
+  "title": "LocalHarnessOptions",
+  "description": "Options for createLocalHarness(). Discriminated union on model.kind: 'scripted' (testing) or 'openai-compatible' (live provider).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": ["repoRoot", "stateDirectory", "model"],
+  "properties": {
+    "repoRoot": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path to the workspace root. Used by WorkspaceGuard and buildRepoProfile."
+    },
+    "stateDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Directory for FileFactStore and FileMemoryStore. Created if missing."
+    },
+    "modelPackPath": {
+      "type": "string",
+      "description": "Override path to a Model Pack JSON. Defaults to the bundled generic-openai pack."
+    },
+    "approvalMode": {
+      "type": "string",
+      "enum": ["deny", "prompt", "auto-safe"],
+      "description": "Harness-level approval mode. 'deny' (default) rejects all writes; 'prompt' delegates to approval port; 'auto-safe' auto-grants registered commands and safe writes."
+    },
+    "approval": {
+      "type": "object",
+      "description": "TypeScript injection point: ApprovalPort { request(request: ApprovalRequest): Promise<boolean> }. Not JSON-serializable; pass programmatically."
+    },
+    "trustRepoConfig": {
+      "type": "boolean",
+      "description": "Trust .focuscode/config.json verification commands. Defaults to false."
+    },
+    "workerId": {
+      "type": "string",
+      "description": "Worker identifier for fact store concurrency. Defaults to `local-worker:${process.pid}`."
+    },
+    "factStore": {
+      "type": "object",
+      "description": "TypeScript injection point: FactPort. Override the default FileFactStore (e.g., with a Postgres-backed implementation). Not JSON-serializable."
+    },
+    "verifier": {
+      "type": "object",
+      "description": "TypeScript injection point: VerifyPort. Override the default RegisteredCommandVerifier. Not JSON-serializable."
+    },
+    "decision": {
+      "type": "object",
+      "description": "TypeScript injection point: DecisionPort. Override the model.kind switch (e.g., with a circuit-breaker wrapper). Not JSON-serializable."
+    },
+    "model": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "steps"],
+          "properties": {
+            "kind": { "type": "string", "const": "scripted" },
+            "steps": {
+              "type": "array",
+              "description": "ScriptedStep[] from @focuscode/testkit. Replays deterministic model decisions for tests."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "modelId", "baseUrl"],
+          "properties": {
+            "kind": { "type": "string", "const": "openai-compatible" },
+            "modelId": { "type": "string", "minLength": 1 },
+            "baseUrl": { "type": "string", "minLength": 1 },
+            "apiKey": {
+              "type": "string",
+              "description": "Optional API key. Prefer environment variable over config."
+            },
+            "extraHeaders": {
+              "type": "object",
+              "additionalProperties": { "type": "string" },
+              "description": "Extra HTTP headers for the OpenAI-compatible transport."
+            }
+          }
+        }
+      ]
+    }
+  }
+}

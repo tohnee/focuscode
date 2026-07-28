@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "create-coding-agent-options.v1",
+  "title": "CreateCodingAgentOptions",
+  "description": "Options for createCodingAgent(). Extends AgentConfigOverrides with session, extension, and injection-point fields.",
+  "additionalProperties": false,
+  "type": "object",
+  "required": ["cwd"],
+  "properties": {
+    "cwd": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Working directory for the agent. Resolved to absolute path."
+    },
+    "sessionDirectory": {
+      "type": "string",
+      "description": "Override session storage directory. Defaults to ~/.focuscode/sessions/<sha256(cwd)[:16]>."
+    },
+    "sessionId": {
+      "type": "string",
+      "description": "Resume an existing session by id."
+    },
+    "sessionName": {
+      "type": "string",
+      "description": "Human-readable session name."
+    },
+    "persistentSession": {
+      "type": "boolean",
+      "description": "Persist session to disk. Defaults to true."
+    },
+    "extensionPaths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Additional extension entry paths. Forbidden in enterprise mode."
+    },
+    "approve": {
+      "type": "object",
+      "description": "TypeScript injection point: ApprovalHandler (request: PermissionRequest) => boolean | Promise<boolean>. Not JSON-serializable."
+    },
+    "onEvent": {
+      "type": "object",
+      "description": "TypeScript injection point: (event: AgentEvent) => void | Promise<void>. Streaming callback. Not JSON-serializable."
+    },
+    "accessTokenProvider": {
+      "type": "object",
+      "description": "TypeScript injection point: () => Promise<string | undefined>. Injects OAuth bearer token into model client. Not JSON-serializable."
+    },
+    "shellExecutor": {
+      "type": "object",
+      "description": "TypeScript injection point: ShellExecutor. Override sandbox creation. Not JSON-serializable."
+    },
+    "effectSpine": {
+      "type": "boolean",
+      "description": "Route tool calls through the EffectPort spine for audit. Defaults to config.agent.effectSpine (true)."
+    }
+  }
+}

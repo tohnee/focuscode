@@ -540,8 +540,7 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
           .catch((error: unknown) => {
             tui.addMessage(
               "system",
-              "Failed to fork session: " +
-                (error instanceof Error ? error.message : String(error)),
+              "Failed to fork session: " + (error instanceof Error ? error.message : String(error)),
             );
           });
         break;

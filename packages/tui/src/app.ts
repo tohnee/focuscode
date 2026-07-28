@@ -322,7 +322,7 @@ export class FullScreenTui {
       specId: state.specId,
       topic: state.topic ?? "(untitled)",
       completedAt: Date.now(),
-      totalDuration: state.totalDuration,
+      ...(state.totalDuration !== undefined ? { totalDuration: state.totalDuration } : {}),
       status: state.phase as "completed" | "skipped",
       stages: state.stages.map((s) => ({ ...s })),
     };
@@ -945,7 +945,10 @@ export class FullScreenTui {
       ...(this.specHistoryVisible
         ? {
             specHistoryView: {
-              entries: this.specHistory.map((e) => ({ ...e, stages: e.stages.map((s) => ({ ...s })) })),
+              entries: this.specHistory.map((e) => ({
+                ...e,
+                stages: e.stages.map((s) => ({ ...s })),
+              })),
               selectedIndex: this.specHistorySelection,
             },
           }

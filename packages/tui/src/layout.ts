@@ -189,7 +189,11 @@ export function toggleSidebarPane(state: LayoutState, paneId: PaneId): LayoutSta
 }
 
 /** Set visibility of a single sidebar pane. */
-export function setSidebarPaneVisible(state: LayoutState, paneId: PaneId, visible: boolean): LayoutState {
+export function setSidebarPaneVisible(
+  state: LayoutState,
+  paneId: PaneId,
+  visible: boolean,
+): LayoutState {
   const panes = state.panes.map((p) => (p.id === paneId ? { ...p, visible } : p));
   return { ...state, panes };
 }

@@ -37,12 +37,12 @@ FocusCode Fox 是一个模型可移植、策略可控的终端 Coding Agent。�
 
 ### 2.1 环境清单
 
-| 工具 | 版本要求 | 用途 |
-|------|----------|------|
-| Node.js | **>= 22.12.0（硬性要求）** | 运行时 |
-| ripgrep (`rg`) | 任意近期版本 | grep/find 工具的搜索引擎 |
-| Docker 或 gVisor | 可选 | 命令沙箱隔离 |
-| pnpm | 11.7.0 | 仅从源码构建时需要 |
+| 工具             | 版本要求                   | 用途                     |
+| ---------------- | -------------------------- | ------------------------ |
+| Node.js          | **>= 22.12.0（硬性要求）** | 运行时                   |
+| ripgrep (`rg`)   | 任意近期版本               | grep/find 工具的搜索引擎 |
+| Docker 或 gVisor | 可选                       | 命令沙箱隔离             |
+| pnpm             | 11.7.0                     | 仅从源码构建时需要       |
 
 ### 2.2 安装步骤
 
@@ -140,12 +140,12 @@ fox                                       # 裸命令进入全屏 TUI
 
 四种模式：
 
-| 模式 | 行为 | 适用场景 |
-|------|------|---------|
-| `ask` | 每个写操作/命令都问你 | 学习期推荐 |
-| `auto-edit` | 自动批准文件编辑，危险命令仍需确认 | 日常开发 |
-| `full-auto` | 全部自动 | 隔离环境/CI |
-| `deny` | 全部拒绝，只读分析 | 代码审查 |
+| 模式        | 行为                               | 适用场景    |
+| ----------- | ---------------------------------- | ----------- |
+| `ask`       | 每个写操作/命令都问你              | 学习期推荐  |
+| `auto-edit` | 自动批准文件编辑，危险命令仍需确认 | 日常开发    |
+| `full-auto` | 全部自动                           | 隔离环境/CI |
+| `deny`      | 全部拒绝，只读分析                 | 代码审查    |
 
 也可用 `--approval ask` 启动参数预设。非交互环境下 `ask` 自动降级为 `deny`。
 
@@ -224,14 +224,14 @@ fox --spec-engine \
 
 **SpecEngine 参数说明**：
 
-| 参数 | 作用 | 默认值 |
-|------|------|--------|
-| `--spec-engine` | 启用 SpecEngine | 关闭 |
-| `--spec-auto-trigger` | 自动判断是否需要补全（不指定则仅 `/spec` 触发） | 仅 `/spec` |
-| `--spec-classifier-model` | 分类/检测阶段使用的小模型（1B-2B） | 主模型 |
-| `--spec-drafter-model` | 草稿/增强阶段使用的中模型（3B-7B） | 主模型 |
-| `--spec-dir` | spec 持久化目录 | `docs/specs` |
-| `--spec-max-exploration-rounds` | 代码探索最大轮次 | 6 |
+| 参数                            | 作用                                            | 默认值       |
+| ------------------------------- | ----------------------------------------------- | ------------ |
+| `--spec-engine`                 | 启用 SpecEngine                                 | 关闭         |
+| `--spec-auto-trigger`           | 自动判断是否需要补全（不指定则仅 `/spec` 触发） | 仅 `/spec`   |
+| `--spec-classifier-model`       | 分类/检测阶段使用的小模型（1B-2B）              | 主模型       |
+| `--spec-drafter-model`          | 草稿/增强阶段使用的中模型（3B-7B）              | 主模型       |
+| `--spec-dir`                    | spec 持久化目录                                 | `docs/specs` |
+| `--spec-max-exploration-rounds` | 代码探索最大轮次                                | 6            |
 
 **5 阶段 pipeline**：
 
@@ -259,15 +259,15 @@ fox --mode acp
 
 ACP（Agent Client Protocol）通过 JSON-RPC 2.0 over stdio 让编辑器直接驱动 Agent。支持的协议方法：
 
-| 方法 | 作用 |
-|------|------|
-| `initialize` | 能力协商 |
-| `session/new` | 创建新会话 |
-| `session/load` | 加载已有会话 |
-| `session/list` | 列出可用会话 |
+| 方法             | 作用                      |
+| ---------------- | ------------------------- |
+| `initialize`     | 能力协商                  |
+| `session/new`    | 创建新会话                |
+| `session/load`   | 加载已有会话              |
+| `session/list`   | 列出可用会话              |
 | `session/prompt` | 发送 prompt，流式返回事件 |
-| `session/cancel` | 取消当前操作 |
-| `shutdown` | 关闭服务器 |
+| `session/cancel` | 取消当前操作              |
+| `shutdown`       | 关闭服务器                |
 
 **Zed 配置示例**（`~/.config/zed/settings.json`）：
 
@@ -411,17 +411,17 @@ fox --model deepseek-v4-flash        # 临时换模型
 
 ## 4. 常见报错与排查
 
-| 症状 | 原因 | 解决方案 |
-|------|------|---------|
-| `No isolated sandbox is available` | 无 Docker 且 auto 拒绝回退 | `fox --sandbox host` 或安装 Docker |
-| `spawn rg ENOENT` | 缺 ripgrep | `brew install ripgrep` 或 `apt install ripgrep` |
-| `Full-screen TUI requires a TTY` | 管道中开 TUI | 改用 `fox -p` 或 `--mode json` |
-| 审批被降级 deny | 非交互环境安全设计 | 显式 `--approval auto-edit` |
-| Node 版本拒绝 | < 22.12 | 升级 Node 22 |
-| `Unknown option: --xxx` | 参数拼写错误 | `fox --help` 查看完整参数表 |
-| 模型返回 401 | 环境变量名不匹配 | 对照速查表检查 Key 映射 |
-| SpecEngine 卡住 | spec_confirmation 等待确认 | TUI 模式用确认 UI；非 TUI 会自动拒绝 |
-| Doom-loop stopped | Agent 反复执行同一失败操作 3 次 | 检查最后一次工具输出，调整指令后重试 |
+| 症状                               | 原因                            | 解决方案                                        |
+| ---------------------------------- | ------------------------------- | ----------------------------------------------- |
+| `No isolated sandbox is available` | 无 Docker 且 auto 拒绝回退      | `fox --sandbox host` 或安装 Docker              |
+| `spawn rg ENOENT`                  | 缺 ripgrep                      | `brew install ripgrep` 或 `apt install ripgrep` |
+| `Full-screen TUI requires a TTY`   | 管道中开 TUI                    | 改用 `fox -p` 或 `--mode json`                  |
+| 审批被降级 deny                    | 非交互环境安全设计              | 显式 `--approval auto-edit`                     |
+| Node 版本拒绝                      | < 22.12                         | 升级 Node 22                                    |
+| `Unknown option: --xxx`            | 参数拼写错误                    | `fox --help` 查看完整参数表                     |
+| 模型返回 401                       | 环境变量名不匹配                | 对照速查表检查 Key 映射                         |
+| SpecEngine 卡住                    | spec_confirmation 等待确认      | TUI 模式用确认 UI；非 TUI 会自动拒绝            |
+| Doom-loop stopped                  | Agent 反复执行同一失败操作 3 次 | 检查最后一次工具输出，调整指令后重试            |
 
 ---
 
@@ -457,81 +457,81 @@ export default function (api) {
 
 ### 环境信息
 
-| 项目 | 命令/路径 |
-|------|-----------|
-| 安装 | `pnpm --filter @focuscode/cli link:global` |
-| 版本检查 | `fox --version` |
-| 会话存储 | `~/.focuscode/sessions/<仓库哈希>/` |
-| 项目配置 | `<仓库>/.focuscode/agent.json` |
-| 全局配置 | `~/.focuscode/config.json` |
-| 全局扩展 | `~/.focuscode/extensions/` |
-| 用户皮肤包 | `~/.focuscode/skins/<id>.json` |
-| Foxy 成长状态 | `~/.focuscode/companion.json` |
+| 项目          | 命令/路径                                  |
+| ------------- | ------------------------------------------ |
+| 安装          | `pnpm --filter @focuscode/cli link:global` |
+| 版本检查      | `fox --version`                            |
+| 会话存储      | `~/.focuscode/sessions/<仓库哈希>/`        |
+| 项目配置      | `<仓库>/.focuscode/agent.json`             |
+| 全局配置      | `~/.focuscode/config.json`                 |
+| 全局扩展      | `~/.focuscode/extensions/`                 |
+| 用户皮肤包    | `~/.focuscode/skins/<id>.json`             |
+| Foxy 成长状态 | `~/.focuscode/companion.json`              |
 
 ### 厂商 -> 环境变量
 
-| 厂商 | 环境变量 | 启动命令 |
-|------|----------|---------|
-| Kimi | `MOONSHOT_API_KEY` | `fox --provider kimi` |
-| Qwen | `DASHSCOPE_API_KEY` | `fox --provider qwen` |
-| GLM | `ZAI_API_KEY` | `fox --provider glm` |
-| DeepSeek | `DEEPSEEK_API_KEY` | `fox --provider deepseek` |
-| MiniMax | `MINIMAX_API_KEY` | `fox --provider minimax` |
-| OpenAI | `OPENAI_API_KEY` | `fox --model openai/gpt-5` |
-| Anthropic | `ANTHROPIC_API_KEY` | `fox --model anthropic/MODEL_ID` |
-| Gemini | `GEMINI_API_KEY` | `fox --model gemini/MODEL_ID` |
-| Ollama 本地 | 无需 | `fox --provider ollama --model qwen3-coder --sandbox host` |
-| 自建网关 | `AGI_API_KEY` | 见步骤 12 |
+| 厂商        | 环境变量            | 启动命令                                                   |
+| ----------- | ------------------- | ---------------------------------------------------------- |
+| Kimi        | `MOONSHOT_API_KEY`  | `fox --provider kimi`                                      |
+| Qwen        | `DASHSCOPE_API_KEY` | `fox --provider qwen`                                      |
+| GLM         | `ZAI_API_KEY`       | `fox --provider glm`                                       |
+| DeepSeek    | `DEEPSEEK_API_KEY`  | `fox --provider deepseek`                                  |
+| MiniMax     | `MINIMAX_API_KEY`   | `fox --provider minimax`                                   |
+| OpenAI      | `OPENAI_API_KEY`    | `fox --model openai/gpt-5`                                 |
+| Anthropic   | `ANTHROPIC_API_KEY` | `fox --model anthropic/MODEL_ID`                           |
+| Gemini      | `GEMINI_API_KEY`    | `fox --model gemini/MODEL_ID`                              |
+| Ollama 本地 | 无需                | `fox --provider ollama --model qwen3-coder --sandbox host` |
+| 自建网关    | `AGI_API_KEY`       | 见步骤 12                                                  |
 
 ### TUI 斜杠命令
 
-| 命令 | 作用 |
-|------|------|
-| `/help` | 全部命令速览 |
-| `/cheer on\|off` | Foxy 鼓励师开关 |
-| `/interrupt <指令>` | 立即打断当前生成并转向 |
-| `/followup <指令>` | 本轮完成后追加工作 |
-| `/approval <模式>` | ask / auto-edit / full-auto / deny |
-| `/model` | 打开 Model 选择器（Alt+M 唤起） |
-| `/init` | 生成 `.focuscode/agent.json` 模板 |
-| `/undo` | 回滚最近一次文件操作 |
-| `/cost` | 查看当前会话 token 与费用 |
-| `/todo [add\|done\|clear]` | 任务清单 |
-| `/mcp [list\|reload]` | MCP server 管理 |
-| `/diagnostics [on\|off]` | LSP 诊断回喂开关 |
-| `/compact` | 压缩上下文 |
-| `/image <路径>` | 附加图片 |
-| `/skin [import\|export\|builtin]` | 一键换肤 |
-| `/sessions` `/resume` `/fork` `/tree` | 会话管理 |
-| `/export` | 导出 HTML |
-| `/exit` | 退出 |
+| 命令                                  | 作用                               |
+| ------------------------------------- | ---------------------------------- |
+| `/help`                               | 全部命令速览                       |
+| `/cheer on\|off`                      | Foxy 鼓励师开关                    |
+| `/interrupt <指令>`                   | 立即打断当前生成并转向             |
+| `/followup <指令>`                    | 本轮完成后追加工作                 |
+| `/approval <模式>`                    | ask / auto-edit / full-auto / deny |
+| `/model`                              | 打开 Model 选择器（Alt+M 唤起）    |
+| `/init`                               | 生成 `.focuscode/agent.json` 模板  |
+| `/undo`                               | 回滚最近一次文件操作               |
+| `/cost`                               | 查看当前会话 token 与费用          |
+| `/todo [add\|done\|clear]`            | 任务清单                           |
+| `/mcp [list\|reload]`                 | MCP server 管理                    |
+| `/diagnostics [on\|off]`              | LSP 诊断回喂开关                   |
+| `/compact`                            | 压缩上下文                         |
+| `/image <路径>`                       | 附加图片                           |
+| `/skin [import\|export\|builtin]`     | 一键换肤                           |
+| `/sessions` `/resume` `/fork` `/tree` | 会话管理                           |
+| `/export`                             | 导出 HTML                          |
+| `/exit`                               | 退出                               |
 
 ### 快捷键
 
-| 键位 | 作用 |
-|------|------|
-| `Enter` / `Ctrl+O` | 提交 / 换行 |
-| `Ctrl+C` / `Ctrl+D` | 中止当前轮 / 退出 |
-| `Tab` | 命令与文件路径补全 |
-| `Ctrl+G` / `Ctrl+T` | 轮换伙伴 / 主题 |
-| `Alt+M` / `Ctrl+M` | 唤起 Model 选择器 |
-| `Alt+S`（选择器内） | 仅当前会话切换模型 |
-| `Tab`（选择器内） | 切换 provider 分组 |
+| 键位                | 作用                          |
+| ------------------- | ----------------------------- |
+| `Enter` / `Ctrl+O`  | 提交 / 换行                   |
+| `Ctrl+C` / `Ctrl+D` | 中止当前轮 / 退出             |
+| `Tab`               | 命令与文件路径补全            |
+| `Ctrl+G` / `Ctrl+T` | 轮换伙伴 / 主题               |
+| `Alt+M` / `Ctrl+M`  | 唤起 Model 选择器             |
+| `Alt+S`（选择器内） | 仅当前会话切换模型            |
+| `Tab`（选择器内）   | 切换 provider 分组            |
 | `←` `→`（选择器内） | 切 Low / High / Max reasoning |
-| `↑` `↓` | 历史输入 / 选择器导航 |
+| `↑` `↓`             | 历史输入 / 选择器导航         |
 
 ### v0.5.0 新增 CLI 参数
 
-| 参数 | 作用 |
-|------|------|
-| `--spec-engine` | 启用 SpecEngine 需求补全 |
-| `--spec-auto-trigger` | 自动触发（不指定则仅 `/spec` 触发） |
-| `--spec-classifier-model` | 分类阶段小模型（1B-2B） |
-| `--spec-drafter-model` | 草稿阶段中模型（3B-7B） |
-| `--spec-dir PATH` | spec 持久化目录 |
-| `--spec-max-exploration-rounds N` | 探索最大轮次 |
-| `--command-rules PATH` | 命令前缀规则文件 |
-| `--mode acp` | ACP 编辑器接入模式 |
+| 参数                              | 作用                                |
+| --------------------------------- | ----------------------------------- |
+| `--spec-engine`                   | 启用 SpecEngine 需求补全            |
+| `--spec-auto-trigger`             | 自动触发（不指定则仅 `/spec` 触发） |
+| `--spec-classifier-model`         | 分类阶段小模型（1B-2B）             |
+| `--spec-drafter-model`            | 草稿阶段中模型（3B-7B）             |
+| `--spec-dir PATH`                 | spec 持久化目录                     |
+| `--spec-max-exploration-rounds N` | 探索最大轮次                        |
+| `--command-rules PATH`            | 命令前缀规则文件                    |
+| `--mode acp`                      | ACP 编辑器接入模式                  |
 
 ---
 
@@ -539,17 +539,17 @@ export default function (api) {
 
 **术语表**
 
-| 术语 | 解释 |
-|------|------|
-| Harness | 模型之外的工程外壳：工具、权限、会话、沙箱的总称 |
-| Steering | 不打断会话的中途引导（append / interrupt / follow-up 三类） |
-| Approval mode | 工具执行的审批闸门，四档 |
-| Sandbox | bash 工具的执行隔离层（host / docker / gVisor / vm / seatbelt） |
-| Session tree | JSONL 会话树，支持 fork 分支与任意节点恢复 |
-| SpecEngine | 需求补全引擎，5 阶段 pipeline 将模糊需求转化为结构化 spec |
-| ACP | Agent Client Protocol，编辑器 ↔ agent 的 JSON-RPC 协议 |
-| beforeTool | 扩展拦截钩子，可在工具执行前 veto |
-| Doom-loop | Agent 反复执行同一失败操作的循环，v0.5.0 新增自动检测 |
-| cache_control | Prompt 缓存断点，v0.5.0 新增 Anthropic 支持 |
+| 术语          | 解释                                                            |
+| ------------- | --------------------------------------------------------------- |
+| Harness       | 模型之外的工程外壳：工具、权限、会话、沙箱的总称                |
+| Steering      | 不打断会话的中途引导（append / interrupt / follow-up 三类）     |
+| Approval mode | 工具执行的审批闸门，四档                                        |
+| Sandbox       | bash 工具的执行隔离层（host / docker / gVisor / vm / seatbelt） |
+| Session tree  | JSONL 会话树，支持 fork 分支与任意节点恢复                      |
+| SpecEngine    | 需求补全引擎，5 阶段 pipeline 将模糊需求转化为结构化 spec       |
+| ACP           | Agent Client Protocol，编辑器 ↔ agent 的 JSON-RPC 协议          |
+| beforeTool    | 扩展拦截钩子，可在工具执行前 veto                               |
+| Doom-loop     | Agent 反复执行同一失败操作的循环，v0.5.0 新增自动检测           |
+| cache_control | Prompt 缓存断点，v0.5.0 新增 Anthropic 支持                     |
 
 **参考资源**：`README.md`、`docs/TUI_AND_MULTIMODAL.md`、`docs/OAUTH_AND_PROVIDERS.md`、`docs/SANDBOXING.md`、`docs/compare/focuscode-v0.5.0-gap-review.md`

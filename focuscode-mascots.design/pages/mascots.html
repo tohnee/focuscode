@@ -1,1339 +1,1778 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FocusCode 伙伴图鉴</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lucide@latest"></script>
-<style>
-:root {
-  --bg: #0d0d0d;
-  --bg-elev: #161616;
-  --bg-card: #1c1c1c;
-  --bg-term: #0a0a0a;
-  --border: #2a2a2a;
-  --border-bright: #3d3d3d;
-  --fg: #e8e8e8;
-  --fg-dim: #888;
-  --fg-mute: #555;
-  --green: #4ade80;
-  --green-dim: #22863a;
-  --amber: #fbbf24;
-  --orange: #f97316;
-  --red: #ef4444;
-  --cyan: #22d3ee;
-  --purple: #a78bfa;
-  --pink: #f472b6;
-  --fox: #f97316;
-  --mochi: #f9a8d4;
-  --byte: #4ade80;
-  --nori: #6ee7b7;
-  --pico: #60a5fa;
-  --bubu: #d97706;
-  --kumo: #94a3b8;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-html { image-rendering: pixelated; image-rendering: crisp-edges; }
-body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: 'Inter', system-ui, sans-serif;
-  line-height: 1.6;
-  overflow-x: hidden;
-}
-/* Scanline overlay */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.08) 2px,
-    rgba(0,0,0,0.08) 4px
-  );
-  pointer-events: none;
-  z-index: 9999;
-}
-.pixel { font-family: 'Press Start 2P', monospace; letter-spacing: 0.5px; }
-.mono { font-family: 'VT323', monospace; font-size: 1.2em; }
-.container { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
-
-/* Hero */
-.hero { margin-bottom: 48px; }
-.term-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: #222;
-  border: 1px solid var(--border);
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-}
-.term-dot { width:12px; height:12px; border-radius:50%; }
-.term-dot.r{background:#ff5f57;}
-.term-dot.y{background:#febc2e;}
-.term-dot.g{background:#28c840;}
-.term-title { margin-left: 8px; font-size:12px; color: var(--fg-dim); font-family: 'VT323', monospace; font-size: 16px; }
-.hero-term {
-  background: var(--bg-term);
-  border: 1px solid var(--border);
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  padding: 28px 28px 24px;
-  position: relative;
-  overflow: hidden;
-}
-.hero-term::before {
-  content: '';
-  position: absolute;
-  top: 0; right: 0;
-  width: 200px; height: 200px;
-  background: radial-gradient(circle at top right, rgba(249,115,22,0.06), transparent 70%);
-  pointer-events: none;
-}
-.term-line { font-family: 'VT323', monospace; font-size: 20px; line-height: 1.6; }
-.term-line .prompt { color: var(--green); }
-.term-line .cmd { color: var(--fg); }
-.term-line .comment { color: var(--fg-mute); }
-.term-line .accent { color: var(--amber); }
-.term-line .cyan { color: var(--cyan); }
-.hero-fox {
-  position: absolute;
-  right: 10px;
-  bottom: -12px;
-  opacity: 0.2;
-  transform: scale(2);
-  pointer-events: none;
-}
-.hero-h1 {
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(18px, 4vw, 28px);
-  color: var(--fg);
-  margin-top: 24px;
-  line-height: 1.5;
-}
-.hero-sub { color: var(--fg-dim); margin-top: 12px; font-size: 15px; }
-
-/* Section */
-.section { margin-bottom: 48px; }
-.sec-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.sec-icon {
-  width: 32px; height: 32px;
-  background: var(--bg-elev);
-  border: 1px solid var(--border-bright);
-  border-radius: 4px;
-  display: grid; place-items: center;
-}
-.sec-icon i { width:16px; height:16px; color: var(--green); }
-.sec-title { font-family: 'Press Start 2P', monospace; font-size: 13px; color: var(--fg); }
-.sec-sub { color: var(--fg-mute); font-size: 13px; margin-left: auto; font-family: 'VT323', monospace; font-size:16px; }
-
-/* Evolution Grid */
-.evo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-}
-.evo-card {
-  background: var(--bg-card);
-  border: 2px solid var(--border);
-  border-radius: 4px;
-  padding: 16px 12px 12px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.15s;
-  position: relative;
-}
-.evo-card:hover {
-  border-color: var(--fox);
-  background: #201810;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 0 -2px rgba(249,115,22,0.3);
-}
-.evo-card.active {
-  border-color: var(--fox);
-  background: #201810;
-}
-.evo-card.max { border-color: var(--amber); background: #201c10; }
-.evo-card.max:hover { border-color: var(--amber); box-shadow: 0 4px 0 -2px rgba(251,191,36,0.3); }
-.evo-sprite-wrap {
-  width: 108px; height: 108px;
-  margin: 0 auto 8px;
-  display: grid; place-items: center;
-  position: relative;
-}
-.evo-sprite-wrap svg { image-rendering: pixelated; image-rendering: crisp-edges; }
-.evo-lv {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  color: var(--fg-mute);
-  margin-bottom: 4px;
-}
-.evo-name {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  color: var(--fg);
-  line-height: 1.4;
-}
-.evo-card.max .evo-name { color: var(--amber); }
-.evo-flame {
-  position: absolute;
-  top: 4px; right: 4px;
-  font-size: 12px;
-}
-
-/* Companion Grid */
-.comp-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 14px;
-}
-.comp-card {
-  background: var(--bg-card);
-  border: 2px solid var(--border);
-  border-radius: 4px;
-  padding: 16px;
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.comp-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 0 -2px rgba(255,255,255,0.1);
-}
-.comp-card[data-comp="foxy"]:hover { border-color: var(--fox); background: #201810; }
-.comp-card[data-comp="mochi"]:hover { border-color: var(--mochi); background: #201a1d; }
-.comp-card[data-comp="byte"]:hover { border-color: var(--byte); background: #102018; }
-.comp-card[data-comp="nori"]:hover { border-color: var(--nori); background: #10201c; }
-.comp-card[data-comp="pico"]:hover { border-color: var(--pico); background: #101828; }
-.comp-card[data-comp="bubu"]:hover { border-color: var(--bubu); background: #201a10; }
-.comp-card[data-comp="kumo"]:hover { border-color: var(--kumo); background: #181c24; }
-.comp-sprite {
-  width: 72px; height: 72px;
-  flex-shrink: 0;
-  display: grid; place-items: center;
-}
-.comp-sprite svg { image-rendering: pixelated; image-rendering: crisp-edges; }
-.comp-info { flex: 1; min-width: 0; }
-.comp-name {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  color: var(--fg);
-  margin-bottom: 4px;
-}
-.comp-desc {
-  font-size: 12px;
-  color: var(--fg-dim);
-  line-height: 1.5;
-  margin-bottom: 6px;
-}
-.comp-tags { display: flex; gap: 4px; flex-wrap: wrap; }
-.comp-tag {
-  font-size: 10px;
-  padding: 2px 6px;
-  border: 1px solid var(--border-bright);
-  border-radius: 2px;
-  color: var(--fg-mute);
-  font-family: 'VT323', monospace;
-  font-size: 13px;
-}
-
-/* Mood Section */
-.mood-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 10px;
-}
-.mood-card {
-  background: var(--bg-card);
-  border: 2px solid var(--border);
-  border-radius: 4px;
-  padding: 12px 8px;
-  text-align: center;
-}
-.mood-sprite {
-  width: 64px; height: 64px;
-  margin: 0 auto 6px;
-  display: grid; place-items: center;
-}
-.mood-name {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  color: var(--fg-dim);
-  line-height: 1.4;
-}
-
-/* Detail Panel */
-.detail-panel {
-  background: var(--bg-elev);
-  border: 2px solid var(--border-bright);
-  border-radius: 4px;
-  padding: 24px;
-  margin-top: 20px;
-  display: none;
-}
-.detail-panel.show { display: flex; gap: 24px; align-items: flex-start; }
-.detail-sprite {
-  width: 180px; height: 180px;
-  flex-shrink: 0;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  display: grid; place-items: center;
-}
-.detail-sprite svg { image-rendering: pixelated; image-rendering: crisp-edges; }
-.detail-info { flex: 1; }
-.detail-name { font-family: 'Press Start 2P', monospace; font-size: 14px; margin-bottom: 8px; }
-.detail-desc { color: var(--fg-dim); font-size: 14px; margin-bottom: 12px; }
-.detail-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.detail-stat {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 8px 10px;
-}
-.detail-stat-label { font-size: 11px; color: var(--fg-mute); margin-bottom: 2px; }
-.detail-stat-val { font-family: 'VT323', monospace; font-size: 18px; color: var(--green); }
-
-/* Spec blocks */
-.spec-block {
-  background: var(--bg-term);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 16px;
-  margin-top: 20px;
-}
-.spec-title {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  color: var(--green);
-  margin-bottom: 12px;
-}
-.spec-row {
-  display: flex;
-  gap: 8px;
-  padding: 4px 0;
-  font-family: 'VT323', monospace;
-  font-size: 16px;
-  border-bottom: 1px dashed var(--border);
-}
-.spec-row:last-child { border-bottom: none; }
-.spec-key { color: var(--cyan); min-width: 120px; }
-.spec-val { color: var(--fg-dim); }
-.spec-val.hl { color: var(--amber); }
-
-.pixel-divider {
-  text-align: center;
-  color: var(--fg-mute);
-  font-family: 'VT323', monospace;
-  font-size: 14px;
-  margin: 8px 0;
-  letter-spacing: 4px;
-}
-
-/* Footer */
-.footer {
-  text-align: center;
-  padding: 32px 0;
-  border-top: 1px solid var(--border);
-  margin-top: 48px;
-}
-.footer p { color: var(--fg-mute); font-size: 12px; font-family: 'VT323', monospace; font-size: 15px; }
-
-@media (max-width: 640px) {
-  .evo-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .evo-card { padding: 10px 6px 8px; }
-  .evo-sprite-wrap { width: 80px; height: 80px; }
-  .evo-sprite-wrap svg { transform: scale(0.75); transform-origin: center; }
-  .comp-grid { grid-template-columns: 1fr; }
-  .detail-panel.show { flex-direction: column; }
-  .detail-sprite { width: 140px; height: 140px; }
-  .hero-fox { display: none; }
-}
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="hero">
-    <div class="term-bar">
-      <span class="term-dot r"></span>
-      <span class="term-dot y"></span>
-      <span class="term-dot g"></span>
-      <span class="term-title">focuscode — companions.repl</span>
-    </div>
-    <div class="hero-term">
-      <div class="term-line"><span class="prompt">$</span> <span class="cmd">focuscode companions list</span></div>
-      <div class="term-line"><span class="comment">// FocusCode 伙伴系统 v0.4.0-beta.2</span></div>
-      <div class="term-line"><span class="comment">// 9 级进化形态 + 7 位可解锁伙伴</span></div>
-      <div class="term-line"><span class="accent">loading</span> <span class="cyan">sprites</span><span class="accent">...</span> <span class="comment">✓ ready</span></div>
-      <div class="hero-fox" id="heroFox"></div>
-    </div>
-    <h1 class="hero-h1">伙伴图鉴<br>COMPANION CODEX</h1>
-    <p class="hero-sub">每一位伙伴都是 20x20 / 32x32 点阵像素手绘，像童年拓麻歌子一样陪你写代码。</p>
-  </div>
-
-  <div class="section">
-    <div class="sec-header">
-      <div class="sec-icon"><i data-lucide="flame"></i></div>
-      <span class="sec-title">九尾进化</span>
-      <span class="sec-sub">// evolution.tree</span>
-    </div>
-    <div class="evo-grid" id="evoGrid"></div>
-    <div class="detail-panel" id="evoDetail">
-      <div class="detail-sprite" id="evoDetailSprite"></div>
-      <div class="detail-info">
-        <div class="detail-name" id="evoDetailName"></div>
-        <div class="detail-desc" id="evoDetailDesc"></div>
-        <div class="detail-stats" id="evoDetailStats"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="pixel-divider">· · ────────────── · ·</div>
-
-  <div class="section">
-    <div class="sec-header">
-      <div class="sec-icon"><i data-lucide="users"></i></div>
-      <span class="sec-title">全伙伴图鉴</span>
-      <span class="sec-sub">// companion.roster</span>
-    </div>
-    <div class="comp-grid" id="compGrid"></div>
-    <div class="detail-panel" id="compDetail">
-      <div class="detail-sprite" id="compDetailSprite"></div>
-      <div class="detail-info">
-        <div class="detail-name" id="compDetailName"></div>
-        <div class="detail-desc" id="compDetailDesc"></div>
-        <div class="detail-stats" id="compDetailStats"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="pixel-divider">· · ────────────── · ·</div>
-
-  <div class="section">
-    <div class="sec-header">
-      <div class="sec-icon"><i data-lucide="heart"></i></div>
-      <span class="sec-title">心情状态</span>
-      <span class="sec-sub">// mood.states</span>
-    </div>
-    <div class="mood-grid" id="moodGrid"></div>
-  </div>
-
-  <div class="pixel-divider">· · ────────────── · ·</div>
-
-  <div class="section">
-    <div class="sec-header">
-      <div class="sec-icon"><i data-lucide="book"></i></div>
-      <span class="sec-title">设计规范</span>
-      <span class="sec-sub">// sprite.spec</span>
-    </div>
-    <div class="spec-block">
-      <div class="spec-title">// PIXEL_SPEC</div>
-      <div class="spec-row"><span class="spec-key">grid_size</span><span class="spec-val"><span class="hl">16×16</span> / <span class="hl">24×24</span> / <span class="hl">32×32</span></span></div>
-      <div class="spec-row"><span class="spec-key">palette</span><span class="spec-val">3-5 色限色（含高光），阴影仅 1 层</span></div>
-      <div class="spec-row"><span class="spec-key">outline</span><span class="spec-val">1px 深色轮廓，不使用反锯齿</span></div>
-      <div class="spec-row"><span class="spec-key">rendering</span><span class="spec-val">image-rendering: pixelated / nearest-neighbor</span></div>
-      <div class="spec-row"><span class="spec-key">silhouette</span><span class="spec-val">必须 64px 缩放下可辨识</span></div>
-      <div class="spec-row"><span class="spec-key">eyes</span><span class="spec-val">1-2px 黑色眼珠 + 1px 白色高光点</span></div>
-      <div class="spec-row"><span class="spec-key">tails</span><span class="spec-val">每级 +1 条尾巴，9 条呈扇形展开</span></div>
-    </div>
-    <div class="spec-block" style="margin-top:12px;">
-      <div class="spec-title">// FOX_EVO_TREE</div>
-      <div class="spec-row"><span class="spec-key">Lv1 一尾</span><span class="spec-val">新手伙伴，1 条卷曲大尾巴</span></div>
-      <div class="spec-row"><span class="spec-key">Lv2 二尾</span><span class="spec-val">第二条尾巴从旁长出，更灵动</span></div>
-      <div class="spec-row"><span class="spec-key">Lv3 三尾</span><span class="spec-val">三条尾巴初步成型，尾尖泛白</span></div>
-      <div class="spec-row"><span class="spec-key">Lv4 四尾</span><span class="spec-val">尾巴带火焰光晕，开始觉醒</span></div>
-      <div class="spec-row"><span class="spec-key">Lv5 五尾</span><span class="spec-val">周身出现火星粒子效果</span></div>
-      <div class="spec-row"><span class="spec-key">Lv6 六尾</span><span class="spec-val">耳朵与尾尖出现金色</span></div>
-      <div class="spec-row"><span class="spec-key">Lv7 七尾</span><span class="spec-val">天狐形态，悬浮金色粒子</span></div>
-      <div class="spec-row"><span class="spec-key">Lv8 八尾</span><span class="spec-val">圣狐光环，身体泛金光</span></div>
-      <div class="spec-row"><span class="spec-key">Lv9 九尾</span><span class="spec-val"><span class="hl">仙狐完全体</span>，九条扇形尾+星光环绕</span></div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <p>FocusCode Companions · pixel art sprite system · v0.4.1</p>
-    <p style="margin-top:4px;">↑ ↑ ↓ ↓ ← → ← → B A</p>
-  </div>
-</div>
-
-<script>
-// ============================================================
-// PIXEL SPRITE ENGINE
-// Each sprite is a 2D array of single-character pixels.
-// Palette maps chars to colors. '.' = transparent.
-// ============================================================
-
-const PX = 3; // pixel size multiplier for SVG rendering
-
-// Palette for fox sprites
-const FOX_PAL = {
-  '.': null,
-  'K': '#2a1205',   // dark outline
-  'D': '#c05518',   // dark orange shadow
-  'O': '#f08030',   // main orange
-  'L': '#ffb060',   // light orange highlight
-  'C': '#fff5e0',   // cream muzzle/belly/tail tip
-  'W': '#ffffff',   // white
-  'M': '#d86820',   // belly dark orange
-  'E': '#1a0a00',   // eye black
-  'H': '#ffffff',   // eye highlight
-  'N': '#1a0a00',   // nose black
-  'P': '#ff9ab0',   // pink ear inner
-  'B': '#1a0a00',   // dark paw socks (same as outline/nose)
-  'G': '#ffd700',   // gold (high evo)
-  'Y': '#ffc020',   // yellow flame
-  'R': '#ff5020',   // red flame
-  'S': '#fff8a0',   // sparkle
-  'z': '#d0a060',   // ZZZ sleep
-  '?': '#1a0a00',   // question mark
-  '!': '#ff4040',   // exclamation
-};
-
-// Companion palettes
-const MOCHI_PAL = {
-  '.': null,
-  'K': '#2d1a28',
-  'D': '#d480aa',
-  'O': '#f4a8d0',
-  'L': '#fcd4e8',
-  'C': '#fff0f8',
-  'E': '#1a2a28',
-  'H': '#ffffff',
-  'N': '#1a2a28',  // nose/mouth dark
-  'P': '#ff6b9d',
-  'B': '#ffb0cc',  // blush
-  'A': '#ff4080',  // heart
-};
-const BYTE_PAL = {
-  '.': null,
-  'K': '#0a2810',
-  'D': '#1a6830',
-  'O': '#3ac050',
-  'L': '#60e878',
-  'C': '#c0ffd0',
-  'E': '#0a1a08',
-  'H': '#ffffff',
-  'N': '#0a1a08',  // nose
-  'P': '#80ffa0',
-};
-const NORI_PAL = {
-  '.': null,
-  'K': '#0a2a20',
-  'D': '#2a9878',
-  'O': '#50d8a8',
-  'L': '#80f0c8',
-  'C': '#c0ffe8',
-  'E': '#0a1a18',
-  'H': '#ffffff',
-  'N': '#0a1a18',  // mouth
-  'P': '#ff6b8a',  // pink gills
-  'A': '#ff4060',  // mouth interior
-  'B': '#c0f0ff',  // bubble
-};
-const PICO_PAL = {
-  '.': null,
-  'K': '#0a1828',
-  'D': '#1a4888',
-  'O': '#3880e0',
-  'L': '#68b0ff',
-  'C': '#f0f6ff',  // white belly
-  'W': '#ffffff',
-  'E': '#0a0a18',
-  'H': '#ffffff',
-  'N': '#f8a020',  // orange beak/feet
-};
-const BUBU_PAL = {
-  '.': null,
-  'K': '#2a1805',
-  'D': '#885010',
-  'O': '#c88030',
-  'L': '#e0a860',
-  'C': '#f0d8b0',  // cream muzzle
-  'E': '#1a0a00',
-  'H': '#ffffff',
-  'N': '#1a0a00',  // nose
-  'P': '#ff9999',  // inner ear
-  'A': '#a06020',  // cookie
-  'B': '#302010',  // chocolate chip
-};
-const KUMO_PAL = {
-  '.': null,
-  'K': '#1a2030',
-  'D': '#586880',
-  'O': '#8898b0',
-  'L': '#b0c0d0',
-  'C': '#d8e0e8',
-  'E': '#1a1a28',
-  'H': '#ffffff',
-  'N': '#1a1a28',  // mouth
-  'P': '#d08090',  // nose
-  'A': '#604020',  // coffee
-  'B': '#ffffff',  // steam
-};
-
-// ============================================================
-// FOX EVOLUTION SPRITES (24x24)
-// 1-tail base fox. Additional tails are overlaid for higher levels.
-// ============================================================
-
-// Base fox body (sitting, front-facing, cute pixel fox)
-// K=black outline, D=dark orange, O=main orange, L=light orange,
-// C=cream/white bib, M=dark belly orange, E=eye, H=eye highlight, P=pink ear/nose, N=dark nose/mouth
-// FOX BODY - redesigned for clear fox characteristics
-// Pointed triangular ears, slender snout, white cheek/tip, dark paws, bushy white chest
-// K=dark outline, D=dark orange shadow, O=main orange, L=light orange highlight
-// C=cream/white, P=pink ear inner, E=eye, H=eye highlight, N=nose, M=belly, W=white tip
-// FOX BODY (24x24) - classic fox: triangular pointy ears, slender face, cream cheeks/bib, dark sock paws
-// K=outline D=dark O=orange L=light C=cream M=belly E=eye H=eye-highlight N=nose P=pink
-// FOX_BODY - Sitting red fox, 24x24, symmetric front view
-// Key fox traits: tall pointed triangular ears, narrow white muzzle,
-// almond eyes with inner-corner highlight, small black nose,
-// white chest bib, dark sock paws, fluffy pear-shaped body
-// K=outline D=shadow O=orange L=highlight C=cream E=eye-black H=eye-highlight N=nose P=pink B=dark-paw M=belly
-const FOX_BODY = [
-  "........K......K........",
-  ".......KKK....KKK.......",
-  ".......KPPK..KPPK.......",
-  "......KPPOOKKOOPPK......",
-  ".....KOOOOKKKKOOOOK.....",
-  ".....KOOOOOOOOOOOOK.....",
-  "....KOOOOOOOOOOOOOOK....",
-  "...KOEEHOOOOOOOOHEEOK...",
-  "...KOOOCCCCCCCCCCOOOK...",
-  "..KOOOCCCCCCCCCCCCOOOK..",
-  "..KOOCCCCCCCCCCCCCCOOK..",
-  "..KOOCCCCCCNNCCCCCCOOK..",
-  "..KOOCCCCCCKKCCCCCCOOK..",
-  "...KOCCCCCCCCCCCCCCOK...",
-  "...KODCCCCCCCCCCCCDOK...",
-  "....KODCCCCCCCCCCDOK....",
-  "....KODDMMMMMMMMDDOK....",
-  "....KODMMMMMMMMMMDOK....",
-  "....KOOOOOOOOOOOOOOK....",
-  ".....KOOOOOOOOOOOOK.....",
-  ".....KLLLLLLLLLLLLK.....",
-  ".....KKK..KKKK..KKK.....",
-  ".....KBK..KBBK..KBK.....",
-  "........................",
-];
-
-// Tail shapes - thin distinct plumes fanning UPWARD in a kitsune fan behind the fox
-// 40x40 canvas gives plenty of room for tall tail fanning
-const FOX_CANVAS = 40;
-const BX = 8;  // center 24px body in 40px canvas (8px margin each side)
-const BY = 12; // body starts at row 12, leaving 12px above for tall tail fan
-
-function foxTails(n) {
-  const tails = [];
-  // Tails fan upward and outward in a wide semicircle behind the fox.
-  // Wider spread = more tails visible. Even-count tails have no center tail,
-  // odd-count tails do, making 3 vs 6 instantly distinguishable.
-  // 1 tail: classic single curled tail arcing up-right
-  // 2+ tails: symmetric fan. Wider angle as count grows.
-  const maxAngle = n === 1 ? 0.35 : n <= 3 ? 0.9 : n <= 6 ? 1.15 : 1.35;
-  let angles;
-  if (n === 1) {
-    angles = [0.35];
-  } else {
-    angles = [];
-    for (let i = 0; i < n; i++) {
-      angles.push(-maxAngle + (2 * maxAngle * i) / (n - 1));
-    }
-  }
-  for (let i = 0; i < n; i++) {
-    tails.push(makeTailPath(angles[i], n, i));
-  }
-  return tails;
-}
-
-function makeTailPath(angle, total, idx) {
-  const absA = Math.abs(angle);
-  // Tail emerges from upper back (sprite row 6-7, behind shoulder area)
-  const baseX = 12 + BX;
-  const baseY = 7 + BY;
-
-  // Tail length: outer tails are noticeably longer for a dramatic fan
-  // This makes 3 vs 6 vs 9 tails visually obvious from silhouette alone
-  const len = 11 + absA * 5 + (total > 3 ? 2 : 0);
-
-  // Direction: primarily UP, with lateral spread at tips
-  const dirX = Math.sin(angle) * 0.85;
-  const dirY = -Math.cos(angle) * 0.95; // slightly stretched upward
-
-  // End point
-  const endX = Math.round(baseX + dirX * len);
-  const endY = Math.round(baseY + dirY * len);
-
-  // Clamp to canvas
-  const fx = Math.max(1, Math.min(FOX_CANVAS - 2, endX));
-  const fy = Math.max(1, Math.min(FOX_CANVAS - 2, endY));
-
-  // Cubic bezier control points for a graceful UPWARD plume curve
-  // cp1: starts straight up from back, cp2: flares outward toward tip
-  const cp1X = Math.round(baseX + dirX * len * 0.15);
-  const cp1Y = Math.round(baseY - len * 0.35);
-  const cp2X = Math.round(baseX + dirX * len * 0.55);
-  const cp2Y = Math.round(baseY - len * 0.7);
-
-  const points = [];
-  for (let t = 0; t <= 1; t += 0.035) {
-    const u = 1 - t;
-    const x = Math.round(u*u*u*baseX + 3*u*u*t*cp1X + 3*u*t*t*cp2X + t*t*t*fx);
-    const y = Math.round(u*u*u*baseY + 3*u*u*t*cp1Y + 3*u*t*t*cp2Y + t*t*t*fy);
-    points.push([Math.max(0, Math.min(FOX_CANVAS-1, x)), Math.max(0, Math.min(FOX_CANVAS-1, y))]);
-  }
-  return { points, angle, total, idx };
-}
-
-function drawTailOnGrid(grid, tail) {
-  const { points, total, idx, angle } = tail;
-
-  // Face exclusion: tails go behind body (body overwrites), but we prevent tail
-  // pixels from appearing directly on the face/eyes area. Ears and top of head are fine.
-  // In body-coords: face is rows 5-13 (eyes-nose-muzzle), cols 7-17
-  const FACE_TOP = 5, FACE_BOT = 13, FACE_L = 7, FACE_R = 17;
-  const isFace = (x, y) => {
-    const bx = x-BX, by = y-BY;
-    return by >= FACE_TOP && by <= FACE_BOT && bx >= FACE_L && bx <= FACE_R;
-  };
-
-  // Draw tail as a THIN distinct plume with dark outline
-  // Tails are 1px thick (radius 1 at widest) to keep them SEPARATE and COUNTABLE
-  for (let pi = 0; pi < points.length; pi++) {
-    const [px, py] = points[pi];
-    const progress = pi / (points.length - 1);
-
-    // Thin tails: base 1px, body 1px (never 2px!), tip tapers to 0
-    let r;
-    if (progress < 0.1) r = 1;       // base
-    else if (progress < 0.75) r = 1; // body - thin!
-    else if (progress < 0.9) r = 1;  // approaching tip
-    else r = 0;                      // very tip is single pixel
-
-    // Dark outline (1px around)
-    for (let dy = -r-1; dy <= r+1; dy++) {
-      for (let dx = -r-1; dx <= r+1; dx++) {
-        const d = Math.sqrt(dx*dx + dy*dy);
-        if (d > r + 0.8) continue;
-        const x = px+dx, y = py+dy;
-        if (x<0||x>=FOX_CANVAS||y<0||y>=FOX_CANVAS) continue;
-        if (isFace(x,y)) continue;
-        if (grid[y][x] === '.') grid[y][x] = 'K';
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FocusCode 伙伴图鉴</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      :root {
+        --bg: #0d0d0d;
+        --bg-elev: #161616;
+        --bg-card: #1c1c1c;
+        --bg-term: #0a0a0a;
+        --border: #2a2a2a;
+        --border-bright: #3d3d3d;
+        --fg: #e8e8e8;
+        --fg-dim: #888;
+        --fg-mute: #555;
+        --green: #4ade80;
+        --green-dim: #22863a;
+        --amber: #fbbf24;
+        --orange: #f97316;
+        --red: #ef4444;
+        --cyan: #22d3ee;
+        --purple: #a78bfa;
+        --pink: #f472b6;
+        --fox: #f97316;
+        --mochi: #f9a8d4;
+        --byte: #4ade80;
+        --nori: #6ee7b7;
+        --pico: #60a5fa;
+        --bubu: #d97706;
+        --kumo: #94a3b8;
       }
-    }
-  }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Inter", system-ui, sans-serif;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+      /* Scanline overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.08) 2px,
+          rgba(0, 0, 0, 0.08) 4px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+      .pixel {
+        font-family: "Press Start 2P", monospace;
+        letter-spacing: 0.5px;
+      }
+      .mono {
+        font-family: "VT323", monospace;
+        font-size: 1.2em;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px 20px 80px;
+      }
 
-  // Fill interior - cross-shaped fill for solid but thin tails
-  // Uses d <= r (instead of d < r-0.2) to include orthogonal neighbors,
-  // giving a 3px-wide solid line that's still thin enough for countability
-  for (let pi = 0; pi < points.length; pi++) {
-    const [px, py] = points[pi];
-    const progress = pi / (points.length - 1);
+      /* Hero */
+      .hero {
+        margin-bottom: 48px;
+      }
+      .term-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: #222;
+        border: 1px solid var(--border);
+        border-bottom: none;
+        border-radius: 8px 8px 0 0;
+      }
+      .term-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+      .term-dot.r {
+        background: #ff5f57;
+      }
+      .term-dot.y {
+        background: #febc2e;
+      }
+      .term-dot.g {
+        background: #28c840;
+      }
+      .term-title {
+        margin-left: 8px;
+        font-size: 12px;
+        color: var(--fg-dim);
+        font-family: "VT323", monospace;
+        font-size: 16px;
+      }
+      .hero-term {
+        background: var(--bg-term);
+        border: 1px solid var(--border);
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        padding: 28px 28px 24px;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-term::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle at top right, rgba(249, 115, 22, 0.06), transparent 70%);
+        pointer-events: none;
+      }
+      .term-line {
+        font-family: "VT323", monospace;
+        font-size: 20px;
+        line-height: 1.6;
+      }
+      .term-line .prompt {
+        color: var(--green);
+      }
+      .term-line .cmd {
+        color: var(--fg);
+      }
+      .term-line .comment {
+        color: var(--fg-mute);
+      }
+      .term-line .accent {
+        color: var(--amber);
+      }
+      .term-line .cyan {
+        color: var(--cyan);
+      }
+      .hero-fox {
+        position: absolute;
+        right: 10px;
+        bottom: -12px;
+        opacity: 0.2;
+        transform: scale(2);
+        pointer-events: none;
+      }
+      .hero-h1 {
+        font-family: "Press Start 2P", monospace;
+        font-size: clamp(18px, 4vw, 28px);
+        color: var(--fg);
+        margin-top: 24px;
+        line-height: 1.5;
+      }
+      .hero-sub {
+        color: var(--fg-dim);
+        margin-top: 12px;
+        font-size: 15px;
+      }
 
-    let r;
-    if (progress < 0.1) r = 1;
-    else if (progress < 0.75) r = 1;
-    else if (progress < 0.88) r = 1;
-    else r = 0;
+      /* Section */
+      .section {
+        margin-bottom: 48px;
+      }
+      .sec-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .sec-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border-bright);
+        border-radius: 4px;
+        display: grid;
+        place-items: center;
+      }
+      .sec-icon i {
+        width: 16px;
+        height: 16px;
+        color: var(--green);
+      }
+      .sec-title {
+        font-family: "Press Start 2P", monospace;
+        font-size: 13px;
+        color: var(--fg);
+      }
+      .sec-sub {
+        color: var(--fg-mute);
+        font-size: 13px;
+        margin-left: auto;
+        font-family: "VT323", monospace;
+        font-size: 16px;
+      }
 
-    for (let dy = -r; dy <= r; dy++) {
-      for (let dx = -r; dx <= r; dx++) {
-        const d = Math.sqrt(dx*dx + dy*dy);
-        if (d > r + 0.1) continue;  // include orthogonal neighbors (d=1)
-        const x = px+dx, y = py+dy;
-        if (x<0||x>=FOX_CANVAS||y<0||y>=FOX_CANVAS) continue;
-        if (isFace(x,y)) continue;
-        if (grid[y][x] === 'K' || grid[y][x] === '.') {
-          if (dy < -0.3) grid[y][x] = 'L';
-          else if (dy > 0.3) grid[y][x] = 'D';
-          else grid[y][x] = 'O';
+      /* Evolution Grid */
+      .evo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+      }
+      .evo-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 4px;
+        padding: 16px 12px 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.15s;
+        position: relative;
+      }
+      .evo-card:hover {
+        border-color: var(--fox);
+        background: #201810;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 -2px rgba(249, 115, 22, 0.3);
+      }
+      .evo-card.active {
+        border-color: var(--fox);
+        background: #201810;
+      }
+      .evo-card.max {
+        border-color: var(--amber);
+        background: #201c10;
+      }
+      .evo-card.max:hover {
+        border-color: var(--amber);
+        box-shadow: 0 4px 0 -2px rgba(251, 191, 36, 0.3);
+      }
+      .evo-sprite-wrap {
+        width: 108px;
+        height: 108px;
+        margin: 0 auto 8px;
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+      .evo-sprite-wrap svg {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+      .evo-lv {
+        font-family: "Press Start 2P", monospace;
+        font-size: 9px;
+        color: var(--fg-mute);
+        margin-bottom: 4px;
+      }
+      .evo-name {
+        font-family: "Press Start 2P", monospace;
+        font-size: 10px;
+        color: var(--fg);
+        line-height: 1.4;
+      }
+      .evo-card.max .evo-name {
+        color: var(--amber);
+      }
+      .evo-flame {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        font-size: 12px;
+      }
+
+      /* Companion Grid */
+      .comp-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 14px;
+      }
+      .comp-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 4px;
+        padding: 16px;
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .comp-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 -2px rgba(255, 255, 255, 0.1);
+      }
+      .comp-card[data-comp="foxy"]:hover {
+        border-color: var(--fox);
+        background: #201810;
+      }
+      .comp-card[data-comp="mochi"]:hover {
+        border-color: var(--mochi);
+        background: #201a1d;
+      }
+      .comp-card[data-comp="byte"]:hover {
+        border-color: var(--byte);
+        background: #102018;
+      }
+      .comp-card[data-comp="nori"]:hover {
+        border-color: var(--nori);
+        background: #10201c;
+      }
+      .comp-card[data-comp="pico"]:hover {
+        border-color: var(--pico);
+        background: #101828;
+      }
+      .comp-card[data-comp="bubu"]:hover {
+        border-color: var(--bubu);
+        background: #201a10;
+      }
+      .comp-card[data-comp="kumo"]:hover {
+        border-color: var(--kumo);
+        background: #181c24;
+      }
+      .comp-sprite {
+        width: 72px;
+        height: 72px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+      }
+      .comp-sprite svg {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+      .comp-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .comp-name {
+        font-family: "Press Start 2P", monospace;
+        font-size: 10px;
+        color: var(--fg);
+        margin-bottom: 4px;
+      }
+      .comp-desc {
+        font-size: 12px;
+        color: var(--fg-dim);
+        line-height: 1.5;
+        margin-bottom: 6px;
+      }
+      .comp-tags {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+      .comp-tag {
+        font-size: 10px;
+        padding: 2px 6px;
+        border: 1px solid var(--border-bright);
+        border-radius: 2px;
+        color: var(--fg-mute);
+        font-family: "VT323", monospace;
+        font-size: 13px;
+      }
+
+      /* Mood Section */
+      .mood-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+      }
+      .mood-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 4px;
+        padding: 12px 8px;
+        text-align: center;
+      }
+      .mood-sprite {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 6px;
+        display: grid;
+        place-items: center;
+      }
+      .mood-name {
+        font-family: "Press Start 2P", monospace;
+        font-size: 8px;
+        color: var(--fg-dim);
+        line-height: 1.4;
+      }
+
+      /* Detail Panel */
+      .detail-panel {
+        background: var(--bg-elev);
+        border: 2px solid var(--border-bright);
+        border-radius: 4px;
+        padding: 24px;
+        margin-top: 20px;
+        display: none;
+      }
+      .detail-panel.show {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+      }
+      .detail-sprite {
+        width: 180px;
+        height: 180px;
+        flex-shrink: 0;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        display: grid;
+        place-items: center;
+      }
+      .detail-sprite svg {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+      .detail-info {
+        flex: 1;
+      }
+      .detail-name {
+        font-family: "Press Start 2P", monospace;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+      .detail-desc {
+        color: var(--fg-dim);
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+      .detail-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .detail-stat {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 8px 10px;
+      }
+      .detail-stat-label {
+        font-size: 11px;
+        color: var(--fg-mute);
+        margin-bottom: 2px;
+      }
+      .detail-stat-val {
+        font-family: "VT323", monospace;
+        font-size: 18px;
+        color: var(--green);
+      }
+
+      /* Spec blocks */
+      .spec-block {
+        background: var(--bg-term);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 16px;
+        margin-top: 20px;
+      }
+      .spec-title {
+        font-family: "Press Start 2P", monospace;
+        font-size: 10px;
+        color: var(--green);
+        margin-bottom: 12px;
+      }
+      .spec-row {
+        display: flex;
+        gap: 8px;
+        padding: 4px 0;
+        font-family: "VT323", monospace;
+        font-size: 16px;
+        border-bottom: 1px dashed var(--border);
+      }
+      .spec-row:last-child {
+        border-bottom: none;
+      }
+      .spec-key {
+        color: var(--cyan);
+        min-width: 120px;
+      }
+      .spec-val {
+        color: var(--fg-dim);
+      }
+      .spec-val.hl {
+        color: var(--amber);
+      }
+
+      .pixel-divider {
+        text-align: center;
+        color: var(--fg-mute);
+        font-family: "VT323", monospace;
+        font-size: 14px;
+        margin: 8px 0;
+        letter-spacing: 4px;
+      }
+
+      /* Footer */
+      .footer {
+        text-align: center;
+        padding: 32px 0;
+        border-top: 1px solid var(--border);
+        margin-top: 48px;
+      }
+      .footer p {
+        color: var(--fg-mute);
+        font-size: 12px;
+        font-family: "VT323", monospace;
+        font-size: 15px;
+      }
+
+      @media (max-width: 640px) {
+        .evo-grid {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+        }
+        .evo-card {
+          padding: 10px 6px 8px;
+        }
+        .evo-sprite-wrap {
+          width: 80px;
+          height: 80px;
+        }
+        .evo-sprite-wrap svg {
+          transform: scale(0.75);
+          transform-origin: center;
+        }
+        .comp-grid {
+          grid-template-columns: 1fr;
+        }
+        .detail-panel.show {
+          flex-direction: column;
+        }
+        .detail-sprite {
+          width: 140px;
+          height: 140px;
+        }
+        .hero-fox {
+          display: none;
         }
       }
-    }
-  }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="hero">
+        <div class="term-bar">
+          <span class="term-dot r"></span>
+          <span class="term-dot y"></span>
+          <span class="term-dot g"></span>
+          <span class="term-title">focuscode — companions.repl</span>
+        </div>
+        <div class="hero-term">
+          <div class="term-line">
+            <span class="prompt">$</span> <span class="cmd">focuscode companions list</span>
+          </div>
+          <div class="term-line">
+            <span class="comment">// FocusCode 伙伴系统 v0.4.0-beta.2</span>
+          </div>
+          <div class="term-line"><span class="comment">// 9 级进化形态 + 7 位可解锁伙伴</span></div>
+          <div class="term-line">
+            <span class="accent">loading</span> <span class="cyan">sprites</span
+            ><span class="accent">...</span> <span class="comment">✓ ready</span>
+          </div>
+          <div class="hero-fox" id="heroFox"></div>
+        </div>
+        <h1 class="hero-h1">伙伴图鉴<br />COMPANION CODEX</h1>
+        <p class="hero-sub">
+          每一位伙伴都是 20x20 / 32x32 点阵像素手绘，像童年拓麻歌子一样陪你写代码。
+        </p>
+      </div>
 
-  // White/cream tail tip
-  const tipStart = Math.floor(points.length * 0.78);
-  for (let i = tipStart; i < points.length; i++) {
-    const [px, py] = points[i];
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (Math.sqrt(dx*dx+dy*dy) > 1) continue;
-        const x = px+dx, y = py+dy;
-        if (x<0||x>=FOX_CANVAS||y<0||y>=FOX_CANVAS) continue;
-        if (isFace(x,y)) continue;
-        if (grid[y][x] === 'K' || grid[y][x] === 'O' || grid[y][x] === 'L' || grid[y][x] === 'D') {
-          grid[y][x] = 'C';
+      <div class="section">
+        <div class="sec-header">
+          <div class="sec-icon"><i data-lucide="flame"></i></div>
+          <span class="sec-title">九尾进化</span>
+          <span class="sec-sub">// evolution.tree</span>
+        </div>
+        <div class="evo-grid" id="evoGrid"></div>
+        <div class="detail-panel" id="evoDetail">
+          <div class="detail-sprite" id="evoDetailSprite"></div>
+          <div class="detail-info">
+            <div class="detail-name" id="evoDetailName"></div>
+            <div class="detail-desc" id="evoDetailDesc"></div>
+            <div class="detail-stats" id="evoDetailStats"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pixel-divider">· · ────────────── · ·</div>
+
+      <div class="section">
+        <div class="sec-header">
+          <div class="sec-icon"><i data-lucide="users"></i></div>
+          <span class="sec-title">全伙伴图鉴</span>
+          <span class="sec-sub">// companion.roster</span>
+        </div>
+        <div class="comp-grid" id="compGrid"></div>
+        <div class="detail-panel" id="compDetail">
+          <div class="detail-sprite" id="compDetailSprite"></div>
+          <div class="detail-info">
+            <div class="detail-name" id="compDetailName"></div>
+            <div class="detail-desc" id="compDetailDesc"></div>
+            <div class="detail-stats" id="compDetailStats"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pixel-divider">· · ────────────── · ·</div>
+
+      <div class="section">
+        <div class="sec-header">
+          <div class="sec-icon"><i data-lucide="heart"></i></div>
+          <span class="sec-title">心情状态</span>
+          <span class="sec-sub">// mood.states</span>
+        </div>
+        <div class="mood-grid" id="moodGrid"></div>
+      </div>
+
+      <div class="pixel-divider">· · ────────────── · ·</div>
+
+      <div class="section">
+        <div class="sec-header">
+          <div class="sec-icon"><i data-lucide="book"></i></div>
+          <span class="sec-title">设计规范</span>
+          <span class="sec-sub">// sprite.spec</span>
+        </div>
+        <div class="spec-block">
+          <div class="spec-title">// PIXEL_SPEC</div>
+          <div class="spec-row">
+            <span class="spec-key">grid_size</span
+            ><span class="spec-val"
+              ><span class="hl">16×16</span> / <span class="hl">24×24</span> /
+              <span class="hl">32×32</span></span
+            >
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">palette</span
+            ><span class="spec-val">3-5 色限色（含高光），阴影仅 1 层</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">outline</span
+            ><span class="spec-val">1px 深色轮廓，不使用反锯齿</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">rendering</span
+            ><span class="spec-val">image-rendering: pixelated / nearest-neighbor</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">silhouette</span
+            ><span class="spec-val">必须 64px 缩放下可辨识</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">eyes</span
+            ><span class="spec-val">1-2px 黑色眼珠 + 1px 白色高光点</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">tails</span
+            ><span class="spec-val">每级 +1 条尾巴，9 条呈扇形展开</span>
+          </div>
+        </div>
+        <div class="spec-block" style="margin-top: 12px">
+          <div class="spec-title">// FOX_EVO_TREE</div>
+          <div class="spec-row">
+            <span class="spec-key">Lv1 一尾</span
+            ><span class="spec-val">新手伙伴，1 条卷曲大尾巴</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">Lv2 二尾</span
+            ><span class="spec-val">第二条尾巴从旁长出，更灵动</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">Lv3 三尾</span
+            ><span class="spec-val">三条尾巴初步成型，尾尖泛白</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">Lv4 四尾</span
+            ><span class="spec-val">尾巴带火焰光晕，开始觉醒</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">Lv5 五尾</span><span class="spec-val">周身出现火星粒子效果</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">Lv6 六尾</span><span class="spec-val">耳朵与尾尖出现金色</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">Lv7 七尾</span
+            ><span class="spec-val">天狐形态，悬浮金色粒子</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">Lv8 八尾</span><span class="spec-val">圣狐光环，身体泛金光</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-key">Lv9 九尾</span
+            ><span class="spec-val"><span class="hl">仙狐完全体</span>，九条扇形尾+星光环绕</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>FocusCode Companions · pixel art sprite system · v0.4.1</p>
+        <p style="margin-top: 4px">↑ ↑ ↓ ↓ ← → ← → B A</p>
+      </div>
+    </div>
+
+    <script>
+      // ============================================================
+      // PIXEL SPRITE ENGINE
+      // Each sprite is a 2D array of single-character pixels.
+      // Palette maps chars to colors. '.' = transparent.
+      // ============================================================
+
+      const PX = 3; // pixel size multiplier for SVG rendering
+
+      // Palette for fox sprites
+      const FOX_PAL = {
+        ".": null,
+        K: "#2a1205", // dark outline
+        D: "#c05518", // dark orange shadow
+        O: "#f08030", // main orange
+        L: "#ffb060", // light orange highlight
+        C: "#fff5e0", // cream muzzle/belly/tail tip
+        W: "#ffffff", // white
+        M: "#d86820", // belly dark orange
+        E: "#1a0a00", // eye black
+        H: "#ffffff", // eye highlight
+        N: "#1a0a00", // nose black
+        P: "#ff9ab0", // pink ear inner
+        B: "#1a0a00", // dark paw socks (same as outline/nose)
+        G: "#ffd700", // gold (high evo)
+        Y: "#ffc020", // yellow flame
+        R: "#ff5020", // red flame
+        S: "#fff8a0", // sparkle
+        z: "#d0a060", // ZZZ sleep
+        "?": "#1a0a00", // question mark
+        "!": "#ff4040", // exclamation
+      };
+
+      // Companion palettes
+      const MOCHI_PAL = {
+        ".": null,
+        K: "#2d1a28",
+        D: "#d480aa",
+        O: "#f4a8d0",
+        L: "#fcd4e8",
+        C: "#fff0f8",
+        E: "#1a2a28",
+        H: "#ffffff",
+        N: "#1a2a28", // nose/mouth dark
+        P: "#ff6b9d",
+        B: "#ffb0cc", // blush
+        A: "#ff4080", // heart
+      };
+      const BYTE_PAL = {
+        ".": null,
+        K: "#0a2810",
+        D: "#1a6830",
+        O: "#3ac050",
+        L: "#60e878",
+        C: "#c0ffd0",
+        E: "#0a1a08",
+        H: "#ffffff",
+        N: "#0a1a08", // nose
+        P: "#80ffa0",
+      };
+      const NORI_PAL = {
+        ".": null,
+        K: "#0a2a20",
+        D: "#2a9878",
+        O: "#50d8a8",
+        L: "#80f0c8",
+        C: "#c0ffe8",
+        E: "#0a1a18",
+        H: "#ffffff",
+        N: "#0a1a18", // mouth
+        P: "#ff6b8a", // pink gills
+        A: "#ff4060", // mouth interior
+        B: "#c0f0ff", // bubble
+      };
+      const PICO_PAL = {
+        ".": null,
+        K: "#0a1828",
+        D: "#1a4888",
+        O: "#3880e0",
+        L: "#68b0ff",
+        C: "#f0f6ff", // white belly
+        W: "#ffffff",
+        E: "#0a0a18",
+        H: "#ffffff",
+        N: "#f8a020", // orange beak/feet
+      };
+      const BUBU_PAL = {
+        ".": null,
+        K: "#2a1805",
+        D: "#885010",
+        O: "#c88030",
+        L: "#e0a860",
+        C: "#f0d8b0", // cream muzzle
+        E: "#1a0a00",
+        H: "#ffffff",
+        N: "#1a0a00", // nose
+        P: "#ff9999", // inner ear
+        A: "#a06020", // cookie
+        B: "#302010", // chocolate chip
+      };
+      const KUMO_PAL = {
+        ".": null,
+        K: "#1a2030",
+        D: "#586880",
+        O: "#8898b0",
+        L: "#b0c0d0",
+        C: "#d8e0e8",
+        E: "#1a1a28",
+        H: "#ffffff",
+        N: "#1a1a28", // mouth
+        P: "#d08090", // nose
+        A: "#604020", // coffee
+        B: "#ffffff", // steam
+      };
+
+      // ============================================================
+      // FOX EVOLUTION SPRITES (24x24)
+      // 1-tail base fox. Additional tails are overlaid for higher levels.
+      // ============================================================
+
+      // Base fox body (sitting, front-facing, cute pixel fox)
+      // K=black outline, D=dark orange, O=main orange, L=light orange,
+      // C=cream/white bib, M=dark belly orange, E=eye, H=eye highlight, P=pink ear/nose, N=dark nose/mouth
+      // FOX BODY - redesigned for clear fox characteristics
+      // Pointed triangular ears, slender snout, white cheek/tip, dark paws, bushy white chest
+      // K=dark outline, D=dark orange shadow, O=main orange, L=light orange highlight
+      // C=cream/white, P=pink ear inner, E=eye, H=eye highlight, N=nose, M=belly, W=white tip
+      // FOX BODY (24x24) - classic fox: triangular pointy ears, slender face, cream cheeks/bib, dark sock paws
+      // K=outline D=dark O=orange L=light C=cream M=belly E=eye H=eye-highlight N=nose P=pink
+      // FOX_BODY - Sitting red fox, 24x24, symmetric front view
+      // Key fox traits: tall pointed triangular ears, narrow white muzzle,
+      // almond eyes with inner-corner highlight, small black nose,
+      // white chest bib, dark sock paws, fluffy pear-shaped body
+      // K=outline D=shadow O=orange L=highlight C=cream E=eye-black H=eye-highlight N=nose P=pink B=dark-paw M=belly
+      const FOX_BODY = [
+        "........K......K........",
+        ".......KKK....KKK.......",
+        ".......KPPK..KPPK.......",
+        "......KPPOOKKOOPPK......",
+        ".....KOOOOKKKKOOOOK.....",
+        ".....KOOOOOOOOOOOOK.....",
+        "....KOOOOOOOOOOOOOOK....",
+        "...KOEEHOOOOOOOOHEEOK...",
+        "...KOOOCCCCCCCCCCOOOK...",
+        "..KOOOCCCCCCCCCCCCOOOK..",
+        "..KOOCCCCCCCCCCCCCCOOK..",
+        "..KOOCCCCCCNNCCCCCCOOK..",
+        "..KOOCCCCCCKKCCCCCCOOK..",
+        "...KOCCCCCCCCCCCCCCOK...",
+        "...KODCCCCCCCCCCCCDOK...",
+        "....KODCCCCCCCCCCDOK....",
+        "....KODDMMMMMMMMDDOK....",
+        "....KODMMMMMMMMMMDOK....",
+        "....KOOOOOOOOOOOOOOK....",
+        ".....KOOOOOOOOOOOOK.....",
+        ".....KLLLLLLLLLLLLK.....",
+        ".....KKK..KKKK..KKK.....",
+        ".....KBK..KBBK..KBK.....",
+        "........................",
+      ];
+
+      // Tail shapes - thin distinct plumes fanning UPWARD in a kitsune fan behind the fox
+      // 40x40 canvas gives plenty of room for tall tail fanning
+      const FOX_CANVAS = 40;
+      const BX = 8; // center 24px body in 40px canvas (8px margin each side)
+      const BY = 12; // body starts at row 12, leaving 12px above for tall tail fan
+
+      function foxTails(n) {
+        const tails = [];
+        // Tails fan upward and outward in a wide semicircle behind the fox.
+        // Wider spread = more tails visible. Even-count tails have no center tail,
+        // odd-count tails do, making 3 vs 6 instantly distinguishable.
+        // 1 tail: classic single curled tail arcing up-right
+        // 2+ tails: symmetric fan. Wider angle as count grows.
+        const maxAngle = n === 1 ? 0.35 : n <= 3 ? 0.9 : n <= 6 ? 1.15 : 1.35;
+        let angles;
+        if (n === 1) {
+          angles = [0.35];
+        } else {
+          angles = [];
+          for (let i = 0; i < n; i++) {
+            angles.push(-maxAngle + (2 * maxAngle * i) / (n - 1));
+          }
+        }
+        for (let i = 0; i < n; i++) {
+          tails.push(makeTailPath(angles[i], n, i));
+        }
+        return tails;
+      }
+
+      function makeTailPath(angle, total, idx) {
+        const absA = Math.abs(angle);
+        // Tail emerges from upper back (sprite row 6-7, behind shoulder area)
+        const baseX = 12 + BX;
+        const baseY = 7 + BY;
+
+        // Tail length: outer tails are noticeably longer for a dramatic fan
+        // This makes 3 vs 6 vs 9 tails visually obvious from silhouette alone
+        const len = 11 + absA * 5 + (total > 3 ? 2 : 0);
+
+        // Direction: primarily UP, with lateral spread at tips
+        const dirX = Math.sin(angle) * 0.85;
+        const dirY = -Math.cos(angle) * 0.95; // slightly stretched upward
+
+        // End point
+        const endX = Math.round(baseX + dirX * len);
+        const endY = Math.round(baseY + dirY * len);
+
+        // Clamp to canvas
+        const fx = Math.max(1, Math.min(FOX_CANVAS - 2, endX));
+        const fy = Math.max(1, Math.min(FOX_CANVAS - 2, endY));
+
+        // Cubic bezier control points for a graceful UPWARD plume curve
+        // cp1: starts straight up from back, cp2: flares outward toward tip
+        const cp1X = Math.round(baseX + dirX * len * 0.15);
+        const cp1Y = Math.round(baseY - len * 0.35);
+        const cp2X = Math.round(baseX + dirX * len * 0.55);
+        const cp2Y = Math.round(baseY - len * 0.7);
+
+        const points = [];
+        for (let t = 0; t <= 1; t += 0.035) {
+          const u = 1 - t;
+          const x = Math.round(
+            u * u * u * baseX + 3 * u * u * t * cp1X + 3 * u * t * t * cp2X + t * t * t * fx,
+          );
+          const y = Math.round(
+            u * u * u * baseY + 3 * u * u * t * cp1Y + 3 * u * t * t * cp2Y + t * t * t * fy,
+          );
+          points.push([
+            Math.max(0, Math.min(FOX_CANVAS - 1, x)),
+            Math.max(0, Math.min(FOX_CANVAS - 1, y)),
+          ]);
+        }
+        return { points, angle, total, idx };
+      }
+
+      function drawTailOnGrid(grid, tail) {
+        const { points, total, idx, angle } = tail;
+
+        // Face exclusion: tails go behind body (body overwrites), but we prevent tail
+        // pixels from appearing directly on the face/eyes area. Ears and top of head are fine.
+        // In body-coords: face is rows 5-13 (eyes-nose-muzzle), cols 7-17
+        const FACE_TOP = 5,
+          FACE_BOT = 13,
+          FACE_L = 7,
+          FACE_R = 17;
+        const isFace = (x, y) => {
+          const bx = x - BX,
+            by = y - BY;
+          return by >= FACE_TOP && by <= FACE_BOT && bx >= FACE_L && bx <= FACE_R;
+        };
+
+        // Draw tail as a THIN distinct plume with dark outline
+        // Tails are 1px thick (radius 1 at widest) to keep them SEPARATE and COUNTABLE
+        for (let pi = 0; pi < points.length; pi++) {
+          const [px, py] = points[pi];
+          const progress = pi / (points.length - 1);
+
+          // Thin tails: base 1px, body 1px (never 2px!), tip tapers to 0
+          let r;
+          if (progress < 0.1)
+            r = 1; // base
+          else if (progress < 0.75)
+            r = 1; // body - thin!
+          else if (progress < 0.9)
+            r = 1; // approaching tip
+          else r = 0; // very tip is single pixel
+
+          // Dark outline (1px around)
+          for (let dy = -r - 1; dy <= r + 1; dy++) {
+            for (let dx = -r - 1; dx <= r + 1; dx++) {
+              const d = Math.sqrt(dx * dx + dy * dy);
+              if (d > r + 0.8) continue;
+              const x = px + dx,
+                y = py + dy;
+              if (x < 0 || x >= FOX_CANVAS || y < 0 || y >= FOX_CANVAS) continue;
+              if (isFace(x, y)) continue;
+              if (grid[y][x] === ".") grid[y][x] = "K";
+            }
+          }
+        }
+
+        // Fill interior - cross-shaped fill for solid but thin tails
+        // Uses d <= r (instead of d < r-0.2) to include orthogonal neighbors,
+        // giving a 3px-wide solid line that's still thin enough for countability
+        for (let pi = 0; pi < points.length; pi++) {
+          const [px, py] = points[pi];
+          const progress = pi / (points.length - 1);
+
+          let r;
+          if (progress < 0.1) r = 1;
+          else if (progress < 0.75) r = 1;
+          else if (progress < 0.88) r = 1;
+          else r = 0;
+
+          for (let dy = -r; dy <= r; dy++) {
+            for (let dx = -r; dx <= r; dx++) {
+              const d = Math.sqrt(dx * dx + dy * dy);
+              if (d > r + 0.1) continue; // include orthogonal neighbors (d=1)
+              const x = px + dx,
+                y = py + dy;
+              if (x < 0 || x >= FOX_CANVAS || y < 0 || y >= FOX_CANVAS) continue;
+              if (isFace(x, y)) continue;
+              if (grid[y][x] === "K" || grid[y][x] === ".") {
+                if (dy < -0.3) grid[y][x] = "L";
+                else if (dy > 0.3) grid[y][x] = "D";
+                else grid[y][x] = "O";
+              }
+            }
+          }
+        }
+
+        // White/cream tail tip
+        const tipStart = Math.floor(points.length * 0.78);
+        for (let i = tipStart; i < points.length; i++) {
+          const [px, py] = points[i];
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (Math.sqrt(dx * dx + dy * dy) > 1) continue;
+              const x = px + dx,
+                y = py + dy;
+              if (x < 0 || x >= FOX_CANVAS || y < 0 || y >= FOX_CANVAS) continue;
+              if (isFace(x, y)) continue;
+              if (
+                grid[y][x] === "K" ||
+                grid[y][x] === "O" ||
+                grid[y][x] === "L" ||
+                grid[y][x] === "D"
+              ) {
+                grid[y][x] = "C";
+              }
+            }
+          }
+        }
+
+        // Flame tails Lv4+
+        if (total >= 4) {
+          for (let i = Math.floor(points.length * 0.85); i < points.length; i++) {
+            const [px, py] = points[i];
+            const flick = ((i * 3 + idx * 2) % 3) - 1;
+            const fx = px + flick,
+              fy = py - 2;
+            if (fx >= 0 && fx < FOX_CANVAS && fy >= 0 && !isFace(fx, fy) && grid[fy][fx] === ".")
+              grid[fy][fx] = "Y";
+            const fx2 = px,
+              fy2 = py - 1;
+            if (
+              fx2 >= 0 &&
+              fx2 < FOX_CANVAS &&
+              fy2 >= 0 &&
+              !isFace(fx2, fy2) &&
+              (grid[fy2][fx2] === "." || grid[fy2][fx2] === "C")
+            )
+              grid[fy2][fx2] = "R";
+          }
+        }
+
+        // Gold tips Lv7+
+        if (total >= 7) {
+          for (let i = Math.floor(points.length * 0.9); i < points.length; i++) {
+            const [px, py] = points[i];
+            for (let dy = -1; dy <= 0; dy++) {
+              const x = px,
+                y = py + dy;
+              if (x >= 0 && x < FOX_CANVAS && y >= 0 && y < FOX_CANVAS && !isFace(x, y))
+                grid[y][x] = "G";
+            }
+          }
+        }
+
+        // Sparkle Lv9
+        if (total >= 9) {
+          const [px, py] = points[points.length - 1];
+          for (const [dx, dy] of [
+            [0, -2],
+            [1, -1],
+            [-1, -1],
+          ]) {
+            const x = px + dx,
+              y = py + dy;
+            if (
+              x >= 0 &&
+              x < FOX_CANVAS &&
+              y >= 0 &&
+              y < FOX_CANVAS &&
+              grid[y][x] === "." &&
+              !isFace(x, y)
+            )
+              grid[y][x] = "S";
+          }
         }
       }
-    }
-  }
 
-  // Flame tails Lv4+
-  if (total >= 4) {
-    for (let i = Math.floor(points.length * 0.85); i < points.length; i++) {
-      const [px, py] = points[i];
-      const flick = ((i * 3 + idx * 2) % 3) - 1;
-      const fx = px + flick, fy = py - 2;
-      if (fx>=0&&fx<FOX_CANVAS&&fy>=0&&!isFace(fx,fy) && grid[fy][fx] === '.') grid[fy][fx] = 'Y';
-      const fx2 = px, fy2 = py - 1;
-      if (fx2>=0&&fx2<FOX_CANVAS&&fy2>=0&&!isFace(fx2,fy2) && (grid[fy2][fx2] === '.' || grid[fy2][fx2] === 'C'))
-        grid[fy2][fx2] = 'R';
-    }
-  }
+      // Build fox sprite for level n (36x36)
+      function buildFoxSprite(n) {
+        const grid = new Array(FOX_CANVAS).fill(null).map(() => new Array(FOX_CANVAS).fill("."));
 
-  // Gold tips Lv7+
-  if (total >= 7) {
-    for (let i = Math.floor(points.length * 0.9); i < points.length; i++) {
-      const [px, py] = points[i];
-      for (let dy = -1; dy <= 0; dy++) {
-        const x = px, y = py+dy;
-        if (x>=0&&x<FOX_CANVAS&&y>=0&&y<FOX_CANVAS&&!isFace(x,y)) grid[y][x] = 'G';
+        // 1. Draw tails first (behind body)
+        const tails = foxTails(n);
+        for (const tail of tails) {
+          drawTailOnGrid(grid, tail);
+        }
+
+        // 2. Draw body on top (at offset BX, BY)
+        for (let y = 0; y < 24; y++) {
+          for (let x = 0; x < 24; x++) {
+            const c = FOX_BODY[y][x];
+            if (c !== ".") {
+              grid[y + BY][x + BX] = c;
+            }
+          }
+        }
+
+        // 3. Evolution effects
+        if (n >= 4) addFoxSparks(grid, n);
+        if (n >= 6) paintFoxGold(grid);
+        if (n >= 8) addFoxAura(grid, n);
+        if (n >= 9) addFoxHalo(grid);
+
+        return grid.map((r) => r.join(""));
       }
-    }
-  }
 
-  // Sparkle Lv9
-  if (total >= 9) {
-    const [px, py] = points[points.length - 1];
-    for (const [dx, dy] of [[0,-2],[1,-1],[-1,-1]]) {
-      const x = px+dx, y = py+dy;
-      if (x>=0&&x<FOX_CANVAS&&y>=0&&y<FOX_CANVAS && grid[y][x] === '.' && !isFace(x,y)) grid[y][x] = 'S';
-    }
-  }
-}
-
-// Build fox sprite for level n (36x36)
-function buildFoxSprite(n) {
-  const grid = new Array(FOX_CANVAS).fill(null).map(() => new Array(FOX_CANVAS).fill('.'));
-
-  // 1. Draw tails first (behind body)
-  const tails = foxTails(n);
-  for (const tail of tails) {
-    drawTailOnGrid(grid, tail);
-  }
-
-  // 2. Draw body on top (at offset BX, BY)
-  for (let y = 0; y < 24; y++) {
-    for (let x = 0; x < 24; x++) {
-      const c = FOX_BODY[y][x];
-      if (c !== '.') {
-        grid[y + BY][x + BX] = c;
+      function addFoxSparks(grid, level) {
+        // Sparks around perimeter for fire fox - positioned around the 40x40 canvas
+        const sparks = [
+          [BX + 2, BY + 0, "Y"],
+          [BX + 3, BY - 1, "S"],
+          [BX + 20, BY - 1, "Y"],
+          [BX + 22, BY + 1, "S"],
+          [BX - 1, BY + 10, "R"],
+          [BX + 25, BY + 8, "Y"],
+          [BX + 0, BY + 18, "Y"],
+          [BX + 24, BY + 20, "S"],
+          [BX + 8, BY - 3, "S"],
+          [BX + 16, BY - 3, "Y"],
+        ];
+        const count = Math.min((level - 3) * 2, sparks.length);
+        for (let i = 0; i < count; i++) {
+          const [x, y, c] = sparks[i];
+          if (x >= 0 && x < FOX_CANVAS && y >= 0 && y < FOX_CANVAS && grid[y][x] === ".")
+            grid[y][x] = c;
+        }
       }
-    }
-  }
 
-  // 3. Evolution effects
-  if (n >= 4) addFoxSparks(grid, n);
-  if (n >= 6) paintFoxGold(grid);
-  if (n >= 8) addFoxAura(grid, n);
-  if (n >= 9) addFoxHalo(grid);
-
-  return grid.map(r => r.join(''));
-}
-
-function addFoxSparks(grid, level) {
-  // Sparks around perimeter for fire fox - positioned around the 40x40 canvas
-  const sparks = [
-    [BX+2, BY+0, 'Y'], [BX+3, BY-1, 'S'],
-    [BX+20, BY-1, 'Y'], [BX+22, BY+1, 'S'],
-    [BX-1, BY+10, 'R'], [BX+25, BY+8, 'Y'],
-    [BX+0, BY+18, 'Y'], [BX+24, BY+20, 'S'],
-    [BX+8, BY-3, 'S'], [BX+16, BY-3, 'Y'],
-  ];
-  const count = Math.min((level - 3) * 2, sparks.length);
-  for (let i = 0; i < count; i++) {
-    const [x,y,c] = sparks[i];
-    if (x>=0&&x<FOX_CANVAS&&y>=0&&y<FOX_CANVAS && grid[y][x] === '.') grid[y][x] = c;
-  }
-}
-
-function paintFoxGold(grid) {
-  // Gold ear tips - ears are at rows 1-3 of body (BY+1 to BY+3), cols 6-7 left, 16-17 right
-  for (let dy = 0; dy <= 2; dy++) {
-    const y = BY + 1 + dy;
-    for (let dx = -1; dx <= 1; dx++) {
-      const x = BX + 6 + dx;
-      if (grid[y] && (grid[y][x] === 'K' || grid[y][x] === 'L' || grid[y][x] === 'P')) grid[y][x] = 'G';
-    }
-    for (let dx = -1; dx <= 1; dx++) {
-      const x = BX + 16 + dx;
-      if (grid[y] && (grid[y][x] === 'K' || grid[y][x] === 'L' || grid[y][x] === 'P')) grid[y][x] = 'G';
-    }
-  }
-  // Gold chest gem
-  const cx = BX+12, cy = BY+16;
-  if (grid[cy] && grid[cy][cx] === 'M') grid[cy][cx] = 'G';
-  if (grid[cy] && grid[cy][cx-1] === 'M') grid[cy][cx-1] = 'G';
-  if (grid[cy] && grid[cy][cx+1] === 'M') grid[cy][cx+1] = 'G';
-}
-
-function addFoxAura(grid, level) {
-  const auraPts = [
-    [BX+4, BY+2, 'S'], [BX+19, BY+2, 'G'], [BX+26, BY+8, 'S'],
-    [BX-2, BY+12, 'G'], [BX+26, BY+14, 'S'], [Math.max(0,BX-3), BY+20, 'G'],
-    [BX+23, BY+22, 'S'], [BX+3, BY+25, 'G'],
-  ];
-  for (const [x,y,c] of auraPts) {
-    if (x>=0&&x<FOX_CANVAS&&y>=0&&y<FOX_CANVAS && grid[y][x] === '.') grid[y][x] = c;
-  }
-}
-
-function addFoxHalo(grid) {
-  // Divine halo above head for Lv9
-  const haloY = BY - 4;
-  const haloX = BX + 12;
-  if (haloY < 0) return;
-  for (let dx = -5; dx <= 5; dx++) {
-    const x = haloX+dx, y = haloY;
-    if (x>=0&&x<FOX_CANVAS&&y>=0 && grid[y][x] === '.') {
-      grid[y][x] = (dx === 0 || Math.abs(dx) === 5) ? 'G' : 'Y';
-    }
-  }
-  for (const [dx,dy] of [[-6,BY-2],[6,BY-2],[-4,BY-5],[4,BY-5],[0,BY-7]]) {
-    const x = BX+12+dx, y = dy;
-    if (x>=0&&x<FOX_CANVAS&&y>=0&&y<FOX_CANVAS && grid[y][x] === '.') grid[y][x] = 'S';
-  }
-}
-
-// ============================================================
-// COMPANION SPRITES (20x20 base)
-// ============================================================
-
-// MOCHI - Cloud cat (pink fluffy)
-const MOCHI_SPRITE = [
-  "....................",
-  "....KK......KK......",
-  "...KDDK....KDDK.....",
-  "...KOPK....KOPK.....",
-  "...KOPPKKKKPPOK.....",
-  "..KOPPPPPPPPPPOK....",
-  "..KOPPEOPPOPEPPO....",
-  "..KOPPHEPPHEPPO.....",
-  "..KOPPPPNNPPPPO.....",
-  "..KOPPPPAAPPPPO.....",
-  ".KOPPPPPPPPPPPPO....",
-  ".KOPCCCCPPCCCCOP....",
-  ".KOPCCBBCCCBBCOP....",
-  ".KOCCCCCCCCCCCCO....",
-  "..KOCCCCCCCCCCCO....",
-  "..KOOOOOOOOOOOOK....",
-  "..KLLLLLLLLLLLK.....",
-  "...KKK.KKKK.KKK.....",
-  "....K.K..K..K.K.....",
-  "....................",
-];
-
-// BYTE - Pixel fox (green, blocky)
-const BYTE_SPRITE = [
-  "....................",
-  "....KK....KK........",
-  "...KDDK..KDDK.......",
-  "..KDOOKKKKOODK......",
-  "..KOOOOOOOOOOK......",
-  ".KOOOEEOOEEOOOK.....",
-  ".KOOOHEOOHEOOOK.....",
-  ".KOOOOONNOOOOOK.....",
-  ".KOOOOONNOOOOOK.....",
-  ".KOOCCOOOOCCOOK.....",
-  "KOOCCCCCCCCCCCOO....",
-  "KOCCCOOOOOOCCCOK....",
-  "KOCOOOOOOOOOOCOK....",
-  "KOCOOOOOOOOOOCOK....",
-  ".KOOOOOOOOOOOOK.....",
-  ".KOOOOOOOOOOOK......",
-  "..KKKOOOOOOKKK......",
-  "...KK.KK.KK.KK......",
-  "...KK.KK.KK.KK......",
-  "....................",
-];
-
-// NORI - Axolotl (mint green, with pink gills)
-const NORI_SPRITE = [
-  "....................",
-  "...PPP....PPP.......",
-  "...P.P....P.P.......",
-  "...P.KKKKKK.P.......",
-  "..KKOOOOOOOOKK......",
-  ".KOOOOOOOOOOOOK.....",
-  "KOEEE.OOOOO.EEEO....",
-  "KOHEEO.OOOO.HEEO....",
-  "KOOOOOOONNOOOOO.....",
-  "KOOOOOOAAAOOOOO.....",
-  "KOCCCOOOOOOCCCO.....",
-  "KOCCCCCCCCCCCCO.....",
-  ".KCCCCCCCCCCCOK.....",
-  ".KOOOOOOOOOOOK......",
-  "..KOOOOOOOOOK.......",
-  "..KLLLLLLLLLK.......",
-  "...KKK.KK.KKK.......",
-  "....K..KK..K........",
-  "....B..BB..B........",
-  "....................",
-];
-
-// PICO - Penguin (blue/white, orange beak)
-const PICO_SPRITE = [
-  "....................",
-  "......KKKKKK........",
-  ".....KDDDDDDK.......",
-  "....KDDDDDDDDK......",
-  "....KDOOOOOODK......",
-  "...KOOEEOOEEOOK.....",
-  "...KOOHEOOHEOOK.....",
-  "...KOONNNOOOOOK.....",
-  "...KOOONNNOOOOK.....",
-  "..KKCCCCCCCCCKK.....",
-  ".KDDCCCCCCCCCDDK....",
-  "KDDCCCCCNCCCCCDDK...",
-  "KDDCCCCCCCCCCCDDK...",
-  "KDDCCCCCCCCCCCDDK...",
-  ".KDDCCCCCCCCCDDK....",
-  "..KDDCCCCCCCDDK.....",
-  "...KDDDDDDDDDK......",
-  "...KNNK..KNNK.......",
-  "....K.K..K.K........",
-  "....................",
-];
-
-// BUBU - Bear (brown, holding cookie)
-const BUBU_SPRITE = [
-  "....................",
-  "..KK........KK......",
-  ".KDDK......KDDK.....",
-  ".KODKKKKKKKDOK......",
-  "KODOOOOOOOOODOK.....",
-  "KOOOEEOOOOEEOOOK....",
-  "KOOOHEOOOHEOOOOK....",
-  "KOOOOOONNOOOOOO.....",
-  "KOOOPPNNNNPPOOOO....",
-  "KOOPPPAAAAAPPOO.....",
-  "KOOPPABAABAPPOOK....",
-  "KOOPPABBBBAPPOOK....",
-  "KOOOPAAAAAAAPOOK....",
-  ".KOOCCCCCCCCOOK.....",
-  ".KOOCCCCCCCCCOK.....",
-  "..KOOOOOOOOOOK......",
-  "..KLLLLLLLLLK.......",
-  "...KKK.KK.KKK.......",
-  "...KK.KK.KK.KK......",
-  "....................",
-];
-
-// KUMO - Capybara (gray, with coffee)
-const KUMO_SPRITE = [
-  "....................",
-  "....B..B..B..B......",
-  "....................",
-  "....KKKKKKKKKK......",
-  "...KDDDDDDDDDDK.....",
-  "..KDOOOOOOOOODK.....",
-  "..KOOOEEOEEOOOK.....",
-  "..KOOO.HE.HEOO......",
-  "..KOOOOOPPOOOO......",
-  "..KOOONPPNOOOO......",
-  "..KOOOAAAAOOOO......",
-  ".KOOOOBBBOOOOO......",
-  ".KOOCCAABBACCOO.....",
-  ".KOOCCAABBACCOO.....",
-  ".KOOOOBBBOOOOO......",
-  "..KOOOOOOOOOOK......",
-  "..KLLLLLLLLLLK......",
-  "...KKK.KKKK.KK......",
-  "...KK..KK..KK.......",
-  "....................",
-];
-
-// FOXY (companion version - same as Lv1 fox but smaller, 20x20)
-const FOXY_COMPANION = [
-  "....................",
-  ".......KK.KK........",
-  "......KOPPOOK.......",
-  ".....KOPPPPOK.......",
-  "....KOMMMMMMOK......",
-  "...KOMMMEMMMEMO.....",
-  "...KOMMMHMMMHMO.....",
-  "..KOMMMMMMNMMMMO....",
-  "..KOMMMMNNNMMMMO....",
-  "..KOMCCCCCCCCCMO....",
-  ".KOMCCCCCCCCCCMO....",
-  ".KMCCCCMMMMCCCMO....",
-  ".KMCCCMMMMMMCCM.....",
-  "..KCCMMMMMMMCCM.....",
-  "..KCMMMMMMMMMCK.....",
-  "...KMMMMMMMMMK......",
-  "...KMMMMMMMMK.......",
-  "....KKMMMMKK........",
-  "....K.KKKK.K........",
-  "....................",
-];
-
-// ============================================================
-// MOOD SPRITES (variations on the base fox)
-// ============================================================
-
-const MOOD_SPRITES = {
-  happy: [
-    "....................",
-    ".......KK.KK........",
-    "......KOPPOOK.......",
-    ".....KOPPPPOK.......",
-    "....KOMMMMMMOK......",
-    "...KOMMCCMMMCCMO....",
-    "...KMMMCCMMMCCMM....",
-    "..KOMMMMMMNMMMMMO...",
-    "..KOMMMMCCCMMMMMO...",
-    "..KOMCCCCCCCCCMO....",
-    ".KOMCCCCCCCCCCMO....",
-    ".KMCCCCMMMMCCCMO....",
-    ".KMCCCMMMMMMCCM.....",
-    "..KCCMMMMMMMCCM.....",
-    "..KCMMMMMMMMMCK.....",
-    "...KMMMMMMMMMK......",
-    "...KMMMMMMMMK.......",
-    "....KKMMMMKK........",
-    "....K.KKKK.K........",
-    "....................",
-  ],
-  focus: [
-    "....................",
-    ".......KK.KK........",
-    "......KOPPOOK.......",
-    ".....KOPPPPOK.......",
-    "....KOMMMMMMOK......",
-    "...KOMMMMMMMMMO.....",
-    "...KMMMEEMMEEMM.....",
-    "..KOMMMMMMNMMMMMO...",
-    "..KOMMMMMMNMMMMMO...",
-    "..KOMCCCCCCCCCMO....",
-    ".KOMCCCCCCCCCCMO....",
-    ".KMCCCCMMMMCCCMO....",
-    ".KMCCCMMMMMMCCM.....",
-    "..KCCMMMMMMMCCM.....",
-    "..KCMMMMMMMMMCK.....",
-    "...KMMMMMMMMMK......",
-    "...KMMMMMMMMK.......",
-    "....KKMMMMKK........",
-    "....K.KKKK.K........",
-    "....................",
-  ],
-  sleep: [
-    "....................",
-    ".......KK.KK........",
-    "......KOPPOOK.......",
-    ".....KOPPPPOK.......",
-    "....KOMMMMMMOK......",
-    "...KOMMMMMMMMMO.....",
-    "...KMMMKMMMKMMM.....",
-    "..KOMMMMMMOMMMMO....",
-    "..KOMMMMMPPMMMMO....",
-    "..KOMCCCCCCCCCMO....",
-    ".KOMCCCCCCCCCCMO....",
-    ".KMCCCCMMMMCCCMO....",
-    ".KMCCCMMMMMMCCM.....",
-    "..KCCMMMMMMMCCM.....",
-    "..KCMMMMMMMMMCK.....",
-    "...KMMMMMMMMMK......",
-    "...KMMMMMMMMK.......",
-    "....KKMMMMKK........",
-    "....K.KKKK.K........",
-    "....................",
-  ],
-  excited: [
-    "....................",
-    "......SKK.KKS.......",
-    "......KOPPOOK.......",
-    "....SKOPPPPOKS......",
-    "....KOMMMMMMOK......",
-    "...KOMMOHMMHOMMO....",
-    "...KMMMOHMMHOMMM....",
-    "..KOMMMMMMNMMMMMOS..",
-    "..KOMMMMDDDMMMMMO...",
-    "..KOMCCCCCCCCCMO....",
-    ".KOMCCCCCCCCCCMO....",
-    ".KMCCCCMMMMCCCMO....",
-    ".KMCCCMMMMMMCCM.....",
-    "..KCCMMMMMMMCCM.....",
-    "..KCMMMMMMMMMCK.....",
-    "...KMMMMMMMMMK......",
-    "...KMMMMMMMMK.......",
-    "....KKMMMMKK........",
-    "....K.KKKK.K........",
-    "....................",
-  ],
-  debug: [
-    "....................",
-    ".......KK.KK........",
-    "......KOPPOOK.......",
-    ".....KOPPPPOK.......",
-    "....KOMMMMMMOK......",
-    "...KOMMEMMMEMMO.....",
-    "...KMMMEEMMEEMM.....",
-    "..KOMMMMMMNMMMMMO...",
-    "..KOMMMMMMNMMMMMO...",
-    "..KOMCCCCCCCCCMO....",
-    ".KOMCCCCCCCCCCMO....",
-    ".KMCCCCMMMMCCCMO....",
-    ".KMCCCMMMMMMCCM.....",
-    "..KCCMMMMMMMCCM.....",
-    "..KCMMMMMMMMMCK.....",
-    "...KMMMMMMMMMK......",
-    "...KMMMMMMMMK.......",
-    "....KKMMMMKK........",
-    "....K.KKKK.K........",
-    "....................",
-  ],
-  error: [
-    "....................",
-    ".......KK.KK........",
-    "......KOPPOOK.......",
-    ".....KOPPPPOK.......",
-    "....KOMMMMMMOK......",
-    "...KOMMDMMDMMMO.....",
-    "...KMMMDDMMDDMM.....",
-    "..KOMMMMMMNMMMMMO...",
-    "..KOMMMMMMDMMMMO....",
-    "..KOMCCCCCCCCCMO....",
-    ".KOMCCCCCCCCCCMO....",
-    ".KMCCCCMMMMCCCMO....",
-    ".KMCCCMMMMMMCCM.....",
-    "..KCCMMMMMMMCCM.....",
-    "..KCMMMMMMMMMCK.....",
-    "...KMMMMMMMMMK......",
-    "...KMMMMMMMMK.......",
-    "....KKMMMMKK........",
-    "....K.KKKK.K........",
-    "....................",
-  ],
-};
-
-// ============================================================
-// DATA
-// ============================================================
-
-const foxLevels = [
-  { lv:1, name:"一尾小狐", desc:"刚孵化的新手伙伴，一条蓬松大尾巴总是卷成问号形。喜欢在你 commit 时蹭你的光标。", stats:{HP:10,ATK:3,LOYALTY:80,SKILL:"代码高亮"} },
-  { lv:2, name:"二尾幼狐", desc:"第二条尾巴从右侧冒出，还不太协调，偶尔会两条尾巴打结。开始学会识别你的编码习惯。", stats:{HP:25,ATK:6,LOYALTY:85,SKILL:"括号配对"} },
-  { lv:3, name:"三尾灵狐", desc:"三条尾巴灵活摆动，尾尖泛出雪白。可以感知到代码里潜藏的 bug，会在出错前轻轻摇尾巴。", stats:{HP:45,ATK:10,LOYALTY:90,SKILL:"Bug 预感"} },
-  { lv:4, name:"四尾焰狐", desc:"尾巴尖跃出橙色火星，奔跑时留下火焰残影。在你重构代码时会兴奋地围着终端转圈。", stats:{HP:70,ATK:18,LOYALTY:92,SKILL:"重构加速"} },
-  { lv:5, name:"五尾炎狐", desc:"周身飘浮红色火星粒子，眼睛在深夜会发出微光。深夜 debug 时它最精神，是你最好的守夜伙伴。", stats:{HP:100,ATK:28,LOYALTY:94,SKILL:"深夜 Debug"} },
-  { lv:6, name:"六尾煌狐", desc:"耳朵和尾尖染上金色，行走时留下淡金色轨迹。能嗅出 PR 里的微妙问题，审查速度翻倍。", stats:{HP:140,ATK:40,LOYALTY:95,SKILL:"PR 嗅探"} },
-  { lv:7, name:"七尾天狐", desc:"悬浮的金色粒子环绕四周，脚掌仿佛不沾地。进入心流状态时会和你一起发光。", stats:{HP:190,ATK:55,LOYALTY:97,SKILL:"心流共振"} },
-  { lv:8, name:"八尾圣狐", desc:"身体泛出温暖金光，八条尾巴如花瓣般展开。能安抚崩溃的依赖地狱，让 npm install 一次成功。", stats:{HP:250,ATK:75,LOYALTY:98,SKILL:"依赖治愈"} },
-  { lv:9, name:"九尾仙狐", desc:"传说中的完全体，九条扇形巨尾展开如孔雀开屏，星光环绕。据说能让任何编译一次通过，让线上零事故。", stats:{HP:999,ATK:999,LOYALTY:100,SKILL:"神话级 Debug"} },
-];
-
-const companions = [
-  { id:"foxy", name:"小福 Foxy", desc:"从 FocusCode 蛋里孵出的第一只狐狸伙伴，永远充满好奇心。", tags:["初始","通用","吉祥物"], stats:{TYPE:"狐狸",RARITY:"普通",HABITAT:"终端",SKILL:"基础陪伴"}, sprite:FOXY_COMPANION, palette:FOX_PAL, bg:"#201810", border:"var(--fox)" },
-  { id:"mochi", name:"云朵猫 Mochi", desc:"粉色棉花糖成精，会在你编译时团成毛球滚来滚去。踩中键盘会自动补上缺失的分号。", tags:["治愈","猫咪","粉色"], stats:{TYPE:"云猫",RARITY:"稀有",HABITAT:"编辑器",SKILL:"自动补全"}, sprite:MOCHI_SPRITE, palette:MOCHI_PAL, bg:"#201a1d", border:"var(--mochi)" },
-  { id:"byte", name:"像素狐 Byte", desc:"数字世界的原住民，身体由方块像素组成。debug 时会钻进代码里帮你逐行排查。", tags:["数字","极客","绿色"], stats:{TYPE:"数据狐",RARITY:"稀有",HABITAT:"二进制",SKILL:"逐行调试"}, sprite:BYTE_SPRITE, palette:BYTE_PAL, bg:"#102018", border:"var(--byte)" },
-  { id:"nori", name:"海苔 Nori", desc:"一只小蝾螈，粉色的外鳃像树枝一样分叉。生活在 merge 冲突的河流里，帮你理清分支。", tags:["水系","萌","分支"], stats:{TYPE:"蝾螈",RARITY:"史诗",HABITAT:"Git 分支",SKILL:"冲突消解"}, sprite:NORI_SPRITE, palette:NORI_PAL, bg:"#10201c", border:"var(--nori)" },
-  { id:"pico", name:"企鹅 Pico", desc:"来自南极的小企鹅，翅膀太短按不到 Ctrl+C 但很努力。最擅长整理杂乱的 import。", tags:["冰系","整理","蓝色"], stats:{TYPE:"企鹅",RARITY:"普通",HABITAT:"文件树",SKILL:"Import 整理"}, sprite:PICO_SPRITE, palette:PICO_PAL, bg:"#101828", border:"var(--pico)" },
-  { id:"bubu", name:"饼干熊 Bubu", desc:"永远抱着一块巧克力饼干的棕熊。吃饱了会帮你写单元测试，饼干屑掉键盘里就会长出 bug。", tags:["熊","食物","棕色"], stats:{TYPE:"棕熊",RARITY:"稀有",HABITAT:"测试目录",SKILL:"自动测试"}, sprite:BUBU_SPRITE, palette:BUBU_PAL, bg:"#201a10", border:"var(--bubu)" },
-  { id:"kumo", name:"水豚 Kumo", desc:"永远佛系的水豚，捧着一杯热咖啡看你写代码。天大的 P0 事故它也能让你冷静下来。", tags:["佛系","冷静","灰色"], stats:{TYPE:"水豚",RARITY:"史诗",HABITAT:"错误日志",SKILL:"事故冷静"}, sprite:KUMO_SPRITE, palette:KUMO_PAL, bg:"#181c24", border:"var(--kumo)" },
-];
-
-const moods = [
-  { id:"happy", name:"开心 HAPPY", palette:FOX_PAL },
-  { id:"focus", name:"专注 FOCUS", palette:FOX_PAL },
-  { id:"sleep", name:"休眠 ZZZ", palette:FOX_PAL },
-  { id:"excited", name:"兴奋 YAY", palette:FOX_PAL },
-  { id:"debug", name:"调试 DEBUG", palette:FOX_PAL },
-  { id:"error", name:"报错 ERROR", palette:FOX_PAL },
-];
-
-// ============================================================
-// RENDERING
-// ============================================================
-
-function renderSprite(sprite, palette, scale) {
-  scale = scale || PX;
-  // Normalize: ensure all rows are same length (pad with '.')
-  const maxLen = Math.max(...sprite.map(r => r.length));
-  const normalized = sprite.map(r => r.padEnd(maxLen, '.').slice(0, maxLen));
-  const h = normalized.length;
-  const w = maxLen;
-  let rects = '';
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const ch = normalized[y][x];
-      const color = palette[ch];
-      if (color) {
-        rects += `<rect x="${x*scale}" y="${y*scale}" width="${scale}" height="${scale}" fill="${color}"/>`;
+      function paintFoxGold(grid) {
+        // Gold ear tips - ears are at rows 1-3 of body (BY+1 to BY+3), cols 6-7 left, 16-17 right
+        for (let dy = 0; dy <= 2; dy++) {
+          const y = BY + 1 + dy;
+          for (let dx = -1; dx <= 1; dx++) {
+            const x = BX + 6 + dx;
+            if (grid[y] && (grid[y][x] === "K" || grid[y][x] === "L" || grid[y][x] === "P"))
+              grid[y][x] = "G";
+          }
+          for (let dx = -1; dx <= 1; dx++) {
+            const x = BX + 16 + dx;
+            if (grid[y] && (grid[y][x] === "K" || grid[y][x] === "L" || grid[y][x] === "P"))
+              grid[y][x] = "G";
+          }
+        }
+        // Gold chest gem
+        const cx = BX + 12,
+          cy = BY + 16;
+        if (grid[cy] && grid[cy][cx] === "M") grid[cy][cx] = "G";
+        if (grid[cy] && grid[cy][cx - 1] === "M") grid[cy][cx - 1] = "G";
+        if (grid[cy] && grid[cy][cx + 1] === "M") grid[cy][cx + 1] = "G";
       }
-    }
-  }
-  const pad = scale;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${(w+2)*scale}" height="${(h+2)*scale}" viewBox="${-pad} ${-pad} ${(w+2)*scale} ${(h+2)*scale}" shape-rendering="crispEdges">${rects}</svg>`;
-}
 
-function renderEvoGrid() {
-  const grid = document.getElementById('evoGrid');
-  grid.innerHTML = '';
-  foxLevels.forEach((f, i) => {
-    const sprite = buildFoxSprite(f.lv);
-    const isMax = f.lv === 9;
-    const card = document.createElement('div');
-    card.className = 'evo-card' + (isMax ? ' max' : '');
-    card.innerHTML = `
+      function addFoxAura(grid, level) {
+        const auraPts = [
+          [BX + 4, BY + 2, "S"],
+          [BX + 19, BY + 2, "G"],
+          [BX + 26, BY + 8, "S"],
+          [BX - 2, BY + 12, "G"],
+          [BX + 26, BY + 14, "S"],
+          [Math.max(0, BX - 3), BY + 20, "G"],
+          [BX + 23, BY + 22, "S"],
+          [BX + 3, BY + 25, "G"],
+        ];
+        for (const [x, y, c] of auraPts) {
+          if (x >= 0 && x < FOX_CANVAS && y >= 0 && y < FOX_CANVAS && grid[y][x] === ".")
+            grid[y][x] = c;
+        }
+      }
+
+      function addFoxHalo(grid) {
+        // Divine halo above head for Lv9
+        const haloY = BY - 4;
+        const haloX = BX + 12;
+        if (haloY < 0) return;
+        for (let dx = -5; dx <= 5; dx++) {
+          const x = haloX + dx,
+            y = haloY;
+          if (x >= 0 && x < FOX_CANVAS && y >= 0 && grid[y][x] === ".") {
+            grid[y][x] = dx === 0 || Math.abs(dx) === 5 ? "G" : "Y";
+          }
+        }
+        for (const [dx, dy] of [
+          [-6, BY - 2],
+          [6, BY - 2],
+          [-4, BY - 5],
+          [4, BY - 5],
+          [0, BY - 7],
+        ]) {
+          const x = BX + 12 + dx,
+            y = dy;
+          if (x >= 0 && x < FOX_CANVAS && y >= 0 && y < FOX_CANVAS && grid[y][x] === ".")
+            grid[y][x] = "S";
+        }
+      }
+
+      // ============================================================
+      // COMPANION SPRITES (20x20 base)
+      // ============================================================
+
+      // MOCHI - Cloud cat (pink fluffy)
+      const MOCHI_SPRITE = [
+        "....................",
+        "....KK......KK......",
+        "...KDDK....KDDK.....",
+        "...KOPK....KOPK.....",
+        "...KOPPKKKKPPOK.....",
+        "..KOPPPPPPPPPPOK....",
+        "..KOPPEOPPOPEPPO....",
+        "..KOPPHEPPHEPPO.....",
+        "..KOPPPPNNPPPPO.....",
+        "..KOPPPPAAPPPPO.....",
+        ".KOPPPPPPPPPPPPO....",
+        ".KOPCCCCPPCCCCOP....",
+        ".KOPCCBBCCCBBCOP....",
+        ".KOCCCCCCCCCCCCO....",
+        "..KOCCCCCCCCCCCO....",
+        "..KOOOOOOOOOOOOK....",
+        "..KLLLLLLLLLLLK.....",
+        "...KKK.KKKK.KKK.....",
+        "....K.K..K..K.K.....",
+        "....................",
+      ];
+
+      // BYTE - Pixel fox (green, blocky)
+      const BYTE_SPRITE = [
+        "....................",
+        "....KK....KK........",
+        "...KDDK..KDDK.......",
+        "..KDOOKKKKOODK......",
+        "..KOOOOOOOOOOK......",
+        ".KOOOEEOOEEOOOK.....",
+        ".KOOOHEOOHEOOOK.....",
+        ".KOOOOONNOOOOOK.....",
+        ".KOOOOONNOOOOOK.....",
+        ".KOOCCOOOOCCOOK.....",
+        "KOOCCCCCCCCCCCOO....",
+        "KOCCCOOOOOOCCCOK....",
+        "KOCOOOOOOOOOOCOK....",
+        "KOCOOOOOOOOOOCOK....",
+        ".KOOOOOOOOOOOOK.....",
+        ".KOOOOOOOOOOOK......",
+        "..KKKOOOOOOKKK......",
+        "...KK.KK.KK.KK......",
+        "...KK.KK.KK.KK......",
+        "....................",
+      ];
+
+      // NORI - Axolotl (mint green, with pink gills)
+      const NORI_SPRITE = [
+        "....................",
+        "...PPP....PPP.......",
+        "...P.P....P.P.......",
+        "...P.KKKKKK.P.......",
+        "..KKOOOOOOOOKK......",
+        ".KOOOOOOOOOOOOK.....",
+        "KOEEE.OOOOO.EEEO....",
+        "KOHEEO.OOOO.HEEO....",
+        "KOOOOOOONNOOOOO.....",
+        "KOOOOOOAAAOOOOO.....",
+        "KOCCCOOOOOOCCCO.....",
+        "KOCCCCCCCCCCCCO.....",
+        ".KCCCCCCCCCCCOK.....",
+        ".KOOOOOOOOOOOK......",
+        "..KOOOOOOOOOK.......",
+        "..KLLLLLLLLLK.......",
+        "...KKK.KK.KKK.......",
+        "....K..KK..K........",
+        "....B..BB..B........",
+        "....................",
+      ];
+
+      // PICO - Penguin (blue/white, orange beak)
+      const PICO_SPRITE = [
+        "....................",
+        "......KKKKKK........",
+        ".....KDDDDDDK.......",
+        "....KDDDDDDDDK......",
+        "....KDOOOOOODK......",
+        "...KOOEEOOEEOOK.....",
+        "...KOOHEOOHEOOK.....",
+        "...KOONNNOOOOOK.....",
+        "...KOOONNNOOOOK.....",
+        "..KKCCCCCCCCCKK.....",
+        ".KDDCCCCCCCCCDDK....",
+        "KDDCCCCCNCCCCCDDK...",
+        "KDDCCCCCCCCCCCDDK...",
+        "KDDCCCCCCCCCCCDDK...",
+        ".KDDCCCCCCCCCDDK....",
+        "..KDDCCCCCCCDDK.....",
+        "...KDDDDDDDDDK......",
+        "...KNNK..KNNK.......",
+        "....K.K..K.K........",
+        "....................",
+      ];
+
+      // BUBU - Bear (brown, holding cookie)
+      const BUBU_SPRITE = [
+        "....................",
+        "..KK........KK......",
+        ".KDDK......KDDK.....",
+        ".KODKKKKKKKDOK......",
+        "KODOOOOOOOOODOK.....",
+        "KOOOEEOOOOEEOOOK....",
+        "KOOOHEOOOHEOOOOK....",
+        "KOOOOOONNOOOOOO.....",
+        "KOOOPPNNNNPPOOOO....",
+        "KOOPPPAAAAAPPOO.....",
+        "KOOPPABAABAPPOOK....",
+        "KOOPPABBBBAPPOOK....",
+        "KOOOPAAAAAAAPOOK....",
+        ".KOOCCCCCCCCOOK.....",
+        ".KOOCCCCCCCCCOK.....",
+        "..KOOOOOOOOOOK......",
+        "..KLLLLLLLLLK.......",
+        "...KKK.KK.KKK.......",
+        "...KK.KK.KK.KK......",
+        "....................",
+      ];
+
+      // KUMO - Capybara (gray, with coffee)
+      const KUMO_SPRITE = [
+        "....................",
+        "....B..B..B..B......",
+        "....................",
+        "....KKKKKKKKKK......",
+        "...KDDDDDDDDDDK.....",
+        "..KDOOOOOOOOODK.....",
+        "..KOOOEEOEEOOOK.....",
+        "..KOOO.HE.HEOO......",
+        "..KOOOOOPPOOOO......",
+        "..KOOONPPNOOOO......",
+        "..KOOOAAAAOOOO......",
+        ".KOOOOBBBOOOOO......",
+        ".KOOCCAABBACCOO.....",
+        ".KOOCCAABBACCOO.....",
+        ".KOOOOBBBOOOOO......",
+        "..KOOOOOOOOOOK......",
+        "..KLLLLLLLLLLK......",
+        "...KKK.KKKK.KK......",
+        "...KK..KK..KK.......",
+        "....................",
+      ];
+
+      // FOXY (companion version - same as Lv1 fox but smaller, 20x20)
+      const FOXY_COMPANION = [
+        "....................",
+        ".......KK.KK........",
+        "......KOPPOOK.......",
+        ".....KOPPPPOK.......",
+        "....KOMMMMMMOK......",
+        "...KOMMMEMMMEMO.....",
+        "...KOMMMHMMMHMO.....",
+        "..KOMMMMMMNMMMMO....",
+        "..KOMMMMNNNMMMMO....",
+        "..KOMCCCCCCCCCMO....",
+        ".KOMCCCCCCCCCCMO....",
+        ".KMCCCCMMMMCCCMO....",
+        ".KMCCCMMMMMMCCM.....",
+        "..KCCMMMMMMMCCM.....",
+        "..KCMMMMMMMMMCK.....",
+        "...KMMMMMMMMMK......",
+        "...KMMMMMMMMK.......",
+        "....KKMMMMKK........",
+        "....K.KKKK.K........",
+        "....................",
+      ];
+
+      // ============================================================
+      // MOOD SPRITES (variations on the base fox)
+      // ============================================================
+
+      const MOOD_SPRITES = {
+        happy: [
+          "....................",
+          ".......KK.KK........",
+          "......KOPPOOK.......",
+          ".....KOPPPPOK.......",
+          "....KOMMMMMMOK......",
+          "...KOMMCCMMMCCMO....",
+          "...KMMMCCMMMCCMM....",
+          "..KOMMMMMMNMMMMMO...",
+          "..KOMMMMCCCMMMMMO...",
+          "..KOMCCCCCCCCCMO....",
+          ".KOMCCCCCCCCCCMO....",
+          ".KMCCCCMMMMCCCMO....",
+          ".KMCCCMMMMMMCCM.....",
+          "..KCCMMMMMMMCCM.....",
+          "..KCMMMMMMMMMCK.....",
+          "...KMMMMMMMMMK......",
+          "...KMMMMMMMMK.......",
+          "....KKMMMMKK........",
+          "....K.KKKK.K........",
+          "....................",
+        ],
+        focus: [
+          "....................",
+          ".......KK.KK........",
+          "......KOPPOOK.......",
+          ".....KOPPPPOK.......",
+          "....KOMMMMMMOK......",
+          "...KOMMMMMMMMMO.....",
+          "...KMMMEEMMEEMM.....",
+          "..KOMMMMMMNMMMMMO...",
+          "..KOMMMMMMNMMMMMO...",
+          "..KOMCCCCCCCCCMO....",
+          ".KOMCCCCCCCCCCMO....",
+          ".KMCCCCMMMMCCCMO....",
+          ".KMCCCMMMMMMCCM.....",
+          "..KCCMMMMMMMCCM.....",
+          "..KCMMMMMMMMMCK.....",
+          "...KMMMMMMMMMK......",
+          "...KMMMMMMMMK.......",
+          "....KKMMMMKK........",
+          "....K.KKKK.K........",
+          "....................",
+        ],
+        sleep: [
+          "....................",
+          ".......KK.KK........",
+          "......KOPPOOK.......",
+          ".....KOPPPPOK.......",
+          "....KOMMMMMMOK......",
+          "...KOMMMMMMMMMO.....",
+          "...KMMMKMMMKMMM.....",
+          "..KOMMMMMMOMMMMO....",
+          "..KOMMMMMPPMMMMO....",
+          "..KOMCCCCCCCCCMO....",
+          ".KOMCCCCCCCCCCMO....",
+          ".KMCCCCMMMMCCCMO....",
+          ".KMCCCMMMMMMCCM.....",
+          "..KCCMMMMMMMCCM.....",
+          "..KCMMMMMMMMMCK.....",
+          "...KMMMMMMMMMK......",
+          "...KMMMMMMMMK.......",
+          "....KKMMMMKK........",
+          "....K.KKKK.K........",
+          "....................",
+        ],
+        excited: [
+          "....................",
+          "......SKK.KKS.......",
+          "......KOPPOOK.......",
+          "....SKOPPPPOKS......",
+          "....KOMMMMMMOK......",
+          "...KOMMOHMMHOMMO....",
+          "...KMMMOHMMHOMMM....",
+          "..KOMMMMMMNMMMMMOS..",
+          "..KOMMMMDDDMMMMMO...",
+          "..KOMCCCCCCCCCMO....",
+          ".KOMCCCCCCCCCCMO....",
+          ".KMCCCCMMMMCCCMO....",
+          ".KMCCCMMMMMMCCM.....",
+          "..KCCMMMMMMMCCM.....",
+          "..KCMMMMMMMMMCK.....",
+          "...KMMMMMMMMMK......",
+          "...KMMMMMMMMK.......",
+          "....KKMMMMKK........",
+          "....K.KKKK.K........",
+          "....................",
+        ],
+        debug: [
+          "....................",
+          ".......KK.KK........",
+          "......KOPPOOK.......",
+          ".....KOPPPPOK.......",
+          "....KOMMMMMMOK......",
+          "...KOMMEMMMEMMO.....",
+          "...KMMMEEMMEEMM.....",
+          "..KOMMMMMMNMMMMMO...",
+          "..KOMMMMMMNMMMMMO...",
+          "..KOMCCCCCCCCCMO....",
+          ".KOMCCCCCCCCCCMO....",
+          ".KMCCCCMMMMCCCMO....",
+          ".KMCCCMMMMMMCCM.....",
+          "..KCCMMMMMMMCCM.....",
+          "..KCMMMMMMMMMCK.....",
+          "...KMMMMMMMMMK......",
+          "...KMMMMMMMMK.......",
+          "....KKMMMMKK........",
+          "....K.KKKK.K........",
+          "....................",
+        ],
+        error: [
+          "....................",
+          ".......KK.KK........",
+          "......KOPPOOK.......",
+          ".....KOPPPPOK.......",
+          "....KOMMMMMMOK......",
+          "...KOMMDMMDMMMO.....",
+          "...KMMMDDMMDDMM.....",
+          "..KOMMMMMMNMMMMMO...",
+          "..KOMMMMMMDMMMMO....",
+          "..KOMCCCCCCCCCMO....",
+          ".KOMCCCCCCCCCCMO....",
+          ".KMCCCCMMMMCCCMO....",
+          ".KMCCCMMMMMMCCM.....",
+          "..KCCMMMMMMMCCM.....",
+          "..KCMMMMMMMMMCK.....",
+          "...KMMMMMMMMMK......",
+          "...KMMMMMMMMK.......",
+          "....KKMMMMKK........",
+          "....K.KKKK.K........",
+          "....................",
+        ],
+      };
+
+      // ============================================================
+      // DATA
+      // ============================================================
+
+      const foxLevels = [
+        {
+          lv: 1,
+          name: "一尾小狐",
+          desc: "刚孵化的新手伙伴，一条蓬松大尾巴总是卷成问号形。喜欢在你 commit 时蹭你的光标。",
+          stats: { HP: 10, ATK: 3, LOYALTY: 80, SKILL: "代码高亮" },
+        },
+        {
+          lv: 2,
+          name: "二尾幼狐",
+          desc: "第二条尾巴从右侧冒出，还不太协调，偶尔会两条尾巴打结。开始学会识别你的编码习惯。",
+          stats: { HP: 25, ATK: 6, LOYALTY: 85, SKILL: "括号配对" },
+        },
+        {
+          lv: 3,
+          name: "三尾灵狐",
+          desc: "三条尾巴灵活摆动，尾尖泛出雪白。可以感知到代码里潜藏的 bug，会在出错前轻轻摇尾巴。",
+          stats: { HP: 45, ATK: 10, LOYALTY: 90, SKILL: "Bug 预感" },
+        },
+        {
+          lv: 4,
+          name: "四尾焰狐",
+          desc: "尾巴尖跃出橙色火星，奔跑时留下火焰残影。在你重构代码时会兴奋地围着终端转圈。",
+          stats: { HP: 70, ATK: 18, LOYALTY: 92, SKILL: "重构加速" },
+        },
+        {
+          lv: 5,
+          name: "五尾炎狐",
+          desc: "周身飘浮红色火星粒子，眼睛在深夜会发出微光。深夜 debug 时它最精神，是你最好的守夜伙伴。",
+          stats: { HP: 100, ATK: 28, LOYALTY: 94, SKILL: "深夜 Debug" },
+        },
+        {
+          lv: 6,
+          name: "六尾煌狐",
+          desc: "耳朵和尾尖染上金色，行走时留下淡金色轨迹。能嗅出 PR 里的微妙问题，审查速度翻倍。",
+          stats: { HP: 140, ATK: 40, LOYALTY: 95, SKILL: "PR 嗅探" },
+        },
+        {
+          lv: 7,
+          name: "七尾天狐",
+          desc: "悬浮的金色粒子环绕四周，脚掌仿佛不沾地。进入心流状态时会和你一起发光。",
+          stats: { HP: 190, ATK: 55, LOYALTY: 97, SKILL: "心流共振" },
+        },
+        {
+          lv: 8,
+          name: "八尾圣狐",
+          desc: "身体泛出温暖金光，八条尾巴如花瓣般展开。能安抚崩溃的依赖地狱，让 npm install 一次成功。",
+          stats: { HP: 250, ATK: 75, LOYALTY: 98, SKILL: "依赖治愈" },
+        },
+        {
+          lv: 9,
+          name: "九尾仙狐",
+          desc: "传说中的完全体，九条扇形巨尾展开如孔雀开屏，星光环绕。据说能让任何编译一次通过，让线上零事故。",
+          stats: { HP: 999, ATK: 999, LOYALTY: 100, SKILL: "神话级 Debug" },
+        },
+      ];
+
+      const companions = [
+        {
+          id: "foxy",
+          name: "小福 Foxy",
+          desc: "从 FocusCode 蛋里孵出的第一只狐狸伙伴，永远充满好奇心。",
+          tags: ["初始", "通用", "吉祥物"],
+          stats: { TYPE: "狐狸", RARITY: "普通", HABITAT: "终端", SKILL: "基础陪伴" },
+          sprite: FOXY_COMPANION,
+          palette: FOX_PAL,
+          bg: "#201810",
+          border: "var(--fox)",
+        },
+        {
+          id: "mochi",
+          name: "云朵猫 Mochi",
+          desc: "粉色棉花糖成精，会在你编译时团成毛球滚来滚去。踩中键盘会自动补上缺失的分号。",
+          tags: ["治愈", "猫咪", "粉色"],
+          stats: { TYPE: "云猫", RARITY: "稀有", HABITAT: "编辑器", SKILL: "自动补全" },
+          sprite: MOCHI_SPRITE,
+          palette: MOCHI_PAL,
+          bg: "#201a1d",
+          border: "var(--mochi)",
+        },
+        {
+          id: "byte",
+          name: "像素狐 Byte",
+          desc: "数字世界的原住民，身体由方块像素组成。debug 时会钻进代码里帮你逐行排查。",
+          tags: ["数字", "极客", "绿色"],
+          stats: { TYPE: "数据狐", RARITY: "稀有", HABITAT: "二进制", SKILL: "逐行调试" },
+          sprite: BYTE_SPRITE,
+          palette: BYTE_PAL,
+          bg: "#102018",
+          border: "var(--byte)",
+        },
+        {
+          id: "nori",
+          name: "海苔 Nori",
+          desc: "一只小蝾螈，粉色的外鳃像树枝一样分叉。生活在 merge 冲突的河流里，帮你理清分支。",
+          tags: ["水系", "萌", "分支"],
+          stats: { TYPE: "蝾螈", RARITY: "史诗", HABITAT: "Git 分支", SKILL: "冲突消解" },
+          sprite: NORI_SPRITE,
+          palette: NORI_PAL,
+          bg: "#10201c",
+          border: "var(--nori)",
+        },
+        {
+          id: "pico",
+          name: "企鹅 Pico",
+          desc: "来自南极的小企鹅，翅膀太短按不到 Ctrl+C 但很努力。最擅长整理杂乱的 import。",
+          tags: ["冰系", "整理", "蓝色"],
+          stats: { TYPE: "企鹅", RARITY: "普通", HABITAT: "文件树", SKILL: "Import 整理" },
+          sprite: PICO_SPRITE,
+          palette: PICO_PAL,
+          bg: "#101828",
+          border: "var(--pico)",
+        },
+        {
+          id: "bubu",
+          name: "饼干熊 Bubu",
+          desc: "永远抱着一块巧克力饼干的棕熊。吃饱了会帮你写单元测试，饼干屑掉键盘里就会长出 bug。",
+          tags: ["熊", "食物", "棕色"],
+          stats: { TYPE: "棕熊", RARITY: "稀有", HABITAT: "测试目录", SKILL: "自动测试" },
+          sprite: BUBU_SPRITE,
+          palette: BUBU_PAL,
+          bg: "#201a10",
+          border: "var(--bubu)",
+        },
+        {
+          id: "kumo",
+          name: "水豚 Kumo",
+          desc: "永远佛系的水豚，捧着一杯热咖啡看你写代码。天大的 P0 事故它也能让你冷静下来。",
+          tags: ["佛系", "冷静", "灰色"],
+          stats: { TYPE: "水豚", RARITY: "史诗", HABITAT: "错误日志", SKILL: "事故冷静" },
+          sprite: KUMO_SPRITE,
+          palette: KUMO_PAL,
+          bg: "#181c24",
+          border: "var(--kumo)",
+        },
+      ];
+
+      const moods = [
+        { id: "happy", name: "开心 HAPPY", palette: FOX_PAL },
+        { id: "focus", name: "专注 FOCUS", palette: FOX_PAL },
+        { id: "sleep", name: "休眠 ZZZ", palette: FOX_PAL },
+        { id: "excited", name: "兴奋 YAY", palette: FOX_PAL },
+        { id: "debug", name: "调试 DEBUG", palette: FOX_PAL },
+        { id: "error", name: "报错 ERROR", palette: FOX_PAL },
+      ];
+
+      // ============================================================
+      // RENDERING
+      // ============================================================
+
+      function renderSprite(sprite, palette, scale) {
+        scale = scale || PX;
+        // Normalize: ensure all rows are same length (pad with '.')
+        const maxLen = Math.max(...sprite.map((r) => r.length));
+        const normalized = sprite.map((r) => r.padEnd(maxLen, ".").slice(0, maxLen));
+        const h = normalized.length;
+        const w = maxLen;
+        let rects = "";
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const ch = normalized[y][x];
+            const color = palette[ch];
+            if (color) {
+              rects += `<rect x="${x * scale}" y="${y * scale}" width="${scale}" height="${scale}" fill="${color}"/>`;
+            }
+          }
+        }
+        const pad = scale;
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${(w + 2) * scale}" height="${(h + 2) * scale}" viewBox="${-pad} ${-pad} ${(w + 2) * scale} ${(h + 2) * scale}" shape-rendering="crispEdges">${rects}</svg>`;
+      }
+
+      function renderEvoGrid() {
+        const grid = document.getElementById("evoGrid");
+        grid.innerHTML = "";
+        foxLevels.forEach((f, i) => {
+          const sprite = buildFoxSprite(f.lv);
+          const isMax = f.lv === 9;
+          const card = document.createElement("div");
+          card.className = "evo-card" + (isMax ? " max" : "");
+          card.innerHTML = `
       <div class="evo-sprite-wrap">${renderSprite(sprite, FOX_PAL, 3)}</div>
       <div class="evo-lv">LV.${f.lv}</div>
       <div class="evo-name">${f.name}</div>
-      ${f.lv >= 4 ? '<div class="evo-flame" style="color:#ff6020">*</div>' : ''}
-      ${isMax ? '<div class="evo-flame" style="color:#ffd700">★</div>' : ''}
+      ${f.lv >= 4 ? '<div class="evo-flame" style="color:#ff6020">*</div>' : ""}
+      ${isMax ? '<div class="evo-flame" style="color:#ffd700">★</div>' : ""}
     `;
-    card.addEventListener('click', () => showEvoDetail(i));
-    grid.appendChild(card);
-  });
-}
+          card.addEventListener("click", () => showEvoDetail(i));
+          grid.appendChild(card);
+        });
+      }
 
-function showEvoDetail(i) {
-  const f = foxLevels[i];
-  const sprite = buildFoxSprite(f.lv);
-  document.querySelectorAll('.evo-card').forEach((c,j) => c.classList.toggle('active', j===i));
-  const panel = document.getElementById('evoDetail');
-  panel.classList.add('show');
-  document.getElementById('evoDetailSprite').innerHTML = renderSprite(sprite, FOX_PAL, 5);
-  document.getElementById('evoDetailName').textContent = f.name;
-  document.getElementById('evoDetailName').style.color = f.lv >= 7 ? '#ffd700' : '#fff';
-  document.getElementById('evoDetailDesc').textContent = f.desc;
-  const stats = document.getElementById('evoDetailStats');
-  stats.innerHTML = `
+      function showEvoDetail(i) {
+        const f = foxLevels[i];
+        const sprite = buildFoxSprite(f.lv);
+        document
+          .querySelectorAll(".evo-card")
+          .forEach((c, j) => c.classList.toggle("active", j === i));
+        const panel = document.getElementById("evoDetail");
+        panel.classList.add("show");
+        document.getElementById("evoDetailSprite").innerHTML = renderSprite(sprite, FOX_PAL, 5);
+        document.getElementById("evoDetailName").textContent = f.name;
+        document.getElementById("evoDetailName").style.color = f.lv >= 7 ? "#ffd700" : "#fff";
+        document.getElementById("evoDetailDesc").textContent = f.desc;
+        const stats = document.getElementById("evoDetailStats");
+        stats.innerHTML = `
     <div class="detail-stat"><div class="detail-stat-label">HP</div><div class="detail-stat-val">${f.stats.HP}</div></div>
     <div class="detail-stat"><div class="detail-stat-label">ATK</div><div class="detail-stat-val">${f.stats.ATK}</div></div>
     <div class="detail-stat"><div class="detail-stat-label">忠诚度</div><div class="detail-stat-val">${f.stats.LOYALTY}%</div></div>
     <div class="detail-stat"><div class="detail-stat-label">技能</div><div class="detail-stat-val">${f.stats.SKILL}</div></div>
   `;
-}
+      }
 
-function renderCompGrid() {
-  const grid = document.getElementById('compGrid');
-  grid.innerHTML = '';
-  companions.forEach((c, i) => {
-    const card = document.createElement('div');
-    card.className = 'comp-card';
-    card.dataset.comp = c.id;
-    card.style.borderColor = c.id === 'foxy' ? 'var(--fox)' : undefined;
-    const tags = c.tags;
-    const tagKeys = Object.keys(tags);
-    const tagHtml = tagKeys.map(k => `<span class="comp-tag">${typeof tags[k]==='string'?tags[k]:tags[k]}</span>`).join('');
-    card.innerHTML = `
+      function renderCompGrid() {
+        const grid = document.getElementById("compGrid");
+        grid.innerHTML = "";
+        companions.forEach((c, i) => {
+          const card = document.createElement("div");
+          card.className = "comp-card";
+          card.dataset.comp = c.id;
+          card.style.borderColor = c.id === "foxy" ? "var(--fox)" : undefined;
+          const tags = c.tags;
+          const tagKeys = Object.keys(tags);
+          const tagHtml = tagKeys
+            .map(
+              (k) =>
+                `<span class="comp-tag">${typeof tags[k] === "string" ? tags[k] : tags[k]}</span>`,
+            )
+            .join("");
+          card.innerHTML = `
       <div class="comp-sprite">${renderSprite(c.sprite, c.palette, 3)}</div>
       <div class="comp-info">
         <div class="comp-name" style="color:${c.border}">${c.name}</div>
@@ -1341,55 +1780,59 @@ function renderCompGrid() {
         <div class="comp-tags">${tagHtml}</div>
       </div>
     `;
-    card.addEventListener('click', () => showCompDetail(i));
-    grid.appendChild(card);
-  });
-}
+          card.addEventListener("click", () => showCompDetail(i));
+          grid.appendChild(card);
+        });
+      }
 
-function showCompDetail(i) {
-  const c = companions[i];
-  document.querySelectorAll('.comp-card').forEach((card,j) => {
-    card.style.borderColor = j===i ? c.border : '';
-    card.style.background = j===i ? c.bg : '';
-  });
-  const panel = document.getElementById('compDetail');
-  panel.classList.add('show');
-  document.getElementById('compDetailSprite').innerHTML = renderSprite(c.sprite, c.palette, 6);
-  document.getElementById('compDetailName').textContent = c.name;
-  document.getElementById('compDetailName').style.color = c.border;
-  document.getElementById('compDetailDesc').textContent = c.desc;
-  const stats = document.getElementById('compDetailStats');
-  stats.innerHTML = `
+      function showCompDetail(i) {
+        const c = companions[i];
+        document.querySelectorAll(".comp-card").forEach((card, j) => {
+          card.style.borderColor = j === i ? c.border : "";
+          card.style.background = j === i ? c.bg : "";
+        });
+        const panel = document.getElementById("compDetail");
+        panel.classList.add("show");
+        document.getElementById("compDetailSprite").innerHTML = renderSprite(
+          c.sprite,
+          c.palette,
+          6,
+        );
+        document.getElementById("compDetailName").textContent = c.name;
+        document.getElementById("compDetailName").style.color = c.border;
+        document.getElementById("compDetailDesc").textContent = c.desc;
+        const stats = document.getElementById("compDetailStats");
+        stats.innerHTML = `
     <div class="detail-stat"><div class="detail-stat-label">类型</div><div class="detail-stat-val">${c.stats.TYPE}</div></div>
     <div class="detail-stat"><div class="detail-stat-label">稀有度</div><div class="detail-stat-val">${c.stats.RARITY}</div></div>
     <div class="detail-stat"><div class="detail-stat-label">栖息地</div><div class="detail-stat-val">${c.stats.HABITAT}</div></div>
     <div class="detail-stat"><div class="detail-stat-label">技能</div><div class="detail-stat-val">${c.stats.SKILL}</div></div>
   `;
-}
+      }
 
-function renderMoodGrid() {
-  const grid = document.getElementById('moodGrid');
-  grid.innerHTML = '';
-  moods.forEach(m => {
-    const sprite = MOOD_SPRITES[m.id];
-    const card = document.createElement('div');
-    card.className = 'mood-card';
-    // Mood sprites reuse base palette chars; special chars are already in FOX_PAL
-    card.innerHTML = `
+      function renderMoodGrid() {
+        const grid = document.getElementById("moodGrid");
+        grid.innerHTML = "";
+        moods.forEach((m) => {
+          const sprite = MOOD_SPRITES[m.id];
+          const card = document.createElement("div");
+          card.className = "mood-card";
+          // Mood sprites reuse base palette chars; special chars are already in FOX_PAL
+          card.innerHTML = `
       <div class="mood-sprite">${renderSprite(sprite, FOX_PAL, 3)}</div>
       <div class="mood-name">${m.name}</div>
     `;
-    grid.appendChild(card);
-  });
-}
+          grid.appendChild(card);
+        });
+      }
 
-// Hero fox
-document.getElementById('heroFox').innerHTML = renderSprite(buildFoxSprite(1), FOX_PAL, 3);
+      // Hero fox
+      document.getElementById("heroFox").innerHTML = renderSprite(buildFoxSprite(1), FOX_PAL, 3);
 
-renderEvoGrid();
-renderCompGrid();
-renderMoodGrid();
-lucide.createIcons();
-</script>
-</body>
+      renderEvoGrid();
+      renderCompGrid();
+      renderMoodGrid();
+      lucide.createIcons();
+    </script>
+  </body>
 </html>

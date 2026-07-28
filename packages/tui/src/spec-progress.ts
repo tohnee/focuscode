@@ -235,7 +235,8 @@ export function renderSpecProgress(
         : stage.status === "running"
           ? theme.warning
           : theme.muted;
-    const stageLabel = stage.status === "running" ? bold("  " + icon + " " + name) : "  " + icon + " " + name;
+    const stageLabel =
+      stage.status === "running" ? bold("  " + icon + " " + name) : "  " + icon + " " + name;
     lines.push(fg(color, stageLabel + faint(detail)));
   }
 
@@ -283,7 +284,9 @@ export function renderSpecProgress(
         const t = dp.tasks[i]!;
         const icon = kindIcon[t.kind] ?? "○";
         lines.push(
-          faint(fg(theme.muted, "  " + icon + " " + truncate(t.description, Math.max(20, width - 10)))),
+          faint(
+            fg(theme.muted, "  " + icon + " " + truncate(t.description, Math.max(20, width - 10))),
+          ),
         );
       }
       if (dp.tasks.length > maxShow) {
