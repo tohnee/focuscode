@@ -15,11 +15,27 @@
         "htmlSrc": "pages/mascots.html",
         "interactions": []
       }
+    },
+    {
+      "id": "page-architecture",
+      "title": "Spec Engine & TUI 架构",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1753617600000,
+      "canvasData": {
+        "x": 1440,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/architecture.html",
+        "interactions": []
+      }
     }
   ],
   "config": {
     "autoLayout": true,
     "deviceType": "desktop",
-    "projectName": "FocusCode TUI 伙伴设计"
+    "projectName": "FocusCode 设计系统"
   }
 }

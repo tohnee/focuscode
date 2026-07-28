@@ -11,6 +11,7 @@ export interface GrepRecursiveOptions {
   glob?: string;
   maxResults: number;
   cwd?: string;
+  signal?: AbortSignal;
 }
 
 export interface GrepMatch {
@@ -24,6 +25,7 @@ export interface ListFilesOptions {
   glob?: string;
   maxResults: number;
   cwd?: string;
+  signal?: AbortSignal;
 }
 
 interface IgnoreRule {
@@ -49,7 +51,12 @@ export async function grepRecursive(
   const glob = globFilter(options.glob);
   const matches: GrepMatch[] = [];
   const state = { stopped: false };
+  const signal = options.signal;
   await walk(root, resolve(options.cwd ?? root), state, async (file) => {
+    if (signal?.aborted) {
+      state.stopped = true;
+      return;
+    }
     if (matches.length >= options.maxResults) {
       state.stopped = true;
       return;
@@ -61,7 +68,7 @@ export async function grepRecursive(
     if (isBinary(buffer)) return;
     const lines = buffer.toString("utf8").split("\n");
     for (const [index, line] of lines.entries()) {
-      if (matches.length >= options.maxResults) {
+      if (signal?.aborted || matches.length >= options.maxResults) {
         state.stopped = true;
         break;
       }
@@ -76,6 +83,11 @@ export async function grepRecursive(
       }
     }
   });
+  if (signal?.aborted) {
+    const error = new Error(signal.reason instanceof Error ? signal.reason.message : "Aborted");
+    error.name = "AbortError";
+    throw error;
+  }
   return matches;
 }
 
@@ -88,7 +100,12 @@ export async function listFiles(
   const glob = globFilter(options.glob);
   const files: string[] = [];
   const state = { stopped: false };
+  const signal = options.signal;
   await walk(root, resolve(options.cwd ?? root), state, async (file) => {
+    if (signal?.aborted) {
+      state.stopped = true;
+      return;
+    }
     if (files.length >= options.maxResults) {
       state.stopped = true;
       return;
@@ -98,6 +115,11 @@ export async function listFiles(
     if (!(await stat(file)).isFile()) return;
     files.push(shown);
   });
+  if (signal?.aborted) {
+    const error = new Error(signal.reason instanceof Error ? signal.reason.message : "Aborted");
+    error.name = "AbortError";
+    throw error;
+  }
   return files.sort((left, right) => left.localeCompare(right));
 }
 

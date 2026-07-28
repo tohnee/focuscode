@@ -99,6 +99,18 @@ export const BUILTIN_COMMANDS: readonly PaletteCommand[] = [
     description: "Wipe the visible conversation",
     category: "view",
   },
+  {
+    id: "pane:toggle_spec",
+    label: "Toggle Spec Pane",
+    description: "Show or hide the spec progress sidebar pane",
+    category: "view",
+  },
+  {
+    id: "pane:toggle_context",
+    label: "Toggle Context Pane",
+    description: "Show or hide the context usage sidebar pane",
+    category: "view",
+  },
 ];
 
 export interface PaletteState {

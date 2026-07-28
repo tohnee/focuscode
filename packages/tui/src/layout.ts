@@ -177,3 +177,19 @@ function visibleSidebarPanes(state: LayoutState): PaneId[] {
   const order: PaneId[] = ["todo", "spec", "context"];
   return order.filter((id) => state.panes.find((p) => p.id === id)?.visible);
 }
+
+/**
+ * Toggle visibility of a single sidebar pane (todo/spec/context).
+ * Does not change the layout mode; only flips the pane's own visible flag.
+ * In classic/focus mode the sidebar is hidden regardless of pane visibility.
+ */
+export function toggleSidebarPane(state: LayoutState, paneId: PaneId): LayoutState {
+  const panes = state.panes.map((p) => (p.id === paneId ? { ...p, visible: !p.visible } : p));
+  return { ...state, panes };
+}
+
+/** Set visibility of a single sidebar pane. */
+export function setSidebarPaneVisible(state: LayoutState, paneId: PaneId, visible: boolean): LayoutState {
+  const panes = state.panes.map((p) => (p.id === paneId ? { ...p, visible } : p));
+  return { ...state, panes };
+}

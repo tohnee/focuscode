@@ -48,6 +48,17 @@ interface ProcessResult {
   timedOut: boolean;
   durationMs: number;
   backend?: string;
+  /** True when the process was terminated by an AbortSignal rather than timeout or normal exit. */
+  aborted?: boolean;
+}
+
+/** Throw an AbortError if the given signal is already aborted. */
+function checkAbort(signal: AbortSignal | undefined): void {
+  if (signal?.aborted) {
+    const error = new Error(signal.reason instanceof Error ? signal.reason.message : "Aborted");
+    error.name = "AbortError";
+    throw error;
+  }
 }
 
 export class AgentToolRegistry {
@@ -111,13 +122,16 @@ export async function createCodingToolRegistry(
       },
       "read",
     ),
-    async execute(input) {
+    async execute(input, context) {
+      checkAbort(context?.signal);
       const path = requiredString(input.path, "path");
       const absolute = await workspace.resolvePath(path);
+      checkAbort(context?.signal);
       const info = await stat(absolute);
       if (!info.isFile()) throw new Error(`Not a regular file: ${path}`);
       if (info.size > maxFileBytes) throw new Error(`File exceeds ${maxFileBytes} bytes: ${path}`);
       const content = await readFile(absolute, "utf8");
+      checkAbort(context?.signal);
       const lines = content.split("\n");
       const offset = boundedInteger(input.offset, 1, 1, Math.max(1, lines.length));
       const limit = boundedInteger(input.limit, 400, 1, 2_000);
@@ -155,16 +169,19 @@ export async function createCodingToolRegistry(
       },
       "write",
     ),
-    async execute(input) {
+    async execute(input, context) {
+      checkAbort(context?.signal);
       const path = requiredString(input.path, "path");
       const content = stringValue(input.content, "content");
       if (Buffer.byteLength(content) > maxFileBytes) {
         throw new Error(`Content exceeds ${maxFileBytes} bytes`);
       }
       const absolute = await workspace.resolvePath(path, { allowMissing: true });
+      checkAbort(context?.signal);
       const before = (await exists(absolute)) ? await readFile(absolute, "utf8") : undefined;
       await mkdir(dirname(absolute), { recursive: true });
       const temporary = join(dirname(absolute), `.${basename(absolute)}.${newId("write")}.tmp`);
+      checkAbort(context?.signal);
       await writeFile(temporary, content, { encoding: "utf8", mode: 0o644 });
       await rename(temporary, absolute);
       return {
@@ -197,7 +214,8 @@ export async function createCodingToolRegistry(
       },
       "write",
     ),
-    async execute(input) {
+    async execute(input, context) {
+      checkAbort(context?.signal);
       const path = requiredString(input.path, "path");
       const oldText = requiredString(input.oldText, "oldText");
       const newText = stringValue(input.newText, "newText");
@@ -205,6 +223,7 @@ export async function createCodingToolRegistry(
       const absolute = await workspace.resolvePath(path);
       const info = await stat(absolute);
       if (!info.isFile() || info.size > maxFileBytes) throw new Error(`File is too large: ${path}`);
+      checkAbort(context?.signal);
       const before = await readFile(absolute, "utf8");
       const occurrences = before.split(oldText).length - 1;
       if (occurrences !== expected) {
@@ -212,6 +231,7 @@ export async function createCodingToolRegistry(
       }
       const after = before.split(oldText).join(newText);
       if (after === before) throw new Error("Edit produced no change");
+      checkAbort(context?.signal);
       const temporary = join(dirname(absolute), `.${basename(absolute)}.${newId("edit")}.tmp`);
       await writeFile(temporary, after, { encoding: "utf8", mode: info.mode });
       await rename(temporary, absolute);
@@ -300,6 +320,7 @@ export async function createCodingToolRegistry(
           ...(glob ? { glob } : {}),
           maxResults: maxResults + 1,
           cwd: workspace.root,
+          ...(context?.signal ? { signal: context.signal } : {}),
         });
         const truncated = found.length > maxResults;
         const matches = found.slice(0, maxResults);
@@ -369,6 +390,7 @@ export async function createCodingToolRegistry(
           ...(glob ? { glob } : {}),
           maxResults: maxResults + 1,
           cwd: workspace.root,
+          ...(context?.signal ? { signal: context.signal } : {}),
         });
         const truncated = found.length > maxResults;
         const lines = found.slice(0, maxResults);
@@ -412,13 +434,20 @@ export async function createCodingToolRegistry(
       },
       "read",
     ),
-    async execute(input) {
+    async execute(input, context) {
+      checkAbort(context?.signal);
       const path = optionalString(input.path) ?? ".";
       const absolute = path === "." ? workspace.root : await workspace.resolvePath(path);
       const entries = await readdir(absolute, { withFileTypes: true });
+      checkAbort(context?.signal);
       const limit = boundedInteger(input.limit, 500, 1, 2_000);
       const rendered: string[] = [];
       for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
+        if (context?.signal?.aborted) {
+          const error = new Error("Aborted");
+          error.name = "AbortError";
+          throw error;
+        }
         if (rendered.length >= limit) break;
         const entryPath = join(absolute, entry.name);
         const type = entry.isDirectory() ? "d" : entry.isSymbolicLink() ? "l" : "f";
@@ -629,6 +658,7 @@ export async function runProcess(
     let stdout = "";
     let stderr = "";
     let timedOut = false;
+    let aborted = false;
     let settled = false;
     const append = (current: string, chunk: Buffer): string =>
       appendBounded(current, chunk.toString("utf8"), options.maxOutputChars);
@@ -643,7 +673,10 @@ export async function runProcess(
       child.kill("SIGTERM");
       setTimeout(() => child.kill("SIGKILL"), 1_000).unref();
     };
-    const onAbort = () => terminate();
+    const onAbort = () => {
+      aborted = true;
+      terminate();
+    };
     if (options.signal?.aborted) onAbort();
     else options.signal?.addEventListener("abort", onAbort, { once: true });
     const timer = setTimeout(() => {
@@ -663,12 +696,22 @@ export async function runProcess(
       settled = true;
       clearTimeout(timer);
       options.signal?.removeEventListener("abort", onAbort);
+      // If aborted by signal, throw AbortError so the caller can distinguish cancellation.
+      if (aborted) {
+        const error = new Error(
+          options.signal?.reason instanceof Error ? options.signal.reason.message : "Aborted",
+        );
+        error.name = "AbortError";
+        reject(error);
+        return;
+      }
       resolvePromise({
         command: [executable, ...argumentsValue].join(" "),
         exitCode,
         stdout,
         stderr,
         timedOut,
+        aborted: false,
         durationMs: Date.now() - started,
       });
     });

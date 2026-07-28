@@ -95,6 +95,12 @@ export interface TuiRenderState {
   layout?: LayoutState;
   /** Todo 侧栏面板状态;仅在 split/wide 布局且有 todo 项时渲染。 */
   todoPanel?: TodoPanelState;
+  /** Which pane currently has keyboard focus; used for focus highlight in sidebar. */
+  activePane?: "input" | "todo" | "spec" | "context";
+  /** Selected item index within each sidebar pane (for keyboard navigation). */
+  paneSelection?: { todo: number; spec: number; context: number };
+  /** Toast notification rendered over the top-right corner with fade animation. */
+  toast?: { text: string; startedAt: number; level: "info" | "success" | "warning" };
 }
 
 const MAX_INPUT_ROWS = 5;
@@ -129,14 +135,24 @@ export function renderTui(state: TuiRenderState): string {
 
   // Layout dispatch: non-classic modes (split/focus/wide) use layout-aware rendering.
   // Overlays (picker/palette) always use classic rendering since they take over the full screen.
+  let frame: string;
   if (state.layout && !state.picker && !state.palette?.visible) {
     const computed = computeLayout(state.layout, width, height);
     if (computed.mode !== "classic") {
-      return renderWithLayout(state, width, height, theme, computed);
+      frame = renderWithLayout(state, width, height, theme, computed);
+    } else {
+      frame = renderClassicFrame(state, width, height, theme);
     }
+  } else {
+    frame = renderClassicFrame(state, width, height, theme);
   }
 
-  return renderClassicFrame(state, width, height, theme);
+  // Toast notification overlay: positioned at top-right with fade animation.
+  if (state.toast) {
+    frame += renderToastOverlay(state.toast, width, theme);
+  }
+
+  return frame;
 }
 
 /**
@@ -536,6 +552,8 @@ function renderCostBadge(spent: number, budget: number | undefined, theme: TuiTh
  * Render multiple panes (todo/spec/context) stacked vertically in the sidebar.
  * Each pane is rendered by its dedicated renderer; panes are separated by a
  * thin muted line. The result is truncated to `bodyHeight` lines.
+ * The currently focused pane gets a highlighted title bar; selected items get
+ * a cursor indicator.
  */
 function renderSidebarPanes(
   panes: PaneId[],
@@ -550,16 +568,23 @@ function renderSidebarPanes(
 
   for (const paneId of panes) {
     let paneLines: string[] = [];
+    const isFocused = state.activePane === paneId;
+    const selIdx = state.paneSelection?.[paneId as "todo" | "spec" | "context"] ?? 0;
 
     if (paneId === "todo" && state.todoPanel) {
-      paneLines = renderTodoPanel(state.todoPanel, paneWidth, bodyHeight, theme);
+      const rendered = renderTodoPanel(state.todoPanel, paneWidth, bodyHeight, theme);
+      paneLines = highlightPaneLines(rendered, paneWidth, isFocused, selIdx, theme, "todo");
     } else if (paneId === "spec" && state.specProgress && state.specProgress.phase !== "idle") {
-      paneLines = renderSpecProgress(state.specProgress, paneWidth, theme, {
+      const rendered = renderSpecProgress(state.specProgress, paneWidth, theme, {
         tick: state.tick,
       });
+      paneLines = highlightPaneLines(rendered, paneWidth, isFocused, selIdx, theme, "spec");
     } else if (paneId === "context" && state.contextUsage) {
       const bar = renderContextBar(state.contextUsage, paneWidth, theme);
-      paneLines = [fg(theme.accent, "⚙ Context"), bar];
+      const title = isFocused
+        ? fg(theme.accent, "▸ ") + fg(theme.foreground, "⚙ Context")
+        : fg(theme.accent, "⚙ Context");
+      paneLines = [title, bar];
     }
 
     if (paneLines.length === 0) continue;
@@ -571,6 +596,52 @@ function renderSidebarPanes(
   }
 
   return lines.slice(0, bodyHeight);
+}
+
+/**
+ * Apply focus styling to a pane: prefix focused title with ▸, and mark the
+ * selected item line with a reverse-video highlight or cursor marker.
+ * `kind` determines how we find the "selectable" item lines:
+ * - "todo": lines starting with checkbox glyphs (☐/☑)
+ * - "spec": lines starting with stage bullets (●/○/✓)
+ */
+function highlightPaneLines(
+  lines: string[],
+  width: number,
+  focused: boolean,
+  selectedIdx: number,
+  theme: TuiTheme,
+  kind: "todo" | "spec",
+): string[] {
+  if (lines.length === 0) return lines;
+  const out: string[] = [];
+  let itemCount = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i]!;
+    // Detect the title line (first line) for focus marker.
+    if (i === 0 && focused) {
+      // Replace leading space with ▸ or prefix ▸ to indicate focus.
+      if (line.startsWith(" ")) {
+        line = fg(theme.accent, "▸") + line.slice(1);
+      } else {
+        line = fg(theme.accent, "▸ ") + line;
+      }
+    }
+    // Detect selectable item lines and apply selection highlight.
+    const isItemLine =
+      (kind === "todo" && /^\s*[☐✓🔄]/.test(stripAnsi(line))) ||
+      (kind === "spec" && /^\s*[●○◐◓◑◒✓◇◆◎]/.test(stripAnsi(line)));
+    if (isItemLine) {
+      if (focused && itemCount === selectedIdx) {
+        // Apply selection: wrap in reverse-video or prefix with >.
+        line = "\u001b[7m" + line + "\u001b[27m";
+      }
+      itemCount++;
+    }
+    out.push(line);
+  }
+  return out;
 }
 
 function renderPickerOverlay(
@@ -755,4 +826,70 @@ function bold(value: string): string {
 
 function italic(value: string): string {
   return "\u001b[3m" + value + "\u001b[23m";
+}
+
+function faintLocal(value: string): string {
+  return "\u001b[2m" + value + "\u001b[22m";
+}
+
+/**
+ * Render a toast notification overlay using ANSI cursor positioning.
+ * The toast appears at the top-right corner with fade animation phases:
+ *   0-300ms:  fade-in (faint → bold)
+ *   300-1800ms: hold (full opacity)
+ *   1800-2500ms: fade-out (normal → faint → gone)
+ * Returns ANSI sequences that move the cursor, draw the toast, then restore.
+ */
+function renderToastOverlay(
+  toast: { text: string; startedAt: number; level: "info" | "success" | "warning" },
+  width: number,
+  theme: TuiTheme,
+): string {
+  const elapsed = Date.now() - toast.startedAt;
+  if (elapsed > 2500) return "";
+
+  // Compute fade phase intensity.
+  let intensity: "bold" | "normal" | "faint" | "gone";
+  if (elapsed < 150) intensity = "gone";
+  else if (elapsed < 300) intensity = "faint";
+  else if (elapsed < 1800) intensity = "bold";
+  else if (elapsed < 2200) intensity = "normal";
+  else if (elapsed < 2500) intensity = "faint";
+  else intensity = "gone";
+
+  if (intensity === "gone") return "";
+
+  // Truncate toast text to fit within half the screen width at most.
+  const maxLen = Math.min(50, Math.floor(width / 2) - 4);
+  const clean = sanitizeTerminalText(toast.text).replaceAll(/\s+/g, " ").trim();
+  const text = clean.length > maxLen ? clean.slice(0, maxLen - 1) + "…" : clean;
+  const padded = " " + text + " ";
+  const visibleLen = stringWidth(padded);
+  const col = Math.max(1, width - visibleLen - 1);
+
+  const levelColor =
+    toast.level === "success"
+      ? theme.success
+      : toast.level === "warning"
+        ? theme.warning
+        : theme.accent;
+
+  let styled: string;
+  const colored = fg(levelColor, padded);
+  if (intensity === "bold") styled = bold(colored);
+  else if (intensity === "faint") styled = faintLocal(colored);
+  else styled = colored;
+
+  // Position cursor at row 2 (below the top border), column `col`, clear the
+  // toast area, draw the toast, then restore cursor to home. Using save/restore
+  // cursor (ESC 7 / ESC 8) to avoid disturbing the frame's final cursor position.
+  const clearArea = " ".repeat(visibleLen);
+  return (
+    "\u001b7" +
+    "\u001b[" + 2 + ";" + col + "H" +
+    clearArea +
+    "\u001b[" + 2 + ";" + col + "H" +
+    styled +
+    "\u001b8"
+  );
 }

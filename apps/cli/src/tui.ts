@@ -321,12 +321,14 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
         if (!isApprovalMode(args)) return "Usage: /approval ask|auto-edit|full-auto|deny";
         options.agent.changeApproval(args);
         tui.setApproval(args);
+        tui.showToast("Approval: " + args, args === "deny" ? "warning" : "info");
         return "Approval mode: " + args;
       }
       if (name === "model") {
         if (!args) return activeModel.provider + "/" + activeModel.model;
         activeModel = await options.changeModel(args);
         tui.setModel(activeModel.provider + "/" + activeModel.model);
+        tui.showToast("Model: " + activeModel.provider + "/" + activeModel.model, "info");
         return "Model changed to " + activeModel.provider + "/" + activeModel.model;
       }
       if (name === "new") {
@@ -469,6 +471,98 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
   options.onReady?.(tui);
   tui.setCompanion(companion);
   tui.setSessionCost(sessionCost, sessionBudget);
+
+  // Wire up the command palette (Ctrl+P) to actual TUI / session actions.
+  // Without this callback, palette commands have no effect (the overlay opens
+  // but selecting a command is a no-op).
+  tui.setPaletteCallback((cmd) => {
+    switch (cmd.id) {
+      case "layout:classic":
+        tui.setLayoutMode("classic");
+        tui.setStatus("Layout: classic");
+        break;
+      case "layout:split":
+        tui.setLayoutMode("split");
+        tui.setStatus("Layout: split");
+        break;
+      case "layout:focus":
+        tui.setLayoutMode("focus");
+        tui.setStatus("Layout: focus");
+        break;
+      case "layout:wide":
+        tui.setLayoutMode("wide");
+        tui.setStatus("Layout: wide");
+        break;
+      case "layout:cycle":
+        tui.cycleLayoutMode();
+        tui.setStatus("Layout: " + tui.getLayoutState().mode);
+        break;
+      case "todo:toggle_panel":
+        tui.toggleTodoPanel();
+        tui.setStatus(tui.getTodoPanelState().visible ? "Todo panel on" : "Todo panel off");
+        break;
+      case "vim:toggle":
+        tui.setVimEnabled(!tui.getVimState());
+        tui.setStatus(tui.getVimState() ? "Vim mode on" : "Vim mode off");
+        break;
+      case "search:transcript":
+        tui.openSearch();
+        break;
+      case "model:picker":
+        tui.openPicker();
+        break;
+      case "spec:decline":
+        // Decline the currently pending spec confirmation, if any.
+        tui.declineSpecConfirmation?.();
+        break;
+      case "session:new":
+        void options.agent
+          .newSession()
+          .then((sessionId) => {
+            tui.setSession(sessionId);
+            tui.setStatus("New session: " + sessionId);
+          })
+          .catch((error: unknown) => {
+            tui.addMessage(
+              "system",
+              "Failed to start new session: " +
+                (error instanceof Error ? error.message : String(error)),
+            );
+          });
+        break;
+      case "session:fork":
+        void options.agent
+          .forkSession()
+          .then((sessionId) => {
+            tui.setSession(sessionId);
+            tui.setStatus("Forked session: " + sessionId);
+          })
+          .catch((error: unknown) => {
+            tui.addMessage(
+              "system",
+              "Failed to fork session: " +
+                (error instanceof Error ? error.message : String(error)),
+            );
+          });
+        break;
+      case "view:toggle_reasoning":
+        tui.toggleReasoning?.();
+        break;
+      case "view:clear_transcript":
+        tui.clearTranscript?.();
+        break;
+      case "pane:toggle_spec":
+        tui.toggleSidebarPane?.("spec");
+        tui.setStatus("Spec pane toggled");
+        break;
+      case "pane:toggle_context":
+        tui.toggleSidebarPane?.("context");
+        tui.setStatus("Context pane toggled");
+        break;
+      default:
+        tui.setStatus("Unknown palette command: " + cmd.id);
+    }
+  });
   options.agent.setEventSink((event) => {
     if (event.type === "usage") {
       sessionCost = event.session.outputTokens + event.session.inputTokens;
@@ -596,9 +690,22 @@ export function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () 
       "✦ " + event.stage + (event.fellBack ? " (fallback)" : " ✓") + " " + event.durationMs + "ms",
     );
   } else if (event.type === "spec_draft_ready") {
+    const understanding = event.understanding as {
+      goal?: string;
+      constraints?: unknown[];
+      acceptanceCriteria?: unknown[];
+      affectedAreas?: Array<{ path: string }>;
+    };
+    const taskBreakdown = event.taskBreakdown as Array<{
+      id: string;
+      description: string;
+      kind: string;
+    }>;
     tui.setSpecDraft({
       specId: event.specId,
       topic: event.topic,
+      understanding,
+      taskBreakdown,
     });
     tui.setSpeech("Spec draft ready: " + event.topic);
   } else if (event.type === "spec_confirmation_required") {
@@ -623,6 +730,7 @@ export function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () 
     tui.clearSpecConfirmation();
     tui.setMood("happy");
     tui.setStatus("✦ Spec confirmed");
+    tui.showToast("Spec confirmed", "success");
   } else if (event.type === "spec_skipped") {
     // Phase 5 — preserve stage history and capture the skip reason so the
     // renderer can show why the pipeline was short-circuited.
@@ -649,6 +757,7 @@ export function renderEvent(tui: FullScreenTui, event: AgentEvent, cheerOn?: () 
     });
     tui.setMood("happy");
     tui.setStatus("✦ Spec completed · " + (totalDuration ?? 0) + "ms");
+    tui.showToast("Spec completed in " + (totalDuration ?? 0) + "ms", "success");
   } else if (event.type === "agent_end") {
     tui.setStatus(
       event.response.stopped +
@@ -865,12 +974,18 @@ async function loadCompanionState(): Promise<CompanionState> {
   }
 }
 
-/** Best-effort persist; missing directories are created, write errors are surfaced. */
+/** Best-effort persist; missing directories are created, write errors are surfaced.
+ *  Debounced: rapid agent_end events within 500ms are coalesced into one write. */
+let companionPersistTimer: ReturnType<typeof setTimeout> | undefined;
 async function persistCompanion(state: CompanionState): Promise<void> {
-  const path = DEFAULT_COMPANION_PATH();
-  const dir = dirname(path);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  await writeFile(path, serializeCompanion(state), "utf8");
+  if (companionPersistTimer) clearTimeout(companionPersistTimer);
+  companionPersistTimer = setTimeout(() => {
+    companionPersistTimer = undefined;
+    const path = DEFAULT_COMPANION_PATH();
+    const dir = dirname(path);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    void writeFile(path, serializeCompanion(state), "utf8").catch(() => undefined);
+  }, 500);
 }
 
 /**

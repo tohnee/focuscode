@@ -8,3 +8,7 @@ reports/npm/*.tgz
 .DS_Store
 apps/cli/bundle/
 apps/cli/model-packs/
+
+# 临时预览图
+pixel-preview.png
+*.preview.png

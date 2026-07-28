@@ -31,6 +31,8 @@ export type TuiAction =
   | "search_transcript"
   | "cycle_layout"
   | "toggle_todo_panel"
+  | "cycle_sidebar_focus"
+  | "sidebar_action"
   | "upcase_word"
   | "downcase_word"
   | "capitalize_word"
@@ -78,6 +80,8 @@ export const DEFAULT_KEYMAP: TuiKeymap = {
   "ctrl+p": "open_palette",
   "ctrl+f": "search_transcript",
   "alt+t": "toggle_todo_panel",
+  "alt+]": "cycle_sidebar_focus",
+  "alt+enter": "sidebar_action",
 };
 
 export type ParsedKey = { type: "action"; action: TuiAction } | { type: "text"; text: string };
@@ -124,6 +128,8 @@ const TERMINAL_SEQUENCES: Array<[string, string]> = [
   ["\u001bc", "alt+c"],
   ["\u001bl", "alt+l"],
   ["\u001bt", "alt+t"],
+  ["\u001b]", "alt+]"],
+  ["\u001b\r", "alt+enter"],
   ["\r", "enter"],
   ["\n", "enter"],
   ["\t", "tab"],
@@ -203,6 +209,8 @@ const VALID_ACTIONS: readonly TuiAction[] = [
   "search_transcript",
   "cycle_layout",
   "toggle_todo_panel",
+  "cycle_sidebar_focus",
+  "sidebar_action",
   "upcase_word",
   "downcase_word",
   "capitalize_word",

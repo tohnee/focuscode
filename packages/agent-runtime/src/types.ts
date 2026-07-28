@@ -210,7 +210,13 @@ export type AgentEvent =
   | { type: "error"; message: string }
   | { type: "spec_start"; input: string; trigger: "auto" | "explicit" }
   | { type: "spec_stage"; stage: string; model: string; durationMs: number; fellBack: boolean }
-  | { type: "spec_draft_ready"; specId: string; topic: string; understanding: unknown }
+  | {
+      type: "spec_draft_ready";
+      specId: string;
+      topic: string;
+      understanding: unknown;
+      taskBreakdown: unknown[];
+    }
   | {
       type: "spec_confirmation_required";
       specId: string;

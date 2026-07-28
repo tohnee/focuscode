@@ -5,6 +5,8 @@ import { sanitizeTerminalText, stringWidth, takeWidth } from "./width.js";
 interface MdStyle {
   bold?: boolean;
   italic?: boolean;
+  dim?: boolean;
+  underline?: boolean;
   color?: ColorValue;
   background?: ColorValue;
 }
@@ -14,7 +16,8 @@ interface MdToken {
   style: MdStyle;
 }
 
-const INLINE_PATTERN = /(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\*[^*\n]+\*)|(_[^_\n]+_)/g;
+const INLINE_PATTERN =
+  /(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\*[^*\n]+\*)|(__[^_\n]+__)|(_[^_\n]+_)|(~~[^~\n]+~~)/g;
 
 /**
  * Render a small, safe Markdown subset into ANSI-styled lines that each fit `width`
@@ -170,12 +173,19 @@ function parseInline(text: string, theme: TuiTheme): MdToken[] {
   let last = 0;
   for (const match of text.matchAll(INLINE_PATTERN)) {
     if (match.index > last) tokens.push({ text: text.slice(last, match.index), style: plain });
-    const whole = match[0];
+    const whole = match[0]!;
     if (whole.startsWith("`")) {
       tokens.push({ text: whole.slice(1, -1), style: { color: theme.warning } });
     } else if (whole.startsWith("**")) {
       tokens.push({ text: whole.slice(2, -2), style: { color: theme.foreground, bold: true } });
-    } else {
+    } else if (whole.startsWith("__")) {
+      tokens.push({
+        text: whole.slice(2, -2),
+        style: { color: theme.foreground, underline: true },
+      });
+    } else if (whole.startsWith("~~")) {
+      tokens.push({ text: whole.slice(2, -2), style: { color: theme.muted, dim: true } });
+    } else if (whole.startsWith("*") || whole.startsWith("_")) {
       tokens.push({ text: whole.slice(1, -1), style: { color: theme.foreground, italic: true } });
     }
     last = match.index + whole.length;
@@ -228,7 +238,9 @@ function applyStyle(text: string, style: MdStyle): string {
   if (!text) return "";
   let open = "";
   if (style.bold) open += "\u001b[1m";
+  if (style.dim) open += "\u001b[2m";
   if (style.italic) open += "\u001b[3m";
+  if (style.underline) open += "\u001b[4m";
   if (style.color !== undefined) {
     // Extract just the open sequence — `fg` returns open+text+close, we
     // strip the close and the text to reuse only the opening SGR.

@@ -50,8 +50,11 @@ import {
   createInitialLayout,
   cycleLayoutMode as cycleLayoutModeFn,
   setLayoutMode as setLayoutModeFn,
+  toggleSidebarPane as toggleSidebarPaneFn,
+  setSidebarPaneVisible as setSidebarPaneVisibleFn,
   type LayoutMode,
   type LayoutState,
+  type PaneId,
 } from "./layout.js";
 import {
   addTodoItem as addTodoItemFn,
@@ -143,8 +146,31 @@ export class FullScreenTui {
   private palette: PaletteState = createPaletteState();
   private vimEnabled = false;
   private vimState: VimState = createVimState();
+  /** Which sidebar pane currently has keyboard focus ("input" = main input has focus). */
+  private activePane: "input" | "todo" | "spec" | "context" = "input";
+  /** Selected item index within each sidebar pane. */
+  private paneSelection: { todo: number; spec: number; context: number } = {
+    todo: 0,
+    spec: 0,
+    context: 0,
+  };
   private layout: LayoutState = createInitialLayout();
   private todoPanel: TodoPanelState = createInitialTodoPanel();
+  /** Active toast notification with fade animation state. */
+  private toast?: { text: string; startedAt: number; level: "info" | "success" | "warning" };
+  /** History of completed/skipped specs for browsing. */
+  private specHistory: Array<{
+    specId: string;
+    topic: string;
+    completedAt: number;
+    totalDuration?: number;
+    status: "completed" | "skipped";
+    stages: SpecStageInfo[];
+  }> = [];
+  /** Whether the spec history browser overlay is visible. */
+  private specHistoryVisible = false;
+  /** Selected index in the spec history list. */
+  private specHistorySelection = 0;
 
   constructor(private readonly options: FullScreenTuiOptions) {
     this.theme = getTheme(options.theme);
@@ -225,6 +251,22 @@ export class FullScreenTui {
     this.render();
   }
 
+  /**
+   * Show a brief toast notification that fades in, holds, and fades out over
+   * ~2 seconds. The toast is rendered in the top-right corner of the TUI and
+   * does not block input. Calling while a toast is active replaces it.
+   */
+  showToast(text: string, level: "info" | "success" | "warning" = "info"): void {
+    const clean = text.trim();
+    if (!clean) {
+      delete this.toast;
+      this.render();
+      return;
+    }
+    this.toast = { text: clean, startedAt: Date.now(), level };
+    this.render();
+  }
+
   setAttachments(names: string[]): void {
     this.attachments = [...names];
     this.render();
@@ -260,8 +302,60 @@ export class FullScreenTui {
 
   /** Update SpecEngine progress state. */
   setSpecProgress(state: SpecProgressState): void {
+    const wasTerminal =
+      this.specProgress.phase === "completed" || this.specProgress.phase === "skipped";
+    const isTerminal = state.phase === "completed" || state.phase === "skipped";
     this.specProgress = { ...state, stages: [...state.stages] };
+    // When a spec first reaches a terminal state, record it in history.
+    if (isTerminal && !wasTerminal) {
+      this.recordSpecHistory(state);
+    }
     this.render();
+  }
+
+  /** Record a completed/skipped spec into the rolling history buffer (max 20). */
+  private recordSpecHistory(state: SpecProgressState): void {
+    if (!state.specId) return;
+    // Avoid duplicate entries for the same specId.
+    if (this.specHistory.some((h) => h.specId === state.specId)) return;
+    const entry = {
+      specId: state.specId,
+      topic: state.topic ?? "(untitled)",
+      completedAt: Date.now(),
+      totalDuration: state.totalDuration,
+      status: state.phase as "completed" | "skipped",
+      stages: state.stages.map((s) => ({ ...s })),
+    };
+    this.specHistory.unshift(entry);
+    if (this.specHistory.length > 20) this.specHistory.length = 20;
+  }
+
+  /** Toggle the spec history browser overlay. */
+  toggleSpecHistory(): void {
+    this.specHistoryVisible = !this.specHistoryVisible;
+    if (this.specHistoryVisible) {
+      this.specHistorySelection = 0;
+    }
+    this.render();
+  }
+
+  /** Navigate spec history selection (delta = +1 or -1). */
+  navigateSpecHistory(delta: number): void {
+    if (!this.specHistoryVisible || this.specHistory.length === 0) return;
+    const max = this.specHistory.length - 1;
+    this.specHistorySelection = Math.max(0, Math.min(max, this.specHistorySelection + delta));
+    this.render();
+  }
+
+  /** Close the spec history overlay. */
+  closeSpecHistory(): void {
+    this.specHistoryVisible = false;
+    this.render();
+  }
+
+  /** Whether the spec history browser is currently visible. */
+  isSpecHistoryVisible(): boolean {
+    return this.specHistoryVisible;
   }
 
   /** Snapshot of current SpecEngine progress state (read-only). */
@@ -286,13 +380,41 @@ export class FullScreenTui {
     this.render();
   }
 
-  /** Set spec draft preview (topic + understanding). */
-  setSpecDraft(draft: { specId?: string; topic?: string }): void {
-    this.specProgress = {
-      ...this.specProgress,
-      ...(draft.specId !== undefined ? { specId: draft.specId } : {}),
-      ...(draft.topic !== undefined ? { topic: draft.topic } : {}),
+  /** Set spec draft preview (topic + understanding summary + task breakdown). */
+  setSpecDraft(draft: {
+    specId?: string;
+    topic?: string;
+    understanding?: {
+      goal?: string;
+      constraints?: unknown[];
+      acceptanceCriteria?: unknown[];
+      affectedAreas?: Array<{ path: string }>;
     };
+    taskBreakdown?: Array<{ id: string; description: string; kind: string }>;
+  }): void {
+    const patch: Partial<SpecProgressState> = {};
+    if (draft.specId !== undefined) patch.specId = draft.specId;
+    if (draft.topic !== undefined) patch.topic = draft.topic;
+    if (draft.understanding || draft.taskBreakdown) {
+      const preview: SpecProgressState["draftPreview"] = {};
+      if (draft.understanding?.goal !== undefined) preview.goal = draft.understanding.goal;
+      if (draft.understanding?.constraints !== undefined)
+        preview.constraintsCount = draft.understanding.constraints.length;
+      if (draft.understanding?.acceptanceCriteria !== undefined)
+        preview.acceptanceCriteriaCount = draft.understanding.acceptanceCriteria.length;
+      if (draft.understanding?.affectedAreas !== undefined)
+        preview.affectedFiles = draft.understanding.affectedAreas.map((a) => a.path);
+      if (draft.taskBreakdown !== undefined) {
+        preview.taskCount = draft.taskBreakdown.length;
+        preview.tasks = draft.taskBreakdown.map((t) => ({
+          id: t.id,
+          description: t.description,
+          kind: t.kind,
+        }));
+      }
+      patch.draftPreview = preview;
+    }
+    this.specProgress = { ...this.specProgress, ...patch };
     this.render();
   }
 
@@ -315,6 +437,27 @@ export class FullScreenTui {
   /** Clear confirmation UI (after spec_confirmed or spec_skipped). */
   clearSpecConfirmation(): void {
     this.specConfirmation = undefined;
+    this.render();
+  }
+
+  /** Decline the currently pending spec confirmation (equivalent to pressing Esc). */
+  declineSpecConfirmation(): void {
+    if (!this.specConfirmation) return;
+    const specId = this.specConfirmation.specId;
+    this.specConfirmation = undefined;
+    this.options.onSpecDecline?.(specId);
+    this.render();
+  }
+
+  /** Toggle reasoning display expanded/collapsed. */
+  toggleReasoning(): void {
+    this.reasoningExpanded = !this.reasoningExpanded;
+    this.render();
+  }
+
+  /** Clear all transcript messages (keeps system welcome banner). */
+  clearTranscript(): void {
+    this.transcript = [];
     this.render();
   }
 
@@ -438,10 +581,10 @@ export class FullScreenTui {
 
   // ─── Vim Mode ──────────────────────────────────────────────────────────
 
-  /** Toggle vim modal editing on/off. When off, vimState is undefined. */
+  /** Toggle vim modal editing on/off. When off, vimState is reset but kept as a valid object. */
   setVimEnabled(enabled: boolean): void {
     this.vimEnabled = enabled;
-    this.vimState = enabled ? createVimState() : createVimState();
+    this.vimState = createVimState();
     this.render();
   }
 
@@ -464,14 +607,18 @@ export class FullScreenTui {
   /** Switch to a specific layout mode (classic/split/focus/wide). */
   setLayoutMode(mode: LayoutMode): void {
     this.layout = setLayoutModeFn(this.layout, mode);
+    // Sync todoPanel.visible with layout pane visibility
+    const todoPane = this.layout.panes.find((p) => p.id === "todo");
+    if (todoPane && this.todoPanel.visible !== todoPane.visible) {
+      this.todoPanel = { ...this.todoPanel, visible: todoPane.visible };
+    }
     this.render();
   }
 
   /** Cycle layout mode: classic → split → focus → wide → classic. */
   cycleLayoutMode(): void {
     const next = cycleLayoutModeFn(this.layout.mode);
-    this.layout = setLayoutModeFn(this.layout, next);
-    this.render();
+    this.setLayoutMode(next);
   }
 
   /** Current layout state snapshot (defensive copy). */
@@ -508,10 +655,97 @@ export class FullScreenTui {
     this.render();
   }
 
-  /** Toggle todo panel visibility. */
-  toggleTodoPanel(): void {
-    this.todoPanel = { ...this.todoPanel, visible: !this.todoPanel.visible };
+  /** Toggle a todo item between pending and completed. */
+  toggleTodoItem(id: string): void {
+    const item = this.todoPanel.items.find((i) => i.id === id);
+    if (!item) return;
+    const next: TodoStatus = item.status === "completed" ? "pending" : "completed";
+    this.todoPanel = updateTodoStatusFn(this.todoPanel, id, next);
     this.render();
+  }
+
+  /** Toggle todo panel visibility. Syncs both todoPanel.visible and layout pane. */
+  toggleTodoPanel(): void {
+    const next = !this.todoPanel.visible;
+    this.todoPanel = { ...this.todoPanel, visible: next };
+    this.layout = setSidebarPaneVisibleFn(this.layout, "todo", next);
+    this.render();
+  }
+
+  /** Toggle a sidebar pane (spec/context) visibility in the layout. */
+  toggleSidebarPane(paneId: Exclude<PaneId, "todo" | "transcript" | "input">): void {
+    this.layout = toggleSidebarPaneFn(this.layout, paneId);
+    this.render();
+  }
+
+  /** Cycle keyboard focus to the next visible sidebar pane, wrapping back to input. */
+  cycleSidebarFocus(): void {
+    const visible = this.visibleSidebarPanes();
+    if (visible.length === 0) {
+      this.activePane = "input";
+      this.render();
+      return;
+    }
+    if (this.activePane === "input") {
+      this.activePane = visible[0]!;
+    } else {
+      const idx = visible.indexOf(this.activePane as "todo" | "spec" | "context");
+      if (idx < 0 || idx === visible.length - 1) {
+        this.activePane = "input";
+      } else {
+        this.activePane = visible[idx + 1]!;
+      }
+    }
+    // Clamp selection to visible items.
+    this.clampPaneSelection();
+    this.render();
+  }
+
+  /** Perform the primary action on the currently focused sidebar pane (e.g. toggle todo). */
+  performSidebarAction(): void {
+    if (this.activePane === "input") return;
+    if (this.activePane === "todo") {
+      const idx = this.paneSelection.todo;
+      const item = this.todoPanel.items[idx];
+      if (item) {
+        this.toggleTodoItem(item.id);
+      }
+      return;
+    }
+    // For spec/context panes, Enter is a no-op for now (informational panes).
+  }
+
+  /** Move the sidebar pane selection up or down (called by arrow keys when a pane is focused). */
+  moveSidebarSelection(delta: number): void {
+    if (this.activePane === "input") return;
+    const key = this.activePane;
+    const max = this.paneItemCount(key) - 1;
+    this.paneSelection[key] = Math.max(0, Math.min(max, this.paneSelection[key] + delta));
+    this.render();
+  }
+
+  private visibleSidebarPanes(): Array<"todo" | "spec" | "context"> {
+    const result: Array<"todo" | "spec" | "context"> = [];
+    const isVisible = (id: "todo" | "spec" | "context") =>
+      this.layout.panes.find((p) => p.id === id)?.visible === true;
+    if (this.todoPanel.visible || isVisible("todo")) result.push("todo");
+    if (isVisible("spec")) result.push("spec");
+    if (isVisible("context")) result.push("context");
+    return result;
+  }
+
+  private paneItemCount(pane: "todo" | "spec" | "context"): number {
+    if (pane === "todo") return Math.max(1, this.todoPanel.items.length);
+    if (pane === "spec") return Math.max(1, this.specProgress.stages.length);
+    if (pane === "context") return 1;
+    return 0;
+  }
+
+  private clampPaneSelection(): void {
+    for (const pane of ["todo", "spec", "context"] as const) {
+      const max = Math.max(0, this.paneItemCount(pane) - 1);
+      if (this.paneSelection[pane] > max) this.paneSelection[pane] = max;
+    }
   }
 
   /** Current todo panel state snapshot (defensive copy). */
@@ -636,6 +870,10 @@ export class FullScreenTui {
   }
 
   snapshot(): TuiRenderState {
+    // Expire toast notifications older than the fade-out window (2500ms).
+    if (this.toast && Date.now() - this.toast.startedAt > 2500) {
+      delete this.toast;
+    }
     return {
       width: this.options.output.columns || 80,
       height: this.options.output.rows || 24,
@@ -692,7 +930,26 @@ export class FullScreenTui {
         ...this.todoPanel,
         items: this.todoPanel.items.map((i) => ({ ...i })),
       },
+      activePane: this.activePane,
+      paneSelection: { ...this.paneSelection },
       scrollOffset: this.scrollOffset,
+      ...(this.toast
+        ? {
+            toast: {
+              text: this.toast.text,
+              startedAt: this.toast.startedAt,
+              level: this.toast.level,
+            },
+          }
+        : {}),
+      ...(this.specHistoryVisible
+        ? {
+            specHistoryView: {
+              entries: this.specHistory.map((e) => ({ ...e, stages: e.stages.map((s) => ({ ...s })) })),
+              selectedIndex: this.specHistorySelection,
+            },
+          }
+        : {}),
     };
   }
 
@@ -1299,10 +1556,18 @@ export class FullScreenTui {
       this.editor.wordRight();
     } else if (action === "history_previous") {
       this.cancelCompletion();
-      this.recall(-1);
+      if (this.activePane !== "input") {
+        this.moveSidebarSelection(-1);
+      } else {
+        this.recall(-1);
+      }
     } else if (action === "history_next") {
       this.cancelCompletion();
-      this.recall(1);
+      if (this.activePane !== "input") {
+        this.moveSidebarSelection(1);
+      } else {
+        this.recall(1);
+      }
     } else if (action === "scroll_up") {
       this.scrollOffset += 5;
     } else if (action === "scroll_down") {
@@ -1332,6 +1597,15 @@ export class FullScreenTui {
     } else if (action === "toggle_todo_panel") {
       this.toggleTodoPanel();
       this.setStatus(this.todoPanel.visible ? "Todo panel on" : "Todo panel off");
+    } else if (action === "cycle_sidebar_focus") {
+      this.cycleSidebarFocus();
+      if (this.activePane !== "input") {
+        this.setStatus("Focus: " + this.activePane + " pane (Alt+] cycles, Alt+Enter acts)");
+      } else {
+        this.setStatus("Focus: input");
+      }
+    } else if (action === "sidebar_action") {
+      this.performSidebarAction();
     } else if (action === "spec_option_up") {
       this.confirmSpecNavigation("option_up");
     } else if (action === "spec_option_down") {

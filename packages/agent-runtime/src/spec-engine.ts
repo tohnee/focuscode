@@ -127,7 +127,7 @@ export class SpecEngine {
             model: input.model,
             readOnlyTools: this.readOnlyTools(input.toolRegistry),
             maxRounds: this.options.maxExplorationRounds,
-            ...(controller.signal.aborted ? { signal: controller.signal } : {}),
+            signal: controller.signal,
           }),
         trace,
         "main-model",
@@ -171,6 +171,7 @@ export class SpecEngine {
       specId: draft.id,
       topic: draft.topic,
       understanding: draft.understanding,
+      taskBreakdown: draft.taskBreakdown,
     });
 
     // Stage 4: Decision Detector

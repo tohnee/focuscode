@@ -345,3 +345,23 @@ export function dim(color: ColorValue, text: string): string {
   const db = Math.round(b * 0.55);
   return "\u001b[38;2;" + dr + ";" + dg + ";" + db + "m" + text + "\u001b[39m";
 }
+
+/** Wrap text in ANSI bold (SGR 1). */
+export function bold(text: string): string {
+  return "\u001b[1m" + text + "\u001b[22m";
+}
+
+/** Wrap text in ANSI italic (SGR 3). */
+export function italic(text: string): string {
+  return "\u001b[3m" + text + "\u001b[23m";
+}
+
+/** Wrap text in ANSI underline (SGR 4). */
+export function underline(text: string): string {
+  return "\u001b[4m" + text + "\u001b[24m";
+}
+
+/** Wrap text in ANSI faint/dim attribute (SGR 2) for terminal-native dimming. */
+export function faint(text: string): string {
+  return "\u001b[2m" + text + "\u001b[22m";
+}

@@ -1,4 +1,4 @@
-import { fg, type TuiTheme } from "./themes.js";
+import { bold, dim, faint, fg, type TuiTheme } from "./themes.js";
 
 export type SpecPhase =
   | "idle"
@@ -29,6 +29,15 @@ export interface SpecDecisionView {
   selectedIndex: number;
 }
 
+export interface SpecDraftPreview {
+  goal?: string;
+  constraintsCount?: number;
+  acceptanceCriteriaCount?: number;
+  affectedFiles?: string[];
+  taskCount?: number;
+  tasks?: { id: string; description: string; kind: string }[];
+}
+
 export interface SpecProgressState {
   phase: SpecPhase;
   trigger?: "auto" | "explicit";
@@ -40,6 +49,8 @@ export interface SpecProgressState {
   pendingDecisions?: SpecDecisionView[];
   /** Reason text captured from spec_skipped; rendered under the "Spec skipped" header. */
   skipReason?: string;
+  /** Draft preview shown after spec_draft_ready fires (before confirmation). */
+  draftPreview?: SpecDraftPreview;
 }
 
 export interface SpecConfirmationState {
@@ -148,6 +159,25 @@ function truncate(text: string, max: number): string {
   return text.slice(0, Math.max(1, max - 1)) + "…";
 }
 
+/** Word-wrap text to fit within `width` columns, breaking on spaces when possible. */
+function wrapText(text: string, width: number): string[] {
+  if (width <= 0) return [text];
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    if (!word) continue;
+    if (current.length + word.length + 1 <= width) {
+      current += (current ? " " : "") + word;
+    } else {
+      if (current) lines.push(current);
+      current = word.length > width ? word.slice(0, width - 1) + "…" : word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length > 0 ? lines : [""];
+}
+
 const RUNNING_SPINNER = ["◐", "◓", "◑", "◒"];
 
 export interface RenderSpecProgressOptions {
@@ -172,15 +202,15 @@ export function renderSpecProgress(
       : state.phase === "completed"
         ? "✦ Spec completed"
         : "✦ Spec Engine";
-  lines.push(fg(theme.accent, header));
+  lines.push(bold(fg(theme.accent, header)));
 
   if (state.phase === "skipped") {
     const reason = options?.reason ?? state.skipReason;
     if (reason) {
-      lines.push(fg(theme.muted, "  " + truncate(reason, width - 4)));
+      lines.push(faint(fg(theme.muted, "  " + truncate(reason, width - 4))));
     }
   } else if (state.topic) {
-    lines.push(fg(theme.muted, "  " + truncate(state.topic, width - 4)));
+    lines.push(faint(fg(theme.muted, "  " + truncate(state.topic, width - 4))));
   }
 
   for (const stage of state.stages) {
@@ -205,15 +235,60 @@ export function renderSpecProgress(
         : stage.status === "running"
           ? theme.warning
           : theme.muted;
-    lines.push(fg(color, "  " + icon + " " + name + detail));
+    const stageLabel = stage.status === "running" ? bold("  " + icon + " " + name) : "  " + icon + " " + name;
+    lines.push(fg(color, stageLabel + faint(detail)));
   }
 
   if (state.phase === "completed") {
     if (state.totalDuration !== undefined) {
-      lines.push(fg(theme.success, "  Total: " + formatDuration(state.totalDuration)));
+      lines.push(bold(fg(theme.success, "  Total: ")) + faint(formatDuration(state.totalDuration)));
     }
     if (state.specId) {
-      lines.push(fg(theme.muted, "  spec: " + truncate(state.specId, width - 9)));
+      lines.push(faint(fg(theme.muted, "  spec: " + truncate(state.specId, width - 9))));
+    }
+  }
+
+  // Draft preview: show compact summary when spec_draft_ready has fired
+  // (phase is "detect-decisions" or later, before confirmation overlay appears).
+  if (state.draftPreview && state.phase !== "completed" && state.phase !== "skipped") {
+    const dp = state.draftPreview;
+    lines.push(fg(theme.accent, "  ── " + bold("Draft Preview") + " ──"));
+    if (dp.goal) {
+      const goalLines = wrapText(dp.goal, Math.max(20, width - 6));
+      for (let i = 0; i < Math.min(goalLines.length, 3); i++) {
+        lines.push(fg(theme.foreground, "  " + goalLines[i]));
+      }
+      if (goalLines.length > 3) {
+        lines.push(faint(fg(theme.muted, "  …")));
+      }
+    }
+    const metaParts: string[] = [];
+    if (dp.taskCount !== undefined) metaParts.push(dp.taskCount + " tasks");
+    if (dp.constraintsCount !== undefined) metaParts.push(dp.constraintsCount + " constraints");
+    if (dp.acceptanceCriteriaCount !== undefined)
+      metaParts.push(dp.acceptanceCriteriaCount + " criteria");
+    if (metaParts.length > 0) {
+      lines.push(bold(fg(theme.secondary, "  " + metaParts.join(" · "))));
+    }
+    if (dp.tasks && dp.tasks.length > 0) {
+      const kindIcon: Record<string, string> = {
+        design: "◇",
+        implement: "●",
+        test: "◆",
+        refactor: "◎",
+        doc: "─",
+      };
+      const maxShow = Math.min(dp.tasks.length, 4);
+      for (let i = 0; i < maxShow; i++) {
+        const t = dp.tasks[i]!;
+        const icon = kindIcon[t.kind] ?? "○";
+        lines.push(
+          faint(fg(theme.muted, "  " + icon + " " + truncate(t.description, Math.max(20, width - 10)))),
+        );
+      }
+      if (dp.tasks.length > maxShow) {
+        lines.push(faint(fg(theme.muted, "  … +" + (dp.tasks.length - maxShow) + " more")));
+      }
     }
   }
 
@@ -237,11 +312,11 @@ export function renderSpecConfirmation(
   const lines: string[] = [];
   const total = state.decisions.length;
   const current = state.currentDecisionIndex + 1;
-  lines.push(fg(theme.accent, "╭─ ✦ Spec Confirmation " + dash.slice(22) + "╮"));
-  lines.push(fg(theme.muted, "│ " + truncate(state.specId, innerWidth - 4)));
+  lines.push(bold(fg(theme.accent, "╭─ ✦ Spec Confirmation " + dash.slice(22) + "╮")));
+  lines.push(faint(fg(theme.muted, "│ " + truncate(state.specId, innerWidth - 4))));
   lines.push(fg(theme.muted, "├" + dash + "┤"));
   lines.push(
-    fg(theme.warning, "│ Decision " + current + "/" + total + " [" + decision.severity + "]"),
+    bold(fg(theme.warning, "│ Decision " + current + "/" + total + " [" + decision.severity + "]")),
   );
   lines.push(fg(theme.foreground, "│ " + truncate(decision.point, innerWidth - 4)));
 
@@ -249,13 +324,13 @@ export function renderSpecConfirmation(
     const selected = i === decision.selectedIndex;
     const marker = selected ? "›" : " ";
     const label = selected
-      ? fg(theme.accent, marker + " " + option.label)
-      : fg(theme.muted, marker + " " + option.label);
-    const desc = fg(theme.muted, " — " + truncate(option.description, innerWidth - 20));
+      ? bold(fg(theme.accent, marker + " " + option.label))
+      : faint(fg(theme.muted, marker + " " + option.label));
+    const desc = faint(fg(theme.muted, " — " + truncate(option.description, innerWidth - 20)));
     lines.push("│ " + label + desc);
   }
 
   lines.push(fg(theme.muted, "├" + dash + "┤"));
-  lines.push(fg(theme.muted, "│ ↑↓ navigate  Enter confirm  Esc decline"));
+  lines.push(faint(fg(theme.muted, "│ ↑↓ navigate  Enter confirm  Esc decline")));
   return lines;
 }
