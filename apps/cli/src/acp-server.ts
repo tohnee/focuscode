@@ -23,17 +23,11 @@ import { createInterface } from "node:readline";
 import {
   CodingAgent,
   SessionStore,
-  createCodingToolRegistry,
-  createModelClient,
-  loadAgentResources,
   renderResourcePrompt,
-  resolveAgentConfig,
   type AgentEvent,
 } from "@focuscode/agent-runtime";
-import { createSandbox } from "@focuscode/sandbox";
 import type { AgentCliArgs } from "./agent-args.js";
-import { buildModelClientChain } from "./model-client-wiring.js";
-import { oauthAccessTokenProvider } from "./auth-command.js";
+import { createAgentContext } from "./agent-context.js";
 
 const ACP_PROTOCOL_VERSION = "1.0.0";
 
@@ -88,34 +82,19 @@ interface AcpSession {
 
 export async function runAcpServer(
   args: AgentCliArgs,
-  configOverrides: Parameters<typeof resolveAgentConfig>[1],
+  configOverrides: Parameters<typeof import("@focuscode/agent-runtime").resolveAgentConfig>[1],
 ): Promise<void> {
   const cwd = resolve(args.cwd);
-  const config = await resolveAgentConfig(cwd, configOverrides);
   const sessions = new SessionStore(
     resolve(args.sessionDirectory ?? joinDefault(cwd)),
     !args.noSession,
   );
-  const sandbox = await createSandbox({
-    kind: config.sandbox.kind ?? "auto",
-    workspaceRoot: cwd,
-  });
-  const registry = await createCodingToolRegistry(cwd, { shellExecutor: sandbox });
-  const resources = await loadAgentResources({
+  const ctx = await createAgentContext({
     cwd,
-    projectTrusted: config.projectTrusted,
-    configuredInstructions: config.instructions,
-  });
-  const client = buildModelClientChain(config.model, config.fallbackModels, {
-    factory: (model) => {
-      const accessTokenProvider = oauthAccessTokenProvider(model);
-      return createModelClient({
-        ...model,
-        ...(accessTokenProvider ? { accessTokenProvider } : {}),
-      });
-    },
+    configOverrides: configOverrides ?? {},
     onFallback: (event) => log(`Fallback: ${event.from} -> ${event.to} (${event.reason})`),
   });
+  const { sandbox, registry, resources, client, config } = ctx;
 
   const sessions_ = new Map<string, AcpSession>();
   let currentSessionId: string | undefined;

@@ -138,6 +138,7 @@ export class CodingAgent {
   private currentSkillPrompt = "";
   private specEngine: SpecEngine | undefined;
   private currentSpecId: string | undefined;
+  private currentSpecTopic: string | undefined;
   // Doom-loop detection: tracks consecutive identical failed tool call rounds.
   private doomLoopFingerprint = "";
   private doomLoopCount = 0;
@@ -318,6 +319,7 @@ export class CodingAgent {
           );
         }
         this.currentSpecId = result.specId;
+        this.currentSpecTopic = result.topic;
       }
       // action === "skip": use original prompt as-is
     }
@@ -641,6 +643,8 @@ export class CodingAgent {
     }
     if (entries.length === 0) throw new Error("Session is too short to compact");
     const structured = summarizeEntriesStructured(entries, this.session.compaction?.structured);
+    if (this.currentSpecId) structured.specId = this.currentSpecId;
+    if (this.currentSpecTopic) structured.specTopic = this.currentSpecTopic;
     const summary = this.context.summarize(entries, this.session.compaction?.summary, structured);
     await this.options.sessionStore.saveCompaction(
       this.sessionId,
@@ -1001,6 +1005,8 @@ export class CodingAgent {
       compiled.compactableEntries,
       this.session.compaction?.structured,
     );
+    if (this.currentSpecId) structured.specId = this.currentSpecId;
+    if (this.currentSpecTopic) structured.specTopic = this.currentSpecTopic;
     const summary = this.context.summarize(
       compiled.compactableEntries,
       this.session.compaction?.summary,

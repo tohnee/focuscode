@@ -164,11 +164,21 @@ export function summarizeEntriesStructured(
       STRUCTURED_DECISION_LIMIT,
     ),
     openQuestions: mergeOrdered(prior?.openQuestions, openQuestions, STRUCTURED_DECISION_LIMIT),
+    // Preserve spec context across compactions so the agent remembers
+    // which spec it's working under after context compression.
+    ...(prior?.specId ? { specId: prior.specId } : {}),
+    ...(prior?.specTopic ? { specTopic: prior.specTopic } : {}),
   };
 }
 
 function renderStructuredSummary(structured: SessionCompactionStructured): string | undefined {
   const sections: string[] = [];
+  if (structured.specId) {
+    const specLine = `${structured.specId}${
+      structured.specTopic ? ` · ${structured.specTopic}` : ""
+    }`;
+    sections.push(`## Spec\n- ${specLine}`);
+  }
   if (structured.filesChanged.length) {
     sections.push(`## Files changed\n${bullet(structured.filesChanged)}`);
   }

@@ -151,6 +151,108 @@ describe("summarizeEntriesStructured", () => {
   });
 });
 
+describe("spec context in structured compaction", () => {
+  it("preserves specId and specTopic from prior across compaction", () => {
+    const entries = [entry({ role: "assistant", content: "Working on auth." })];
+    const prior: SessionCompactionStructured = {
+      schemaVersion: "focuscode-compaction.v1",
+      filesRead: [],
+      filesChanged: [],
+      commandsRun: [],
+      keyDecisions: [],
+      pendingApprovals: [],
+      openQuestions: [],
+      specId: "spec_123",
+      specTopic: "add user authentication",
+    };
+    const result = summarizeEntriesStructured(entries, prior);
+    expect(result.specId).toBe("spec_123");
+    expect(result.specTopic).toBe("add user authentication");
+  });
+
+  it("does not include spec fields when prior has none", () => {
+    const entries = [entry({ role: "assistant", content: "Working." })];
+    const result = summarizeEntriesStructured(entries);
+    expect(result.specId).toBeUndefined();
+    expect(result.specTopic).toBeUndefined();
+  });
+
+  it("updates specId when prior changes", () => {
+    const entries: SessionEntry[] = [];
+    const prior1: SessionCompactionStructured = {
+      schemaVersion: "focuscode-compaction.v1",
+      filesRead: [],
+      filesChanged: [],
+      commandsRun: [],
+      keyDecisions: [],
+      pendingApprovals: [],
+      openQuestions: [],
+      specId: "spec_old",
+      specTopic: "old topic",
+    };
+    const result1 = summarizeEntriesStructured(entries, prior1);
+    expect(result1.specId).toBe("spec_old");
+
+    // Second compaction with new spec
+    const prior2 = { ...result1, specId: "spec_new", specTopic: "new topic" };
+    const result2 = summarizeEntriesStructured(entries, prior2);
+    expect(result2.specId).toBe("spec_new");
+    expect(result2.specTopic).toBe("new topic");
+  });
+
+  it("round-trips specId through saveCompaction and load", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "focus-spec-compaction-"));
+    directories.push(directory);
+    const store = new SessionStore(directory, true, now);
+    const session = await store.create({ cwd: process.cwd(), model });
+    const first = await store.appendMessage(session.header.sessionId, {
+      role: "user",
+      content: "implement auth",
+    });
+    const structured = summarizeEntriesStructured([
+      entry({ role: "assistant", content: "我决定使用JWT。" }),
+    ]);
+    // Simulate agent setting spec context after SpecEngine completes
+    structured.specId = "spec_abc";
+    structured.specTopic = "add JWT authentication";
+    await store.saveCompaction(session.header.sessionId, "summary", first.entryId, {
+      structured,
+    });
+    const loaded = await new SessionStore(directory, true, now).load(session.header.sessionId);
+    expect(loaded.compaction?.structured?.specId).toBe("spec_abc");
+    expect(loaded.compaction?.structured?.specTopic).toBe("add JWT authentication");
+  });
+
+  it("renders spec section in structured summary when specId is present", () => {
+    const entries = [entry({ role: "assistant", content: "Done." })];
+    const prior: SessionCompactionStructured = {
+      schemaVersion: "focuscode-compaction.v1",
+      filesRead: [],
+      filesChanged: [],
+      commandsRun: [],
+      keyDecisions: [],
+      pendingApprovals: [],
+      openQuestions: [],
+      specId: "spec_xyz",
+      specTopic: "refactor permissions",
+    };
+    const structured = summarizeEntriesStructured(entries, prior);
+    const context = new ConversationContext(model);
+    const summary = context.summarize(entries, undefined, structured);
+    expect(summary).toContain("## Spec");
+    expect(summary).toContain("spec_xyz");
+    expect(summary).toContain("refactor permissions");
+  });
+
+  it("does not render spec section when no specId", () => {
+    const entries = [entry({ role: "assistant", content: "Done." })];
+    const structured = summarizeEntriesStructured(entries);
+    const context = new ConversationContext(model);
+    const summary = context.summarize(entries, undefined, structured);
+    expect(summary).not.toContain("## Spec");
+  });
+});
+
 describe("ConversationContext.summarize structured sections", () => {
   it("renders fixed sections for structured facts at the top of the summary", () => {
     const context = new ConversationContext(model);

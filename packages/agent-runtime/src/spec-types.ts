@@ -128,6 +128,8 @@ export type SpecClarifyResult =
       enhancedPrompt: string;
       initialTodos: SpecInitialTodo[];
       specPath: string;
+      /** Spec topic for compaction tracking. */
+      topic: string;
     };
 
 export interface SpecDraft {

@@ -32,6 +32,10 @@ export interface SessionCompactionStructured {
   keyDecisions: string[];
   pendingApprovals: string[];
   openQuestions: string[];
+  /** Active spec ID from SpecEngine, preserved across compactions. */
+  specId?: string;
+  /** Active spec topic from SpecEngine, preserved across compactions. */
+  specTopic?: string;
 }
 
 export interface SessionCompaction {

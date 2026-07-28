@@ -292,6 +292,7 @@ export class SpecEngine {
       enhancedPrompt,
       initialTodos: doc.initialTodos,
       specPath,
+      topic: doc.topic,
     };
   }
 
