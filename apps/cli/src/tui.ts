@@ -170,6 +170,10 @@ export interface FullScreenAgentOptions {
   /** SpecEngine 拒绝回调透传。 */
   onSpecDecline?(specId: string): void;
   onReady?(tui: FullScreenTui): void;
+  /** Initial vim mode preference, persisted across sessions. */
+  vimEnabled?: boolean;
+  /** Callback fired when vim mode is toggled; persist the new value. */
+  onVimToggle?(enabled: boolean): void;
 }
 
 const DEFAULT_COMPANION_PATH = () => join(homedir(), ".focuscode", "companion.json");
@@ -203,6 +207,11 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
     ...(options.pickerReasoningEffort
       ? { pickerReasoningEffort: options.pickerReasoningEffort }
       : {}),
+    // Wire vim mode persistence: the TUI restores the initial state and
+    // fires onVimToggle when the user toggles vim mode, so the CLI can
+    // write the preference back to config.
+    ...(options.vimEnabled !== undefined ? { vimEnabled: options.vimEnabled } : {}),
+    ...(options.onVimToggle ? { onVimToggle: options.onVimToggle } : {}),
     onPickModel: (result) => {
       void options
         .changeModel(result.model)

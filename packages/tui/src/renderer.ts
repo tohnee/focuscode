@@ -16,6 +16,7 @@ import { renderSearchBar, type SearchState } from "./search.js";
 import { renderVimIndicator, type VimState } from "./vim.js";
 import { computeLayout, type ComputedLayout, type LayoutState, type PaneId } from "./layout.js";
 import { renderTodoPanel, type TodoPanelState } from "./todo-panel.js";
+import { renderTreePanel, type TreePanelState } from "./tree-panel.js";
 import { bg, fg, type ColorValue, type TuiTheme } from "./themes.js";
 import {
   charWidth,
@@ -96,10 +97,12 @@ export interface TuiRenderState {
   layout?: LayoutState;
   /** Todo 侧栏面板状态;仅在 split/wide 布局且有 todo 项时渲染。 */
   todoPanel?: TodoPanelState;
+  /** Session tree 侧栏面板状态;仅在 split/wide 布局且 visible 时渲染。 */
+  treePanel?: TreePanelState;
   /** Which pane currently has keyboard focus; used for focus highlight in sidebar. */
-  activePane?: "input" | "todo" | "spec" | "context";
+  activePane?: "input" | "todo" | "spec" | "context" | "tree";
   /** Selected item index within each sidebar pane (for keyboard navigation). */
-  paneSelection?: { todo: number; spec: number; context: number };
+  paneSelection?: { todo: number; spec: number; context: number; tree: number };
   /** Toast notification rendered over the top-right corner with fade animation. */
   toast?: { text: string; startedAt: number; level: "info" | "success" | "warning" };
   /** Spec history browser overlay entries and selection. */
@@ -591,7 +594,7 @@ function renderSidebarPanes(
   for (const paneId of panes) {
     let paneLines: string[] = [];
     const isFocused = state.activePane === paneId;
-    const selIdx = state.paneSelection?.[paneId as "todo" | "spec" | "context"] ?? 0;
+    const selIdx = state.paneSelection?.[paneId as "todo" | "spec" | "context" | "tree"] ?? 0;
 
     if (paneId === "todo" && state.todoPanel) {
       const rendered = renderTodoPanel(state.todoPanel, paneWidth, bodyHeight, theme);
@@ -607,6 +610,19 @@ function renderSidebarPanes(
         ? fg(theme.accent, "▸ ") + fg(theme.foreground, "⚙ Context")
         : fg(theme.accent, "⚙ Context");
       paneLines = [title, bar];
+    } else if (paneId === "tree" && state.treePanel) {
+      const rendered = renderTreePanel(state.treePanel, paneWidth, bodyHeight, theme);
+      // Tree pane uses a simple focus marker on the title line (no per-item
+      // checkbox selection because tree nodes are informational for now).
+      if (rendered.length > 0 && isFocused) {
+        const first = rendered[0]!;
+        if (first.startsWith(" ")) {
+          rendered[0] = fg(theme.accent, "▸") + first.slice(1);
+        } else {
+          rendered[0] = fg(theme.accent, "▸ ") + first;
+        }
+      }
+      paneLines = rendered;
     }
 
     if (paneLines.length === 0) continue;

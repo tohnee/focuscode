@@ -5,7 +5,7 @@
  * 不持有任何运行时状态，仅依赖 TypeScript 标准类型与本包内部模块。
  */
 
-export type PaneId = "transcript" | "input" | "todo" | "spec" | "context";
+export type PaneId = "transcript" | "input" | "todo" | "spec" | "context" | "tree";
 
 export type LayoutMode = "classic" | "split" | "focus" | "wide";
 
@@ -63,6 +63,7 @@ export function createInitialLayout(): LayoutState {
       { id: "todo", visible: false, side: "right" },
       { id: "spec", visible: false, side: "right" },
       { id: "context", visible: false, side: "right" },
+      { id: "tree", visible: false, side: "right" },
     ],
   };
 }
@@ -174,7 +175,7 @@ function computeWideLayout(width: number, height: number, state: LayoutState): C
 }
 
 function visibleSidebarPanes(state: LayoutState): PaneId[] {
-  const order: PaneId[] = ["todo", "spec", "context"];
+  const order: PaneId[] = ["todo", "spec", "context", "tree"];
   return order.filter((id) => state.panes.find((p) => p.id === id)?.visible);
 }
 

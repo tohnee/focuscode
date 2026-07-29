@@ -3,6 +3,7 @@ export * from "./coding-agent.js";
 export * from "./effect-spine.js";
 export * from "./tool-dsl.js";
 export * from "./async-iterable.js";
+export * from "./run-coding-agent.js";
 export * from "./hooks.js";
 export * from "./errors.js";
 export * from "./migration.js";

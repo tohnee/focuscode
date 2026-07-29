@@ -7,3 +7,4 @@ apps/cli/bundle
 .tmp
 pnpm-lock.yaml
 docs/compare
+focuscode-mascots.design

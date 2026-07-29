@@ -49,6 +49,17 @@ export interface CreateCodingAgentOptions extends AgentConfigOverrides {
    * addition to (not instead of) `onEvent`.
    */
   hooks?: AgentHooks;
+  /**
+   * Fork an existing session instead of creating a new one. When set, the
+   * agent resumes from the specified session's history and branches into a
+   * new session. Maps to Claude Agent SDK's `forkSession`.
+   */
+  forkSession?: string;
+  /**
+   * Fork at a specific entry point within the source session. Only used
+   * when `forkSession` is set.
+   */
+  forkEntryId?: string;
 }
 
 export interface CreatedCodingAgent {
@@ -137,10 +148,46 @@ export async function createCodingAgent(
       : (resources.extensionPaths ?? [])),
     ...(options.extensionPaths ?? []),
   ]);
+  // Bridge SDK preToolUse hook into the ExtensionHost beforeTool registry so
+  // agent-runtime's veto path (both legacy and spine) fires the SDK hook.
+  // This unifies the split beforeTool mechanism: integrators register via
+  // CreateCodingAgentOptions.hooks, and the SDK wires it into the same
+  // ExtensionHost pipeline that extensions use.
+  if (options.hooks?.preToolUse) {
+    const sdkPreToolUse = options.hooks.preToolUse;
+    const hook = async (context: {
+      toolName: string;
+      arguments: Record<string, unknown>;
+      cwd: string;
+    }) => {
+      const result = await sdkPreToolUse({
+        toolName: context.toolName,
+        arguments: context.arguments,
+        cwd: context.cwd,
+      });
+      if (!result) return { allow: true };
+      return result;
+    };
+    // Access the private beforeToolHooks array directly; ExtensionHost.api()
+    // is private but the underlying array is the single registration point.
+    (extensions as unknown as { beforeToolHooks: Array<typeof hook> }).beforeToolHooks.push(hook);
+  }
   const sessions = new SessionStore(
     resolve(options.sessionDirectory ?? defaultSessionDirectory(cwd)),
     options.persistentSession ?? true,
   );
+  // Fork an existing session when forkSession is provided. This branches the
+  // source session's history into a new session, optionally at a specific
+  // entry point, and resumes from the forked branch.
+  if (options.forkSession) {
+    const forked = await sessions.fork(
+      options.forkSession,
+      options.forkEntryId,
+      config.model,
+      options.sessionName,
+    );
+    options.sessionId = forked.header.sessionId;
+  }
   // The spine needs a stable taskId before agent creation, so pre-create the
   // session (exactly what CodingAgent.create would do) when none was resumed.
   const spineEnabled = options.effectSpine ?? config.agent.effectSpine;

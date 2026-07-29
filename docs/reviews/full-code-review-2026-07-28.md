@@ -417,3 +417,70 @@ FocusCode v0.5.0 在以下维度显著领先竞品：
 - 3 项为计数偏差（主题 12→13、TuiAction 42→45、鼓励语描述）— 已更正
 
 **最终决策**: APPROVE。报告可作为 v0.5.0 能力评估的权威参考，所有改进建议（P0/P1/P2）的优先级判定维持不变。
+
+---
+
+## 九、第三次复审记录（2026-07-29）
+
+本章节记录在仓库新提交（`671c3ee` P2 TDD D4-D12 + `d339b97` D1 dual-chain convergence）后，对源码进行的第三次验证，确认报告中各项问题的当前修复状态。
+
+### 9.1 已修复项（4 项）
+
+| #   | 原优先级 | 问题                      | 修复提交       | 当前状态                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --- | -------- | ------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | P1       | ACP checkpoint 能力未实现 | D12（671c3ee） | ✅ 已修复。[acp-handler.ts:42-54](file:///Users/tohnee/Trae/Code/focuscode/apps/cli/src/acp-handler.ts) `checkpoint: true`；[acp-handler.ts:56-79](file:///Users/tohnee/Trae/Code/focuscode/apps/cli/src/acp-handler.ts) 实现 `session/checkpoint` 方法（list/undo）；[acp-checkpoint.test.ts](file:///Users/tohnee/Trae/Code/focuscode/apps/cli/test/acp-checkpoint.test.ts) 8 个测试用例                                                                                                                                                                                                                                     |
+| 2   | P2       | truecolor 检测缺失        | D11（671c3ee） | ✅ 已修复。[themes.ts:292-380](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/src/themes.ts) 新增 `detectTruecolorSupport()`/`setColorMode()`/`rgbToAnsi256()`；`fg()`/`bg()`/`dim()` 在非 truecolor 模式下自动降级到 256 色；[truecolor-detection.test.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/test/truecolor-detection.test.ts) 18 个测试用例                                                                                                                                                                                                                                                       |
+| 3   | P2       | keymap 冲突静默删除       | D9（671c3ee）  | ✅ 已修复。[keymap.ts:240-247](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/src/keymap.ts) `mergeKeymap` 新增 `console.warn` 冲突警告；[keymap.test.ts:232-302](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/test/keymap.test.ts) 8 个测试用例（TC-D9-01 到 TC-D9-08）                                                                                                                                                                                                                                                                                                                                       |
+| 4   | P2       | vim 模式不持久化          | D10（671c3ee） | ⚠️ 部分修复。TUI 层基础设施已就位：[app.ts:102-105](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/src/app.ts) 新增 `vimEnabled?`/`onVimToggle?` 选项，[app.ts:187-188](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/src/app.ts) 构造时恢复偏好，[app.ts:591-596](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/src/app.ts) `setVimEnabled` 触发回调；[tui.test.ts:584-699](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/test/tui.test.ts) 6 个测试用例。**但 CLI 层未接入**：`apps/cli/src/tui.ts:190` 构造 `FullScreenTui` 时未传递 `vimEnabled`/`onVimToggle`，重启后 vim 模式仍重置为 off |
+
+### 9.2 未修复项（10 项，优先级维持不变）
+
+| #   | 原优先级 | 问题                        | 当前状态                                                                                                                                                                                                                                                                                                                                                                                           |
+| --- | -------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | P0       | 原生 AsyncGenerator 入口    | ❌ 未修复。[async-iterable.ts:66](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/async-iterable.ts) 仍是 `streamSubmit` 适配器，非原生 Generator                                                                                                                                                                                                                                        |
+| 2   | P0       | forkSession SDK 层暴露      | ❌ 未修复。[coding-agent.ts:32-52](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/coding-agent.ts) `CreateCodingAgentOptions` 无 `forkSession` 参数；[migration.ts:11](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/migration.ts) 注释明示 "silently dropped"                                                                                                              |
+| 3   | P0       | beforeTool 统一到 SDK hooks | ❌ 未修复。[hooks.ts:109-130](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/hooks.ts) `AgentHooks` 仍只有 8 种钩子，不含 `beforeTool`；[effect-spine.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/effect-spine.ts) 不触发 beforeTool；[migration.ts:114-117](file:///Users/tohnee/Trae/Code/focuscode/packages/sdk/src/migration.ts) `MigratedHooks` 分裂注册路径仍在 |
+| 4   | P0       | LSP 接入 TUI 内联补全       | ❌ 未修复。[completion.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/src/completion.ts) 未集成 LSP 候选；[lsp-client.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/agent-runtime/src/lsp-client.ts) 无 `textDocument/completion` 请求方法                                                                                                                                      |
+| 5   | P0       | 鼠标支持                    | ❌ 未修复。[keymap.ts:116-145](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/src/keymap.ts) `TERMINAL_SEQUENCES` 仍只含键盘序列，无 `\u001b[M` 或 `\u001b[<` 鼠标 SGR 序列                                                                                                                                                                                                                 |
+| 6   | P1       | in-process MCP server       | ❌ 未修复。[mcp.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/agent-runtime/src/mcp.ts) 仍只有 `McpStdioClient` + `McpHttpClient`，无 in-process 实现                                                                                                                                                                                                                                      |
+| 7   | P1       | settingSources 三层语义     | ❌ 未修复。全仓库无 `settingSources` 字符串                                                                                                                                                                                                                                                                                                                                                        |
+| 8   | P1       | 多步 rewind                 | ❌ 未修复。[checkpoints.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/agent-runtime/src/checkpoints.ts) 仍只有 `restoreLatest()`，无 `restoreN(n)` 或 `rewind(steps)`                                                                                                                                                                                                                      |
+| 9   | P1       | 会话树可视化 pane           | ❌ 未修复。[tui/src/](file:///Users/tohnee/Trae/Code/focuscode/packages/tui/src) 无 `tree-panel.ts`                                                                                                                                                                                                                                                                                                |
+| 10  | P2       | custom commands SDK 层      | ❌ 未修复。全仓库无 `customCommand` 相关代码                                                                                                                                                                                                                                                                                                                                                       |
+
+### 9.3 §8.5 新发现跟进
+
+| #   | 原发现                                                                | 当前状态                                                                                                            |
+| --- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 1   | 源码注释滞后（themes.ts:34-40 仅提及 2 个 truecolor 主题，实际 6 个） | ❌ 未修复。注释仍仅提及 "Aurora Glow, Crimson Tide"，未涵盖 tokyo-night/catppuccin-mocha/rose-pine/gruvbox-material |
+| 2   | MCP SSE 传输规划状态（mcp.ts:13 注释 "reserved for v0.6.0"）          | 未变化。当前仍仅 stdio + http 两种传输已实现                                                                        |
+| 3   | toggle_reasoning action 无默认键绑定                                  | 未变化。`DEFAULT_KEYMAP` 中仍无对应绑定，需通过命令面板触发                                                         |
+
+### 9.4 D1 dual-chain convergence 验证
+
+提交 `d339b97` 声称"beforeTool hooks now fire in spine path"，经核实：
+
+- [spine-beforetool-regression.test.ts](file:///Users/tohnee/Trae/Code/focuscode/packages/agent-runtime/test/spine-beforetool-regression.test.ts) 存在于 `packages/agent-runtime/test/`（非 `packages/sdk/test/`），验证的是通过 `extensionHost["api"]().beforeTool(...)` 注册的 veto 行为
+- 该修复确保了 spine path 中 ExtensionHost 的 beforeTool 能被触发，**但并未将 beforeTool 统一到 SDK 的 `AgentHooks` 接口**
+- 分裂状态仍在：集成者仍必须通过 `extensionHost.api().beforeTool()` 注册，不能通过 `CreateCodingAgentOptions.hooks` 注册
+
+**判定**: D1 修复了 spine path 中 beforeTool 的触发问题（功能层面），但未解决报告 §4 MEDIUM #1 描述的"分裂两套机制"问题（架构层面）。
+
+### 9.5 第三次复审结论
+
+| 维度     | 总项数 | 已修复 | 部分修复 | 未修复 | 修复率            |
+| -------- | ------ | ------ | -------- | ------ | ----------------- |
+| P0       | 5      | 0      | 0        | 5      | 0%                |
+| P1       | 5      | 1      | 0        | 4      | 20%               |
+| P2       | 4      | 3      | 1        | 0      | 75%（含部分修复） |
+| **合计** | **14** | **4**  | **1**    | **9**  | **28.6%**         |
+
+**关键发现**:
+
+- 所有 P0 问题（原生 Generator/forkSession/beforeTool 统一/LSP 补全/鼠标）均未修复
+- P1 仅 ACP checkpoint 已修复，其余 4 项（in-process MCP/settingSources/多步 rewind/会话树 pane）未修复
+- P2 修复进度最好：truecolor 检测和 keymap warning 已完整修复，vim 持久化 TUI 层已就位但 CLI 层未接入
+
+**vim 持久化端到端缺口**: D10 在 TUI 包内实现了 `vimEnabled`/`onVimToggle` 选项和恢复逻辑，但 `apps/cli/src/tui.ts:190` 构造 `FullScreenTui` 时未传递这两个选项。修复方法：CLI 层从 `~/.focuscode/config.json` 读取 `tui.vimEnabled`，构造时传入 `vimEnabled`，并注册 `onVimToggle` 回调写回配置。
+
+**最终决策**: MAINTAIN。所有未修复项的优先级判定维持不变。建议下一步优先修复 P0 项，特别是 beforeTool 统一和 LSP 接入 TUI 补全，这两项是影响开发者体验的关键短板。

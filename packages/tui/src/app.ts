@@ -67,6 +67,13 @@ import {
   type TodoPriority,
   type TodoStatus,
 } from "./todo-panel.js";
+import {
+  buildSessionTree as buildSessionTreeFn,
+  createInitialTreePanel,
+  type SessionTreeInput,
+  type SessionTreeNode,
+  type TreePanelState,
+} from "./tree-panel.js";
 
 export interface FullScreenTuiOptions {
   input: ReadStream;
@@ -151,15 +158,17 @@ export class FullScreenTui {
   private vimEnabled = false;
   private vimState: VimState = createVimState();
   /** Which sidebar pane currently has keyboard focus ("input" = main input has focus). */
-  private activePane: "input" | "todo" | "spec" | "context" = "input";
+  private activePane: "input" | "todo" | "spec" | "context" | "tree" = "input";
   /** Selected item index within each sidebar pane. */
-  private paneSelection: { todo: number; spec: number; context: number } = {
+  private paneSelection: { todo: number; spec: number; context: number; tree: number } = {
     todo: 0,
     spec: 0,
     context: 0,
+    tree: 0,
   };
   private layout: LayoutState = createInitialLayout();
   private todoPanel: TodoPanelState = createInitialTodoPanel();
+  private treePanel: TreePanelState = createInitialTreePanel();
   /** Active toast notification with fade animation state. */
   private toast?: { text: string; startedAt: number; level: "info" | "success" | "warning" };
   /** History of completed/skipped specs for browsing. */
@@ -621,6 +630,11 @@ export class FullScreenTui {
     if (todoPane && this.todoPanel.visible !== todoPane.visible) {
       this.todoPanel = { ...this.todoPanel, visible: todoPane.visible };
     }
+    // Sync treePanel.visible with layout pane visibility
+    const treePane = this.layout.panes.find((p) => p.id === "tree");
+    if (treePane && this.treePanel.visible !== treePane.visible) {
+      this.treePanel = { ...this.treePanel, visible: treePane.visible };
+    }
     this.render();
   }
 
@@ -681,8 +695,27 @@ export class FullScreenTui {
     this.render();
   }
 
+  /**
+   * Replace the sessions displayed in the tree panel. The caller is responsible
+   * for loading SessionHeaders from the SessionStore and mapping them into
+   * {@link SessionTreeInput}. Rebuilds the tree on every call.
+   */
+  setSessionTree(sessions: SessionTreeInput[]): void {
+    const nodes = buildSessionTreeFn(sessions);
+    this.treePanel = { ...this.treePanel, nodes };
+    this.render();
+  }
+
+  /** Toggle tree panel visibility. Syncs both treePanel.visible and layout pane. */
+  toggleTreePanel(): void {
+    const next = !this.treePanel.visible;
+    this.treePanel = { ...this.treePanel, visible: next };
+    this.layout = setSidebarPaneVisibleFn(this.layout, "tree", next);
+    this.render();
+  }
+
   /** Toggle a sidebar pane (spec/context) visibility in the layout. */
-  toggleSidebarPane(paneId: Exclude<PaneId, "todo" | "transcript" | "input">): void {
+  toggleSidebarPane(paneId: Exclude<PaneId, "todo" | "tree" | "transcript" | "input">): void {
     this.layout = toggleSidebarPaneFn(this.layout, paneId);
     this.render();
   }
@@ -698,7 +731,7 @@ export class FullScreenTui {
     if (this.activePane === "input") {
       this.activePane = visible[0]!;
     } else {
-      const idx = visible.indexOf(this.activePane as "todo" | "spec" | "context");
+      const idx = visible.indexOf(this.activePane as "todo" | "spec" | "context" | "tree");
       if (idx < 0 || idx === visible.length - 1) {
         this.activePane = "input";
       } else {
@@ -733,25 +766,27 @@ export class FullScreenTui {
     this.render();
   }
 
-  private visibleSidebarPanes(): Array<"todo" | "spec" | "context"> {
-    const result: Array<"todo" | "spec" | "context"> = [];
-    const isVisible = (id: "todo" | "spec" | "context") =>
+  private visibleSidebarPanes(): Array<"todo" | "spec" | "context" | "tree"> {
+    const result: Array<"todo" | "spec" | "context" | "tree"> = [];
+    const isVisible = (id: "todo" | "spec" | "context" | "tree") =>
       this.layout.panes.find((p) => p.id === id)?.visible === true;
     if (this.todoPanel.visible || isVisible("todo")) result.push("todo");
     if (isVisible("spec")) result.push("spec");
     if (isVisible("context")) result.push("context");
+    if (this.treePanel.visible || isVisible("tree")) result.push("tree");
     return result;
   }
 
-  private paneItemCount(pane: "todo" | "spec" | "context"): number {
+  private paneItemCount(pane: "todo" | "spec" | "context" | "tree"): number {
     if (pane === "todo") return Math.max(1, this.todoPanel.items.length);
     if (pane === "spec") return Math.max(1, this.specProgress.stages.length);
     if (pane === "context") return 1;
+    if (pane === "tree") return Math.max(1, countTreeNodes(this.treePanel.nodes));
     return 0;
   }
 
   private clampPaneSelection(): void {
-    for (const pane of ["todo", "spec", "context"] as const) {
+    for (const pane of ["todo", "spec", "context", "tree"] as const) {
       const max = Math.max(0, this.paneItemCount(pane) - 1);
       if (this.paneSelection[pane] > max) this.paneSelection[pane] = max;
     }
@@ -762,6 +797,18 @@ export class FullScreenTui {
     return {
       ...this.todoPanel,
       items: this.todoPanel.items.map((i) => ({ ...i })),
+    };
+  }
+
+  /** Current tree panel state snapshot (defensive copy). */
+  getTreePanelState(): TreePanelState {
+    return {
+      ...this.treePanel,
+      nodes: this.treePanel.nodes.map((n) => ({
+        ...n,
+        children: [...n.children],
+        ...(n.forkedFrom ? { forkedFrom: { ...n.forkedFrom } } : {}),
+      })),
     };
   }
 
@@ -939,6 +986,14 @@ export class FullScreenTui {
         ...this.todoPanel,
         items: this.todoPanel.items.map((i) => ({ ...i })),
       },
+      treePanel: {
+        ...this.treePanel,
+        nodes: this.treePanel.nodes.map((n) => ({
+          ...n,
+          children: [...n.children],
+          ...(n.forkedFrom ? { forkedFrom: { ...n.forkedFrom } } : {}),
+        })),
+      },
       activePane: this.activePane,
       paneSelection: { ...this.paneSelection },
       scrollOffset: this.scrollOffset,
@@ -1026,11 +1081,13 @@ export class FullScreenTui {
       if (key.type === "text") {
         this.cancelCompletion();
         this.editor.insertText(key.text);
-      } else {
+      } else if (key.type === "action") {
         void this.action(key.action).catch((error: unknown) => {
           this.setStatus(error instanceof Error ? error.message : String(error));
           this.setMood("oops");
         });
+      } else if (key.type === "mouse") {
+        this.handleMouseEvent(key);
       }
     }
     this.render();
@@ -1177,11 +1234,13 @@ export class FullScreenTui {
     // bindings still fire (e.g. Esc to cancel operator is handled above by
     // vimHandleKey; arrows for cursor movement work via EditorBuffer).
     for (const key of this.inputDecoder.push(value)) {
-      if (key.type !== "text") {
+      if (key.type === "action") {
         void this.action(key.action).catch((error: unknown) => {
           this.setStatus(error instanceof Error ? error.message : String(error));
           this.setMood("oops");
         });
+      } else if (key.type === "mouse") {
+        this.handleMouseEvent(key);
       }
     }
     this.render();
@@ -1519,6 +1578,25 @@ export class FullScreenTui {
     }
   }
 
+  /**
+   * Handle a parsed mouse event from the terminal. Currently a no-op
+   * placeholder: the TUI logs the event for debugging but does not yet
+   * map mouse actions to UI commands. Future work will route scroll
+   * events to transcript scrolling and click events to pane focus.
+   */
+  private handleMouseEvent(key: {
+    type: "mouse";
+    event: "press" | "release" | "drag" | "scroll";
+    button: "left" | "middle" | "right";
+    column: number;
+    row: number;
+    direction?: "up" | "down";
+  }): void {
+    // Placeholder: mouse events are parsed but not yet acted upon.
+    // This prevents the TUI from crashing on unrecognized input.
+    void key;
+  }
+
   private async action(action: TuiAction): Promise<void> {
     if (action === "exit") {
       if (this.busy) this.options.onAbort();
@@ -1651,6 +1729,9 @@ export class FullScreenTui {
     } else if (action === "toggle_todo_panel") {
       this.toggleTodoPanel();
       this.setStatus(this.todoPanel.visible ? "Todo panel on" : "Todo panel off");
+    } else if (action === "toggle_tree_panel") {
+      this.toggleTreePanel();
+      this.setStatus(this.treePanel.visible ? "Session tree on" : "Session tree off");
     } else if (action === "cycle_sidebar_focus") {
       this.cycleSidebarFocus();
       if (this.activePane !== "input") {
@@ -1741,4 +1822,18 @@ export class FullScreenTui {
     this.lastFrame = frame;
     this.lastDimensions = dimensions;
   }
+}
+
+/**
+ * Count all nodes in a session tree (roots + all descendants).
+ * Used by paneItemCount to compute the keyboard-navigation range for the
+ * tree sidebar pane.
+ */
+function countTreeNodes(nodes: SessionTreeNode[]): number {
+  let count = 0;
+  for (const node of nodes) {
+    count += 1;
+    count += countTreeNodes(node.children);
+  }
+  return count;
 }

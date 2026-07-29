@@ -63,8 +63,33 @@ export interface FallbackModelPreset extends ModelProfilePreset {
   model: string;
 }
 
+/**
+ * Configuration source layers, in priority order (low → high).
+ *
+ * - `user` — `~/.focuscode/config.json`, the global user-level config.
+ * - `project` — `<cwd>/.focuscode/agent.json`, the shared project config.
+ *   Requires `projectTrusted: true` to load.
+ * - `local` — `<cwd>/.focuscode.local/agent.json`, the personal local
+ *   override layer. Not subject to `projectTrusted` because it is a
+ *   personal file (typically git-ignored) owned by the current user.
+ *
+ * The `settingSources` field in the **user** config declares which layers
+ * are allowed to load. Declarations in project/local configs are ignored
+ * to prevent a malicious project from widening its own trust scope.
+ */
+export type SettingSource = "project" | "local" | "user";
+
+export const DEFAULT_SETTING_SOURCES: readonly SettingSource[] = ["user", "project", "local"];
+
 export interface AgentConfigFile {
   schemaVersion?: "focuscode-agent.v1";
+  /**
+   * Declares which configuration layers may be loaded. Only honored when
+   * declared in the **user** (global) config; project/local declarations
+   * are ignored to prevent trust-scope escalation. Defaults to all three
+   * layers when absent.
+   */
+  settingSources?: SettingSource[];
   provider?: string;
   model?: string;
   revision?: string;
@@ -208,6 +233,13 @@ export interface AgentConfigOverrides extends AgentConfigFile {
   projectTrusted?: boolean;
   globalConfigPath?: string;
   projectConfigPath?: string;
+  /**
+   * Path to the local (personal) config layer. Defaults to
+   * `<cwd>/.focuscode.local/agent.json`. The local layer is loaded
+   * regardless of `projectTrusted` because it is a personal override
+   * file owned by the current user, not the project.
+   */
+  localConfigPath?: string;
 }
 
 /** USD per 1M tokens for one model. */
@@ -257,6 +289,13 @@ export interface ResolvedAgentConfig {
   requireExtensionSignatures: boolean;
   shareEndpoint?: string;
   sources: string[];
+  /**
+   * Effective configuration source layers (resolved from the user-layer
+   * `settingSources` declaration, or the default `["user", "project",
+   * "local"]` when absent). Reflects which layers are *permitted* to
+   * load, not which files actually existed on disk.
+   */
+  settingSources: SettingSource[];
 }
 
 // defaultRevision pins the version-pinned ID each built-in (unpinned) model
@@ -659,16 +698,44 @@ export async function resolveAgentConfig(
   const projectPath = resolve(
     overrides.projectConfigPath ?? join(resolve(cwd), ".focuscode", "agent.json"),
   );
+  const localPath = resolve(
+    overrides.localConfigPath ?? join(resolve(cwd), ".focuscode.local", "agent.json"),
+  );
+  // ─── L1: 三层配置加载开始（debug 级别）────────────────────────────
+  // 列出预期路径，便于诊断配置加载问题。
+  if (process.env.FOCUSCODE_DEBUG_CONFIG) {
+    process.stderr.write(
+      `[config] loading layers: user=${globalPath} project=${projectPath} local=${localPath}\n`,
+    );
+  }
   const sources: string[] = [];
   const global = await readConfigIfPresent(globalPath);
   if (global) sources.push(globalPath);
-  const project = projectTrusted ? await readConfigIfPresent(projectPath) : undefined;
+  // settingSources 仅从 user (global) 层读取，project/local 声明被忽略
+  // 以防止恶意项目通过 settingSources: ["user"] 关闭 local 覆盖层。
+  const declaredSources = global?.settingSources;
+  const settingSources: SettingSource[] = validateSettingSources(declaredSources);
+  const allowProject = settingSources.includes("project");
+  const allowLocal = settingSources.includes("local");
+  const project =
+    projectTrusted && allowProject ? await readConfigIfPresent(projectPath) : undefined;
   if (project) sources.push(projectPath);
-  const merged = mergeConfig(global, project, overrides);
+  // local 层不受 projectTrusted 限制：它是个人本地文件（通常 git-ignored），
+  // 由当前用户拥有。即便项目不受信任，个人本地覆盖仍应生效。
+  const local = allowLocal ? await readConfigIfPresent(localPath) : undefined;
+  if (local) sources.push(localPath);
+  // ─── L2: 每层加载完成（info 级别）────────────────────────────────
+  if (process.env.FOCUSCODE_DEBUG_CONFIG) {
+    process.stderr.write(
+      `[config] layers loaded: user=${global ? "yes" : "no"} project=${project ? "yes" : "no"} local=${local ? "yes" : "no"} (settingSources=${settingSources.join(",")})\n`,
+    );
+  }
+  const merged = mergeConfig(global, project, local, overrides);
   validateAgentConfig(merged, "merged configuration");
   const customPresets = {
     ...(global?.providers ?? {}),
     ...(project?.providers ?? {}),
+    ...(local?.providers ?? {}),
     ...(overrides.providers ?? {}),
   };
   const providerId = merged.provider ?? inferProviderFromEnvironment() ?? "openai";
@@ -840,6 +907,7 @@ export async function resolveAgentConfig(
     requireExtensionSignatures: merged.requireExtensionSignatures ?? true,
     ...(merged.shareEndpoint ? { shareEndpoint: merged.shareEndpoint } : {}),
     sources,
+    settingSources,
   };
 }
 
@@ -863,6 +931,27 @@ async function readConfigIfPresent(path: string): Promise<AgentConfigFile | unde
   validateStringArray(config.disabledTools, "disabledTools", path);
   validateAgentConfig(config, path);
   return config;
+}
+
+/**
+ * Validate the `settingSources` declaration from the user-layer config.
+ * Returns the default three-layer list when the declaration is absent.
+ * Throws on malformed entries to fail fast at config load time.
+ */
+function validateSettingSources(declared: SettingSource[] | undefined): SettingSource[] {
+  if (declared === undefined) return [...DEFAULT_SETTING_SOURCES];
+  if (!Array.isArray(declared)) {
+    throw new Error("settingSources must be an array");
+  }
+  const valid = new Set<SettingSource>(["user", "project", "local"]);
+  for (const entry of declared) {
+    if (typeof entry !== "string" || !valid.has(entry as SettingSource)) {
+      throw new Error(
+        `settingSources must contain only "user", "project", or "local"; got: ${JSON.stringify(entry)}`,
+      );
+    }
+  }
+  return [...declared];
 }
 
 function mergeConfig(...configs: Array<AgentConfigFile | undefined>): AgentConfigFile {
@@ -913,7 +1002,13 @@ function mergeConfig(...configs: Array<AgentConfigFile | undefined>): AgentConfi
       }
       if (
         value !== undefined &&
-        !["apiKey", "projectTrusted", "globalConfigPath", "projectConfigPath"].includes(key)
+        ![
+          "apiKey",
+          "projectTrusted",
+          "globalConfigPath",
+          "projectConfigPath",
+          "localConfigPath",
+        ].includes(key)
       ) {
         (merged as Record<string, unknown>)[key] = value;
       }

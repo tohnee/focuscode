@@ -31,6 +31,7 @@ export type TuiAction =
   | "search_transcript"
   | "cycle_layout"
   | "toggle_todo_panel"
+  | "toggle_tree_panel"
   | "cycle_sidebar_focus"
   | "sidebar_action"
   | "upcase_word"
@@ -85,12 +86,23 @@ export const DEFAULT_KEYMAP: TuiKeymap = {
   "ctrl+p": "open_palette",
   "ctrl+f": "search_transcript",
   "alt+t": "toggle_todo_panel",
+  "alt+y": "toggle_tree_panel",
   "alt+]": "cycle_sidebar_focus",
   "alt+enter": "sidebar_action",
   "alt+h": "spec_history_toggle",
 };
 
-export type ParsedKey = { type: "action"; action: TuiAction } | { type: "text"; text: string };
+export type ParsedKey =
+  | { type: "action"; action: TuiAction }
+  | { type: "text"; text: string }
+  | {
+      type: "mouse";
+      event: "press" | "release" | "drag" | "scroll";
+      button: "left" | "middle" | "right";
+      column: number;
+      row: number;
+      direction?: "up" | "down";
+    };
 
 export function parseTerminalInput(input: string, keymap: TuiKeymap = DEFAULT_KEYMAP): ParsedKey[] {
   return parseBufferedInput(input, keymap).parsed;
@@ -134,6 +146,7 @@ const TERMINAL_SEQUENCES: Array<[string, string]> = [
   ["\u001bc", "alt+c"],
   ["\u001bl", "alt+l"],
   ["\u001bt", "alt+t"],
+  ["\u001by", "alt+y"],
   ["\u001bh", "alt+h"],
   ["\u001b]", "alt+]"],
   ["\u001b\r", "alt+enter"],
@@ -159,6 +172,13 @@ function parseBufferedInput(
       index = end + 6;
       continue;
     }
+    // SGR mouse sequence: \u001b[<button;column;rowM (press/drag/scroll) or m (release)
+    const mouseMatch = parseSgrMouse(input, index);
+    if (mouseMatch) {
+      parsed.push(mouseMatch.event);
+      index += mouseMatch.length;
+      continue;
+    }
     const matched = terminalKeyAt(input, index);
     if (matched) {
       const action = keymap[matched.key];
@@ -181,6 +201,79 @@ function parseBufferedInput(
     index += text.length;
   }
   return { parsed, consumed: index };
+}
+
+/**
+ * Parse an SGR mouse sequence at the given index. Returns the parsed mouse
+ * event and the sequence length, or undefined if the input at `index` does
+ * not start a valid SGR mouse sequence.
+ *
+ * SGR mouse format: `\u001b[<button;column;rowM` for press/drag/scroll,
+ * `\u001b[<button;column;rowm` for release. Button encodes:
+ *   - 0=left, 1=middle, 2=right
+ *   - 32=drag with left, 33=drag with middle, 34=drag with right
+ *   - 64=scroll up, 65=scroll down
+ */
+function parseSgrMouse(
+  input: string,
+  index: number,
+): { event: ParsedKey; length: number } | undefined {
+  if (!input.startsWith("\u001b[<", index)) return undefined;
+  const rest = input.slice(index + 3);
+  const match = /^(\d+);(\d+);(\d+)([Mm])/.exec(rest);
+  if (!match) return undefined;
+  const buttonCode = Number(match[1]);
+  const column = Number(match[2]);
+  const row = Number(match[3]);
+  const finalChar = match[4];
+  const length = 3 + match[0].length;
+
+  // Release: final character is 'm'
+  if (finalChar === "m") {
+    const button = (buttonCode === 0 ? "left" : buttonCode === 1 ? "middle" : "right") as
+      "left" | "middle" | "right";
+    return {
+      event: { type: "mouse", event: "release", button, column, row },
+      length,
+    };
+  }
+
+  // Scroll: button 64 or 65
+  if (buttonCode === 64 || buttonCode === 65) {
+    return {
+      event: {
+        type: "mouse",
+        event: "scroll",
+        button: "left",
+        column,
+        row,
+        direction: buttonCode === 64 ? "up" : "down",
+      },
+      length,
+    };
+  }
+
+  // Drag: button 32-34
+  if (buttonCode >= 32 && buttonCode <= 34) {
+    const button = (buttonCode === 32 ? "left" : buttonCode === 33 ? "middle" : "right") as
+      "left" | "middle" | "right";
+    return {
+      event: { type: "mouse", event: "drag", button, column, row },
+      length,
+    };
+  }
+
+  // Press: button 0-2
+  if (buttonCode >= 0 && buttonCode <= 2) {
+    const button = (buttonCode === 0 ? "left" : buttonCode === 1 ? "middle" : "right") as
+      "left" | "middle" | "right";
+    return {
+      event: { type: "mouse", event: "press", button, column, row },
+      length,
+    };
+  }
+
+  return undefined;
 }
 
 const VALID_ACTIONS: readonly TuiAction[] = [
@@ -216,6 +309,7 @@ const VALID_ACTIONS: readonly TuiAction[] = [
   "search_transcript",
   "cycle_layout",
   "toggle_todo_panel",
+  "toggle_tree_panel",
   "cycle_sidebar_focus",
   "sidebar_action",
   "upcase_word",
@@ -263,7 +357,7 @@ function terminalKeyAt(value: string, index: number): { key: string; length: num
 }
 
 function validKey(value: string): boolean {
-  return /^(ctrl\+[a-z]|alt\+[a-z]|enter|backspace|tab|home|end|left|right|up|down|pageup|pagedown|delete)$/.test(
+  return /^(ctrl\+[a-z]|alt\+[a-z\]]|enter|backspace|tab|home|end|left|right|up|down|pageup|pagedown|delete)$/.test(
     value,
   );
 }

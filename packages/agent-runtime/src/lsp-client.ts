@@ -221,6 +221,30 @@ export class LspClient {
   }
 
   /**
+   * Requests `textDocument/completion` from the LSP server. Returns an empty
+   * array on any failure (fail-quiet) so the TUI completion system can fall
+   * back to other providers.
+   */
+  async completion(params: {
+    textDocument: { uri: string };
+    position: { line: number; character: number };
+  }): Promise<Array<{ label: string; detail?: string }>> {
+    try {
+      const result = (await this.request("textDocument/completion", params, this.timeoutMs)) as
+        { items?: Array<{ label?: string; detail?: string }> } | undefined;
+      const items = result?.items ?? [];
+      return items
+        .filter((item) => typeof item.label === "string")
+        .map((item) => ({
+          label: item.label!,
+          ...(typeof item.detail === "string" ? { detail: item.detail } : {}),
+        }));
+    } catch {
+      return [];
+    }
+  }
+
+  /**
    * Performs a clean shutdown: `shutdown` request, then `exit` notification.
    */
   async close(): Promise<void> {

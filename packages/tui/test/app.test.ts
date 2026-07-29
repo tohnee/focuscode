@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { FullScreenTui } from "../src/app.js";
+import { DEFAULT_KEYMAP, mergeKeymap } from "../src/keymap.js";
 import { TUI_MASCOTS } from "../src/mascots.js";
 import type { ContextUsageState } from "../src/context-bar.js";
 import type { SpecDecisionView, SpecProgressState } from "../src/spec-progress.js";
@@ -518,6 +519,241 @@ describe("FullScreenTui todo panel state", () => {
     // Mutating returned snapshot must not affect internal state
     state.items.push({ id: "x", content: "hack", status: "pending", priority: "low" });
     expect(tui.snapshot().todoPanel?.items).toHaveLength(1);
+  });
+});
+
+// ─── Tree panel integration (P1-4 会话树可视化 pane) ──────────────────────
+
+describe("FullScreenTui tree panel integration", () => {
+  it("treePanel starts hidden with no nodes", () => {
+    const tui = createTui();
+    const snap = tui.snapshot();
+    expect(snap.treePanel?.visible).toBe(false);
+    expect(snap.treePanel?.nodes).toEqual([]);
+  });
+
+  it("toggleTreePanel flips visibility and syncs layout pane", () => {
+    const tui = createTui();
+    expect(tui.snapshot().treePanel?.visible).toBe(false);
+    tui.toggleTreePanel();
+    expect(tui.snapshot().treePanel?.visible).toBe(true);
+    // Layout pane should also be visible
+    const layout = tui.getLayoutState();
+    const treePane = layout.panes.find((p) => p.id === "tree");
+    expect(treePane?.visible).toBe(true);
+    // Toggle back off
+    tui.toggleTreePanel();
+    expect(tui.snapshot().treePanel?.visible).toBe(false);
+    expect(tui.getLayoutState().panes.find((p) => p.id === "tree")?.visible).toBe(false);
+  });
+
+  it("toggle_tree_panel action toggles visibility", () => {
+    const tui = createTui();
+    const anyTui = tui as unknown as { action: (a: string) => Promise<void> };
+    expect(tui.snapshot().treePanel?.visible).toBe(false);
+    void anyTui.action("toggle_tree_panel");
+    expect(tui.snapshot().treePanel?.visible).toBe(true);
+    void anyTui.action("toggle_tree_panel");
+    expect(tui.snapshot().treePanel?.visible).toBe(false);
+  });
+
+  it("setSessionTree builds tree from flat session list", () => {
+    const tui = createTui();
+    tui.setSessionTree([
+      {
+        sessionId: "s1",
+        name: "Main session",
+        model: "test/model",
+        createdAt: "2026-07-29T00:00:00Z",
+      },
+      {
+        sessionId: "s2",
+        name: "Fork",
+        model: "test/model",
+        createdAt: "2026-07-29T01:00:00Z",
+        forkedFrom: { sessionId: "s1" },
+      },
+    ]);
+    const state = tui.getTreePanelState();
+    expect(state.nodes).toHaveLength(1);
+    expect(state.nodes[0]?.sessionId).toBe("s1");
+    expect(state.nodes[0]?.children).toHaveLength(1);
+    expect(state.nodes[0]?.children[0]?.sessionId).toBe("s2");
+    expect(state.nodes[0]?.children[0]?.depth).toBe(1);
+  });
+
+  it("setSessionTree with empty array clears nodes", () => {
+    const tui = createTui();
+    tui.setSessionTree([
+      {
+        sessionId: "s1",
+        name: "Main",
+        model: "m",
+        createdAt: "2026-07-29T00:00:00Z",
+      },
+    ]);
+    expect(tui.getTreePanelState().nodes).toHaveLength(1);
+    tui.setSessionTree([]);
+    expect(tui.getTreePanelState().nodes).toEqual([]);
+  });
+
+  it("getTreePanelState returns defensive copy", () => {
+    const tui = createTui();
+    tui.setSessionTree([
+      {
+        sessionId: "s1",
+        name: "Main",
+        model: "m",
+        createdAt: "2026-07-29T00:00:00Z",
+      },
+    ]);
+    const state = tui.getTreePanelState();
+    // Mutating returned snapshot must not affect internal state
+    state.nodes.push({
+      sessionId: "hack",
+      name: "hack",
+      model: "hack",
+      createdAt: "2026-07-29T00:00:00Z",
+      depth: 0,
+      children: [],
+    });
+    expect(tui.getTreePanelState().nodes).toHaveLength(1);
+  });
+
+  it("setLayoutMode syncs treePanel visibility", () => {
+    const tui = createTui();
+    // Make tree visible first
+    tui.toggleTreePanel();
+    expect(tui.snapshot().treePanel?.visible).toBe(true);
+    // Switch to classic (hides sidebar)
+    tui.setLayoutMode("classic");
+    expect(tui.snapshot().treePanel?.visible).toBe(false);
+    // Switch to split (shows sidebar)
+    tui.setLayoutMode("split");
+    expect(tui.snapshot().treePanel?.visible).toBe(true);
+  });
+
+  it("cycleSidebarFocus includes tree pane", () => {
+    const tui = createTui();
+    // Enable tree panel only (todo is on by default, turn it off)
+    tui.toggleTodoPanel();
+    tui.toggleTreePanel();
+    // Cycle from input → tree (since todo is off, tree is first visible sidebar pane)
+    tui.cycleSidebarFocus();
+    expect(tui.snapshot().activePane).toBe("tree");
+    // Cycle back to input
+    tui.cycleSidebarFocus();
+    expect(tui.snapshot().activePane).toBe("input");
+  });
+
+  it("paneSelection includes tree field", () => {
+    const tui = createTui();
+    const snap = tui.snapshot();
+    expect(snap.paneSelection).toHaveProperty("tree");
+    expect(typeof snap.paneSelection?.tree).toBe("number");
+  });
+
+  it("alt+y keybinding maps to toggle_tree_panel", () => {
+    // Verify the default keymap includes the new binding
+    expect(DEFAULT_KEYMAP["alt+y"]).toBe("toggle_tree_panel");
+  });
+
+  it("toggle_tree_panel is a valid TuiAction in VALID_ACTIONS", () => {
+    // Indirect verification: mergeKeymap would throw if action is invalid
+    expect(() => mergeKeymap({ "alt+y": "toggle_tree_panel" })).not.toThrow();
+  });
+
+  it("snapshot includes treePanel in render state", () => {
+    const tui = createTui();
+    tui.setSessionTree([
+      {
+        sessionId: "s1",
+        name: "Main",
+        model: "m",
+        createdAt: "2026-07-29T00:00:00Z",
+      },
+    ]);
+    tui.toggleTreePanel();
+    const snap = tui.snapshot();
+    expect(snap.treePanel).toBeDefined();
+    expect(snap.treePanel?.visible).toBe(true);
+    expect(snap.treePanel?.nodes).toHaveLength(1);
+  });
+
+  it("toggleSidebarPane still works for spec/context panes (tree excluded)", () => {
+    const tui = createTui();
+    // spec pane
+    tui.toggleSidebarPane("spec");
+    expect(tui.getLayoutState().panes.find((p) => p.id === "spec")?.visible).toBe(true);
+    tui.toggleSidebarPane("spec");
+    expect(tui.getLayoutState().panes.find((p) => p.id === "spec")?.visible).toBe(false);
+    // context pane
+    tui.toggleSidebarPane("context");
+    expect(tui.getLayoutState().panes.find((p) => p.id === "context")?.visible).toBe(true);
+    tui.toggleSidebarPane("context");
+    expect(tui.getLayoutState().panes.find((p) => p.id === "context")?.visible).toBe(false);
+  });
+
+  it("moveSidebarSelection works for tree pane", () => {
+    const tui = createTui();
+    tui.toggleTodoPanel(); // turn todo off
+    tui.toggleTreePanel();
+    tui.setSessionTree([
+      {
+        sessionId: "s1",
+        name: "Main",
+        model: "m",
+        createdAt: "2026-07-29T00:00:00Z",
+      },
+      {
+        sessionId: "s2",
+        name: "Child",
+        model: "m",
+        createdAt: "2026-07-29T01:00:00Z",
+        forkedFrom: { sessionId: "s1" },
+      },
+      {
+        sessionId: "s3",
+        name: "Child2",
+        model: "m",
+        createdAt: "2026-07-29T02:00:00Z",
+        forkedFrom: { sessionId: "s1" },
+      },
+    ]);
+    // Focus tree pane
+    tui.cycleSidebarFocus();
+    expect(tui.snapshot().activePane).toBe("tree");
+    // Selection should start at 0
+    expect(tui.snapshot().paneSelection?.tree).toBe(0);
+    // Move down (3 total nodes: 1 root + 2 children; max index = 2)
+    tui.moveSidebarSelection(1);
+    expect(tui.snapshot().paneSelection?.tree).toBe(1);
+    tui.moveSidebarSelection(1);
+    expect(tui.snapshot().paneSelection?.tree).toBe(2);
+    // Move down again — should clamp at max (2)
+    tui.moveSidebarSelection(1);
+    expect(tui.snapshot().paneSelection?.tree).toBe(2);
+    // Move back up
+    tui.moveSidebarSelection(-1);
+    expect(tui.snapshot().paneSelection?.tree).toBe(1);
+  });
+
+  it("clampPaneSelection clamps tree selection to valid range", () => {
+    const tui = createTui();
+    tui.toggleTreePanel();
+    tui.setSessionTree([
+      {
+        sessionId: "s1",
+        name: "Only",
+        model: "m",
+        createdAt: "2026-07-29T00:00:00Z",
+      },
+    ]);
+    // Focus tree, try to move beyond bounds
+    tui.cycleSidebarFocus();
+    tui.moveSidebarSelection(5);
+    // Should clamp to 0 (only 1 node, max index is 0)
+    expect(tui.snapshot().paneSelection?.tree).toBe(0);
   });
 });
 

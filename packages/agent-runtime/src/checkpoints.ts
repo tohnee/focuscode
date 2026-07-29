@@ -123,6 +123,28 @@ export class CheckpointStore {
     return manifest;
   }
 
+  /**
+   * Restore up to `n` most recent checkpoints in reverse-chronological order
+   * (newest first). Returns the manifests of the restored checkpoints, or an
+   * empty array when `n` is 0 or no checkpoints exist. When `n` exceeds the
+   * available checkpoints, all available checkpoints are restored.
+   *
+   * Each checkpoint is restored and removed from the store, matching the
+   * behavior of {@link restoreLatest}. The restore order is strictly newest
+   * → oldest so the workspace ends up at the state before the oldest
+   * restored checkpoint.
+   */
+  async restoreN(n: number): Promise<CheckpointManifest[]> {
+    if (n <= 0) return [];
+    const restored: CheckpointManifest[] = [];
+    for (let i = 0; i < n; i++) {
+      const manifest = await this.restoreLatest();
+      if (!manifest) break;
+      restored.push(manifest);
+    }
+    return restored;
+  }
+
   private normalize(file: string): string | undefined {
     if (!file || file.includes("\0") || isAbsolute(file)) return undefined;
     const candidate = resolve(this.workspaceRoot, file);

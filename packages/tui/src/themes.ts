@@ -33,10 +33,13 @@ const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
 /**
  * Built-in themes. The original seven use 8-bit ANSI colors so they render
- * identically on 256-color terminals. The truecolor themes (Aurora Glow,
- * Crimson Tide) use hex strings for finer gradient control; terminals
- * without truecolor support still receive a valid SGR sequence, though the
- * exact shade may be approximated by the terminal's own downscaler.
+ * identically on 256-color terminals. The six truecolor themes use hex
+ * strings for finer gradient control: Aurora Glow and Crimson Tide are the
+ * original pair, joined by four community palettes — Tokyo Night,
+ * Catppuccin Mocha, Rosé Pine, and Gruvbox Material. Terminals without
+ * truecolor support still receive a valid SGR sequence, though the exact
+ * shade may be approximated by the terminal's own downscaler (or the
+ * built-in 256-color downgrade when `FOCUSCODE_COLOR_MODE=256`).
  */
 export const TUI_THEMES: readonly TuiTheme[] = [
   {

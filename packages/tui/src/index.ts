@@ -18,6 +18,7 @@ export * from "./spec-progress.js";
 export * from "./syntax.js";
 export * from "./themes.js";
 export * from "./todo-panel.js";
+export * from "./tree-panel.js";
 export * from "./vim.js";
 export * from "./widgets.js";
 export * from "./width.js";

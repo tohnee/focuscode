@@ -22,6 +22,29 @@ export interface PostToolContext {
 }
 
 /**
+ * Context passed to {@link AgentHooks.preToolUse} before a tool executes.
+ * The hook may return `{ allow: false, reason?: string }` to veto execution,
+ * `{ allow: true }` to explicitly permit, or `undefined` to fail-open.
+ */
+export interface PreToolContext {
+  /** Tool name (matches `ToolDefinition.name`). */
+  toolName: string;
+  /** Parsed arguments that will be passed to the tool. */
+  arguments: Record<string, unknown>;
+  /** Working directory of the agent. */
+  cwd: string;
+}
+
+/**
+ * Result of {@link AgentHooks.preToolUse}. `allow: false` vetoes the tool
+ * call and returns the reason to the model as an error result.
+ */
+export interface PreToolResult {
+  allow: boolean;
+  reason?: string;
+}
+
+/**
  * Context for session-lifecycle hooks.
  */
 export interface SessionContext {
@@ -107,6 +130,19 @@ export interface Notification {
  * observe them — wrap in try/catch inside the hook if you want fail-soft.
  */
 export interface AgentHooks {
+  /**
+   * Called before each tool execution. Return `{ allow: false, reason? }` to
+   * veto the tool call; the reason is returned to the model as an error result.
+   * Return `{ allow: true }` to explicitly permit, or `undefined` to fail-open.
+   *
+   * This is the SDK-level equivalent of ExtensionHost's `beforeTool` hook,
+   * unified into the `AgentHooks` interface so integrators can register veto
+   * logic through `CreateCodingAgentOptions.hooks` instead of the split
+   * `extensionHost.api().beforeTool()` path.
+   */
+  preToolUse?: (
+    context: PreToolContext,
+  ) => Promise<PreToolResult | undefined> | PreToolResult | undefined;
   /** Called after each tool execution with the call context and result. */
   postToolUse?: (context: PostToolContext, result: ToolExecutionResult) => void | Promise<void>;
   /** Called when a session is created (integrators invoke directly). */
@@ -165,6 +201,7 @@ export interface DispatchContext {
  * can register lifecycle hooks without manually parsing `AgentEvent` variants.
  *
  * Behavior:
+ *   - `tool_start` → `preToolUse` (with toolName, arguments, cwd)
  *   - `tool_end` → `postToolUse` (with toolName, arguments, durationMs, result)
  *   - `agent_end` → `stop` (with `AgentRunResult.stopped` as StopReason)
  *   - `compaction` → `preCompact` (with summary, droppedMessages, cwd)
@@ -181,6 +218,16 @@ export async function dispatchAgentEvent(
   event: AgentEvent,
   context: DispatchContext,
 ): Promise<void> {
+  if (event.type === "tool_start") {
+    if (hooks.preToolUse) {
+      await hooks.preToolUse({
+        toolName: event.call.name,
+        arguments: event.call.arguments,
+        cwd: context.cwd,
+      });
+    }
+    return;
+  }
   if (event.type === "tool_end") {
     if (hooks.postToolUse) {
       await hooks.postToolUse(
