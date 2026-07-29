@@ -4,6 +4,7 @@ import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import type {
   BeforeToolContext,
+  BeforeToolHook,
   BeforeToolResult,
   ExtensionCommand,
   ExtensionHostLike,
@@ -110,6 +111,7 @@ export class ProcessExtensionHost implements ExtensionHostLike {
   >();
   private readonly promptFragments: Array<{ owner: ExtensionProcess; fragment: string }> = [];
   private readonly extensions: ExtensionProcess[] = [];
+  private readonly localBeforeToolHooks: BeforeToolHook[] = [];
   private paths: string[] = [];
   private requestCounter = 0;
 
@@ -147,6 +149,15 @@ export class ProcessExtensionHost implements ExtensionHostLike {
     return this.load(paths);
   }
 
+  /**
+   * Register a beforeTool hook that runs in the parent process, before
+   * delegating to child-process extensions. This lets the SDK integrator
+   * add hooks without a round-trip to each child.
+   */
+  registerBeforeToolHook(hook: BeforeToolHook): void {
+    this.localBeforeToolHooks.push(hook);
+  }
+
   async dispose(): Promise<void> {
     await this.stopAll();
     this.paths = [];
@@ -182,6 +193,16 @@ export class ProcessExtensionHost implements ExtensionHostLike {
   }
 
   async checkBeforeTool(context: BeforeToolContext): Promise<BeforeToolResult | undefined> {
+    // Local hooks (registered by the SDK via registerBeforeToolHook) are
+    // checked first and take precedence over child-process hooks.
+    for (const hook of this.localBeforeToolHooks) {
+      try {
+        const result = await hook(context);
+        if (!result.allow) return result;
+      } catch {
+        // Buggy local hook: fail-open to avoid blocking the agent loop.
+      }
+    }
     let checked = 0;
     for (const extension of this.extensions) {
       if (extension.status !== "running") continue;

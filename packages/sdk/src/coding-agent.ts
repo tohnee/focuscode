@@ -168,9 +168,10 @@ export async function createCodingAgent(
       if (!result) return { allow: true };
       return result;
     };
-    // Access the private beforeToolHooks array directly; ExtensionHost.api()
-    // is private but the underlying array is the single registration point.
-    (extensions as unknown as { beforeToolHooks: Array<typeof hook> }).beforeToolHooks.push(hook);
+    // Use the public registerBeforeToolHook API instead of accessing the
+    // private beforeToolHooks array. This survives internal refactors and
+    // works for both in-process and process-isolated extension hosts.
+    extensions.registerBeforeToolHook(hook);
   }
   const sessions = new SessionStore(
     resolve(options.sessionDirectory ?? defaultSessionDirectory(cwd)),

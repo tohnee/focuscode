@@ -6,6 +6,7 @@
 //   - initialized         -> (notification, ignored)
 //   - textDocument/didOpen -> pushes textDocument/publishDiagnostics with one
 //                             diagnostic if the text contains the word "error"
+//   - textDocument/completion -> returns a fixed list of completion items
 //   - shutdown             -> null result
 //   - exit                 -> process.exit(0)
 
@@ -66,6 +67,21 @@ function handle(raw) {
     return;
   }
   if (message.method === "initialized") return;
+  if (message.method === "textDocument/completion") {
+    send({
+      jsonrpc: "2.0",
+      id: message.id,
+      result: {
+        items: [
+          { label: "foo", detail: "() => void" },
+          { label: "bar", detail: "(x: number) => string" },
+          { label: "baz" },
+          { detail: "no-label-should-be-filtered" },
+        ],
+      },
+    });
+    return;
+  }
   if (message.method === "textDocument/didOpen") {
     const doc = message.params?.textDocument;
     if (doc?.uri && typeof doc.text === "string" && doc.text.includes("error")) {

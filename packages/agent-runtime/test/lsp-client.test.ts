@@ -121,4 +121,96 @@ describe("LspClient — JSON-RPC 2.0 over stdio with Content-Length framing", ()
       }),
     ).resolves.toBeUndefined();
   });
+
+  it("completion() returns completion items with label and optional detail", async () => {
+    const client = new LspClient({ command: process.execPath, args: [fixture] });
+    clients.push(client);
+    await client.connect();
+    const items = await client.completion({
+      textDocument: { uri: "file:///fake/sample.ts" },
+      position: { line: 0, character: 0 },
+    });
+    expect(items).toHaveLength(3);
+    expect(items[0]?.label).toBe("foo");
+    expect(items[0]?.detail).toBe("() => void");
+    expect(items[1]?.label).toBe("bar");
+    expect(items[1]?.detail).toBe("(x: number) => string");
+    expect(items[2]?.label).toBe("baz");
+    expect(items[2]?.detail).toBeUndefined();
+  });
+
+  it("completion() filters out items without a string label", async () => {
+    const client = new LspClient({ command: process.execPath, args: [fixture] });
+    clients.push(client);
+    await client.connect();
+    const items = await client.completion({
+      textDocument: { uri: "file:///fake/sample.ts" },
+      position: { line: 0, character: 0 },
+    });
+    // The fake server sends 4 items, one without a label — it must be filtered.
+    expect(items.every((item) => typeof item.label === "string")).toBe(true);
+  });
+
+  it("completion() returns empty array when not connected (fail-quiet)", async () => {
+    const client = new LspClient({ command: process.execPath, args: [fixture] });
+    clients.push(client);
+    // Don't call connect() — the client has no child process.
+    const items = await client.completion({
+      textDocument: { uri: "file:///fake/sample.ts" },
+      position: { line: 0, character: 0 },
+    });
+    expect(items).toEqual([]);
+  });
+
+  it("completion() returns empty array when the server responds with an error", async () => {
+    // Use a server that responds with an error to completion requests.
+    const client = new LspClient({
+      command: process.execPath,
+      args: [
+        "-e",
+        `
+        let buf = Buffer.alloc(0);
+        process.stdin.on("data", (chunk) => {
+          buf = Buffer.concat([buf, chunk]);
+          for (;;) {
+            const end = buf.indexOf("\\r\\n\\r\\n");
+            if (end < 0) return;
+            const header = buf.subarray(0, end).toString();
+            const m = /Content-Length:\\s*(\\d+)/i.exec(header);
+            if (!m) { buf = buf.subarray(end + 4); continue; }
+            const len = Number(m[1]);
+            const start = end + 4;
+            if (buf.length < start + len) return;
+            const body = buf.subarray(start, start + len).toString();
+            buf = buf.subarray(start + len);
+            const msg = JSON.parse(body);
+            if (msg.method === "initialize") {
+              const out = JSON.stringify({ jsonrpc: "2.0", id: msg.id, result: { capabilities: {}, serverInfo: { name: "err-lsp" } } });
+              const bytes = Buffer.from(out);
+              process.stdout.write("Content-Length: " + bytes.length + "\\r\\n\\r\\n");
+              process.stdout.write(bytes);
+            } else if (msg.method === "textDocument/completion") {
+              const out = JSON.stringify({ jsonrpc: "2.0", id: msg.id, error: { code: -32603, message: "completion failed" } });
+              const bytes = Buffer.from(out);
+              process.stdout.write("Content-Length: " + bytes.length + "\\r\\n\\r\\n");
+              process.stdout.write(bytes);
+            } else if (msg.method === "shutdown") {
+              const out = JSON.stringify({ jsonrpc: "2.0", id: msg.id, result: null });
+              const bytes = Buffer.from(out);
+              process.stdout.write("Content-Length: " + bytes.length + "\\r\\n\\r\\n");
+              process.stdout.write(bytes);
+            }
+          }
+        });
+      `,
+      ],
+    });
+    clients.push(client);
+    await client.connect();
+    const items = await client.completion({
+      textDocument: { uri: "file:///fake/sample.ts" },
+      position: { line: 0, character: 0 },
+    });
+    expect(items).toEqual([]);
+  });
 });

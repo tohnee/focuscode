@@ -11,6 +11,7 @@ import {
   SessionStore,
   createCodingToolRegistry,
   createModelClient,
+  editGlobalConfig,
   expandFileMentions,
   listProviderPresets,
   loadImageAttachments,
@@ -46,36 +47,6 @@ import { rpcEventSink, runRpc } from "./rpc.js";
 import { defaultExtensionDirectory } from "./platform-command.js";
 import { runFullScreenAgent } from "./tui.js";
 import { runAcpServer } from "./acp-server.js";
-import {
-  readFile as readGlobalConfigFile,
-  writeFile as writeGlobalConfigFile,
-  mkdir,
-} from "node:fs/promises";
-import { dirname } from "node:path";
-
-function globalConfigPath(): string {
-  return resolve(join(homedir(), ".focuscode", "config.json"));
-}
-
-async function readGlobalConfig(): Promise<Record<string, unknown>> {
-  try {
-    const text = await readFile(globalConfigPath(), "utf8");
-    const value: unknown = JSON.parse(text);
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      return value as Record<string, unknown>;
-    }
-    return {};
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
-    throw error;
-  }
-}
-
-async function writeGlobalConfig(config: Record<string, unknown>): Promise<void> {
-  const path = globalConfigPath();
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, JSON.stringify(config, null, 2) + "\n", "utf8");
-}
 
 export const CLI_VERSION = "0.5.0";
 
@@ -425,13 +396,17 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
         vimEnabled: (config.tui as Record<string, unknown> | undefined)?.vimEnabled === true,
         onVimToggle: async (enabled: boolean) => {
           try {
-            const globalConfig = await readGlobalConfig();
-            const tuiConfig = (globalConfig.tui as Record<string, unknown> | undefined) ?? {};
-            tuiConfig.vimEnabled = enabled;
-            globalConfig.tui = tuiConfig;
-            await writeGlobalConfig(globalConfig);
-          } catch {
-            // Best-effort persistence; ignore write errors.
+            await editGlobalConfig((globalConfig) => {
+              const tuiConfig = (globalConfig.tui as Record<string, unknown> | undefined) ?? {};
+              tuiConfig.vimEnabled = enabled;
+              globalConfig.tui = tuiConfig;
+            });
+          } catch (error) {
+            // Best-effort persistence; log to stderr so the failure is
+            // observable in debug mode rather than silently swallowed.
+            process.stderr.write(
+              `[tui] Failed to persist vim preference: ${error instanceof Error ? error.message : String(error)}\n`,
+            );
           }
         },
         // ─── SpecEngine confirmation bridge ───────────────────────────

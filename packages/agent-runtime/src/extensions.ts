@@ -70,6 +70,13 @@ export interface ExtensionHostLike {
    * buggy extensions.
    */
   checkBeforeTool?(context: BeforeToolContext): Promise<BeforeToolResult | undefined>;
+  /**
+   * Register a beforeTool hook on this host. This is the public entry point
+   * for integrators (e.g. the SDK) to add hooks without accessing private
+   * fields. In-process hosts push directly to the hook array; process hosts
+   * collect hooks locally and invoke them before delegating to children.
+   */
+  registerBeforeToolHook?(hook: BeforeToolHook): void;
   /** Release host resources (child processes for the process host). No-op in-process. */
   dispose?(): void | Promise<void>;
 }
@@ -146,6 +153,15 @@ export class ExtensionHost implements ExtensionHostLike {
 
   dispose(): void {
     // In-process extensions share the host process; nothing to release.
+  }
+
+  /**
+   * Public entry point for SDK integrators to register beforeTool hooks
+   * without accessing private fields. Equivalent to extensions.api().beforeTool(hook)
+   * but does not expose the full AgentExtensionApi surface.
+   */
+  registerBeforeToolHook(hook: BeforeToolHook): void {
+    this.beforeToolHooks.push(hook);
   }
 
   private api(): AgentExtensionApi {

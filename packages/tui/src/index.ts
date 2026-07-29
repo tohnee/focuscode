@@ -7,6 +7,7 @@ export * from "./diff.js";
 export * from "./editor.js";
 export * from "./keymap.js";
 export * from "./layout.js";
+export * from "./lsp-completion.js";
 export * from "./markdown.js";
 export * from "./mascots.js";
 export * from "./picker.js";

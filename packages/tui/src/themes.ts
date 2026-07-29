@@ -342,6 +342,24 @@ export function setColorMode(mode: ColorMode): void {
 }
 
 /**
+ * Initialize the color mode from the `FOCUSCODE_COLOR_MODE` environment
+ * variable. Supported values:
+ *
+ * - `"256"`        — force 256-color downgrade (for terminals without truecolor).
+ * - `"truecolor"`  — force 24-bit color output.
+ * - `"auto"`       — detect from `COLORTERM` / `TERM` (same as the default).
+ *
+ * Unset or unrecognized values leave the mode at its default (`"truecolor"`).
+ * Call this once at TUI startup, before the first render.
+ */
+export function initColorModeFromEnv(): void {
+  const value = process.env.FOCUSCODE_COLOR_MODE;
+  if (value === "256" || value === "truecolor" || value === "auto") {
+    setColorMode(value);
+  }
+}
+
+/**
  * Convert an [r,g,b] triple to the nearest 8-bit ANSI color code (0–255).
  * Uses the standard xterm 6×6×6 color cube (16–231) and grayscale ramp
  * (232–255). The algorithm mirrors `ansi256ToRgb` so roundtripping is

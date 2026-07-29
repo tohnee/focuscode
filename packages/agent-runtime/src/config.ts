@@ -1,7 +1,7 @@
 import { constants } from "node:fs";
-import { access, readFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import type {
   ApprovalMode,
   ModelCapabilities,
@@ -2041,5 +2041,65 @@ function enforceEnterpriseModelAllowlist(
     !matchesAllowedModel(allowedModels, model, qualifiedModel, revision)
   ) {
     throw new Error(`Enterprise policy denies model ${qualifiedModel}`);
+  }
+}
+
+/**
+ * Read-modify-write helper for the global user-layer config
+ * (`~/.focuscode/config.json`). Reads the current config (or `{}` if absent),
+ * applies the updater, and writes it back. This is the single entry point
+ * for CLI/SDK integrators that need to persist preference fields (e.g.
+ * `tui.vimEnabled`) — it avoids the last-write-wins race that arises when
+ * callers re-implement their own read/write path against the same file.
+ *
+ * The updater receives the parsed config object and may mutate it in place
+ * or return a replacement; if it throws, the write is skipped and the error
+ * propagates to the caller.
+ */
+export async function editGlobalConfig(
+  updater: (config: Record<string, unknown>) => void | Promise<void>,
+  overrides?: { globalConfigPath?: string },
+): Promise<void> {
+  const path = resolve(overrides?.globalConfigPath ?? join(homedir(), ".focuscode", "config.json"));
+  let config: Record<string, unknown>;
+  try {
+    const text = await readFile(path, "utf8");
+    const value: unknown = JSON.parse(text);
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      config = value as Record<string, unknown>;
+    } else {
+      config = {};
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      config = {};
+    } else {
+      throw error;
+    }
+  }
+  await updater(config);
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, JSON.stringify(config, null, 2) + "\n", "utf8");
+}
+
+/**
+ * Read the global user-layer config as a plain object. Returns `{}` when the
+ * file does not exist. Use {@link editGlobalConfig} for read-modify-write;
+ * this helper is for read-only access (e.g. seeding TUI options at startup).
+ */
+export async function readGlobalConfig(overrides?: {
+  globalConfigPath?: string;
+}): Promise<Record<string, unknown>> {
+  const path = resolve(overrides?.globalConfigPath ?? join(homedir(), ".focuscode", "config.json"));
+  try {
+    const text = await readFile(path, "utf8");
+    const value: unknown = JSON.parse(text);
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return value as Record<string, unknown>;
+    }
+    return {};
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
+    throw error;
   }
 }

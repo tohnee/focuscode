@@ -27,7 +27,7 @@ import {
   type SpecProgressState,
   type SpecStageInfo,
 } from "./spec-progress.js";
-import { getTheme, TUI_THEMES, type TuiTheme } from "./themes.js";
+import { getTheme, initColorModeFromEnv, TUI_THEMES, type TuiTheme } from "./themes.js";
 import type { ContextUsageState } from "./context-bar.js";
 import {
   closePalette,
@@ -186,6 +186,9 @@ export class FullScreenTui {
   private specHistorySelection = 0;
 
   constructor(private readonly options: FullScreenTuiOptions) {
+    // L4: honor FOCUSCODE_COLOR_MODE env var before the first render so
+    // 256-color downgrade applies from the very first frame.
+    initColorModeFromEnv();
     this.theme = getTheme(options.theme);
     this.mascot = getMascot(options.mascot);
     this.model = options.model;

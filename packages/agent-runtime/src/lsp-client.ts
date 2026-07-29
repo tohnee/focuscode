@@ -223,7 +223,8 @@ export class LspClient {
   /**
    * Requests `textDocument/completion` from the LSP server. Returns an empty
    * array on any failure (fail-quiet) so the TUI completion system can fall
-   * back to other providers.
+   * back to other providers. Set `FOCUSCODE_DEBUG_LSP=1` to surface the
+   * failure reason on stderr for debugging.
    */
   async completion(params: {
     textDocument: { uri: string };
@@ -239,7 +240,12 @@ export class LspClient {
           label: item.label!,
           ...(typeof item.detail === "string" ? { detail: item.detail } : {}),
         }));
-    } catch {
+    } catch (error) {
+      if (process.env.FOCUSCODE_DEBUG_LSP) {
+        process.stderr.write(
+          `[lsp:completion] failed: ${error instanceof Error ? error.message : String(error)}\n`,
+        );
+      }
       return [];
     }
   }

@@ -16,6 +16,7 @@ export * from "./lsp-client.js";
 export * from "./lsp-diagnostic-provider.js";
 export * from "./media.js";
 export * from "./mcp.js";
+export * from "./mcp-sdk-server.js";
 export * from "./model-clients.js";
 export * from "./native-provider-clients.js";
 export * from "./permissions.js";
