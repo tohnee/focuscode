@@ -3,8 +3,11 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import {
   CodingAgent,
+  CircuitBreakingModelClient,
   ExtensionHost,
+  FallbackModelClient,
   FileAuditJournal,
+  ProcessExtensionHost,
   SessionStore,
   createCodingToolRegistry,
   createModelClient,
@@ -16,6 +19,9 @@ import {
   type AgentResources,
   type ApprovalHandler,
   type ApprovalMode,
+  type ModelClient,
+  type ModelProfile,
+  type ExtensionHostLike,
   type ResolvedAgentConfig,
   type ShellExecutor,
 } from "@focuscode/agent-runtime";
@@ -60,12 +66,27 @@ export interface CreateCodingAgentOptions extends AgentConfigOverrides {
    * when `forkSession` is set.
    */
   forkEntryId?: string;
+  /**
+   * Extension host isolation mode. `"in-process"` (default) runs extensions
+   * in the CLI process; `"process"` spawns a child process per extension for
+   * crash isolation. Note: process isolation is not a security sandbox.
+   */
+  extensionHostKind?: "in-process" | "process";
+  /**
+   * Wrap the composed event sink before it is handed to the agent. CLI uses
+   * this to intercept `spec_confirmation_required` events and forward them
+   * to the SpecEngine resolver, without duplicating the sink composition
+   * logic that lives in the SDK.
+   */
+  eventSinkWrapper?: (
+    sink: ((event: AgentEvent) => Promise<void> | void) | undefined,
+  ) => ((event: AgentEvent) => Promise<void> | void) | undefined;
 }
 
 export interface CreatedCodingAgent {
   agent: CodingAgent;
   sessions: SessionStore;
-  extensions: ExtensionHost;
+  extensions: ExtensionHostLike;
   resources: AgentResources;
   config: ResolvedAgentConfig;
 }
@@ -106,13 +127,17 @@ export async function createCodingAgent(
   }
   const registry = await createCodingToolRegistry(cwd, {
     shellExecutor,
+    ...(config.agent.searchEndpoint ? { searchEndpoint: config.agent.searchEndpoint } : {}),
   });
   const enabled = new Set(config.enabledTools ?? registry.definitions().map((tool) => tool.name));
   const disabled = new Set(config.disabledTools);
   for (const tool of registry.definitions()) {
     if (!enabled.has(tool.name) || disabled.has(tool.name)) registry.unregister(tool.name);
   }
-  const extensions = new ExtensionHost(registry);
+  const extensions: ExtensionHost | ProcessExtensionHost =
+    options.extensionHostKind === "process"
+      ? new ProcessExtensionHost(registry)
+      : new ExtensionHost(registry);
   const extensionPackages = new ExtensionPackageManager({
     directory: resolve(config.extensionDirectory ?? join(homedir(), ".focuscode", "extensions")),
   });
@@ -171,7 +196,7 @@ export async function createCodingAgent(
     // Use the public registerBeforeToolHook API instead of accessing the
     // private beforeToolHooks array. This survives internal refactors and
     // works for both in-process and process-isolated extension hosts.
-    extensions.registerBeforeToolHook(hook);
+    extensions.registerBeforeToolHook?.(hook);
   }
   const sessions = new SessionStore(
     resolve(options.sessionDirectory ?? defaultSessionDirectory(cwd)),
@@ -218,14 +243,15 @@ export async function createCodingAgent(
         ...(options.approve ? { approve: options.approve } : {}),
       })
     : undefined;
-  const eventSink = composeEventSink({ cwd, onEvent: options.onEvent, hooks: options.hooks });
+  const composedSink = composeEventSink({ cwd, onEvent: options.onEvent, hooks: options.hooks });
+  const eventSink = options.eventSinkWrapper
+    ? options.eventSinkWrapper(composedSink)
+    : composedSink;
+  const modelClient = buildModelClient(config.model, config.fallbackModels, options);
   const agent = await CodingAgent.create({
     cwd,
     model: config.model,
-    modelClient: createModelClient({
-      ...config.model,
-      ...(options.accessTokenProvider ? { accessTokenProvider: options.accessTokenProvider } : {}),
-    }),
+    modelClient,
     tools: registry.values(),
     toolRegistry: registry,
     permission: {
@@ -265,6 +291,49 @@ function createEnterpriseAudit(config: ResolvedAgentConfig): FileAuditJournal {
   return new FileAuditJournal({
     directory: config.enterprise.auditDirectory ?? join(homedir(), ".focuscode", "audit"),
     hmacKey: key,
+  });
+}
+
+/**
+ * Build the model client chain for a resolved agent config. When fallback
+ * models are declared, the primary client is wrapped in a
+ * `FallbackModelClient` with one `CircuitBreakingModelClient` per fallback.
+ * When no fallbacks are declared, the primary client is returned directly,
+ * preserving the exact pre-fallback runtime path.
+ */
+function buildModelClient(
+  primary: ModelProfile,
+  fallbacks: ModelProfile[],
+  options: CreateCodingAgentOptions,
+): ModelClient {
+  const primaryClient = circuitBreakingClient(primary, options);
+  if (fallbacks.length === 0) return primaryClient;
+  const fallbackClients = fallbacks.map((profile) => circuitBreakingClient(profile, options));
+  return new FallbackModelClient(primaryClient, fallbackClients, {
+    primaryModel: primary.model,
+    fallbackModels: fallbacks.map((profile) => profile.model),
+  });
+}
+
+function circuitBreakingClient(
+  profile: ModelProfile,
+  options: CreateCodingAgentOptions,
+): CircuitBreakingModelClient {
+  const inner = createModelClient({
+    ...profile,
+    ...(options.accessTokenProvider ? { accessTokenProvider: options.accessTokenProvider } : {}),
+  });
+  return new CircuitBreakingModelClient(inner, {
+    provider: profile.provider,
+    ...(profile.reliability.circuitThreshold !== undefined
+      ? { circuitThreshold: profile.reliability.circuitThreshold }
+      : {}),
+    ...(profile.reliability.circuitCooldownMs !== undefined
+      ? { circuitCooldownMs: profile.reliability.circuitCooldownMs }
+      : {}),
+    ...(profile.reliability.maxConcurrency !== undefined
+      ? { maxConcurrency: profile.reliability.maxConcurrency }
+      : {}),
   });
 }
 

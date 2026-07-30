@@ -55,11 +55,11 @@ function resolveDefaultPackPath(): string {
 /**
  * Canonical approval modes for the audit-style LocalHarness.
  *
- * The SDK surface historically called this `ApprovalMode`, which collided
- * with the agent-runtime `ApprovalMode` union (`ask | auto-edit | full-auto |
- * deny`) once both were re-exported from composition roots. The
- * disambiguated alias `HarnessApprovalMode` is now the canonical name; the
- * legacy alias is retained for backwards compatibility.
+ * This is distinct from agent-runtime's `ApprovalMode`
+ * (`ask | auto-edit | full-auto | deny`) which governs the session agent
+ * permission matrix. The two types are intentionally separate to prevent
+ * composition roots from accidentally mixing Kernel and Session approval
+ * semantics.
  *
  * `HARNESS_APPROVAL_MODES` is the runtime source of truth — the type is
  * derived from it so external tooling (JSON Schema, runtime validators) can
@@ -67,14 +67,12 @@ function resolveDefaultPackPath(): string {
  */
 export const HARNESS_APPROVAL_MODES = ["deny", "prompt", "auto-safe"] as const;
 export type HarnessApprovalMode = (typeof HARNESS_APPROVAL_MODES)[number];
-/** @deprecated Use {@link HarnessApprovalMode} to avoid colliding with agent-runtime's ApprovalMode. */
-export type ApprovalMode = HarnessApprovalMode;
 
 interface LocalHarnessBaseOptions {
   repoRoot: string;
   stateDirectory: string;
   modelPackPath?: string;
-  approvalMode?: ApprovalMode;
+  approvalMode?: HarnessApprovalMode;
   approval?: ApprovalPort;
   trustRepoConfig?: boolean;
   workerId?: string;

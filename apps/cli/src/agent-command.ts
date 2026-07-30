@@ -50,27 +50,40 @@ import { runAcpServer } from "./acp-server.js";
 
 export const CLI_VERSION = "0.5.0";
 
+/**
+ * Exhaustive, frozen list of CLI subcommands. Adding a new subcommand means
+ * adding it here — the routing logic reads from this single source of truth
+ * instead of a hard-coded deny-list scattered in the function body.
+ */
+export const SUBCOMMANDS = Object.freeze([
+  "init",
+  "run",
+  "inspect",
+  "export",
+  "auth",
+  "extension",
+  "share",
+  "sandbox",
+  "mascots",
+  "themes",
+  "doctor",
+  "skins",
+  "character",
+  "companion",
+]);
+
+const SUBCOMMAND_SET: ReadonlySet<string> = new Set(SUBCOMMANDS);
+
 export function isAgentInvocation(argv: string[]): boolean {
   const first = argv[0];
-  return (
-    !first ||
-    ![
-      "init",
-      "run",
-      "inspect",
-      "export",
-      "auth",
-      "extension",
-      "share",
-      "sandbox",
-      "mascots",
-      "themes",
-      "doctor",
-      "skins",
-      "character",
-      "companion",
-    ].includes(first)
-  );
+  // No first argument → default to the conversational agent.
+  if (!first) return true;
+  // A known subcommand → dispatch to the subcommand handler, not the agent.
+  if (SUBCOMMAND_SET.has(first)) return false;
+  // Anything else → treat as an agent prompt (chat-first UX). This preserves
+  // the historical default-to-agent behaviour so `focuscode fix the bug`
+  // still works without an explicit `agent` prefix.
+  return true;
 }
 
 export async function runAgentCommand(argv: string[]): Promise<void> {

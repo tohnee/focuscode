@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { TaskSpecSchema, assertSchema, type TaskSpecV1 } from "@focuscode/contracts";
 import {
   createLocalHarness,
-  type ApprovalMode,
+  type HarnessApprovalMode,
   type OpenAIHarnessOptions,
   type ScriptedStep,
 } from "@focuscode/sdk";
@@ -15,7 +15,7 @@ interface WorkerJob {
   stateDirectory: string;
   taskId: string;
   task: TaskSpecV1;
-  approvalMode: ApprovalMode;
+  approvalMode: HarnessApprovalMode;
   trustRepoConfig?: boolean;
   model:
     | { kind: "scripted"; steps: ScriptedStep[] }

@@ -7,7 +7,7 @@ import { stdin, stdout } from "node:process";
 import { exportTaskAssets, FileMemoryStore } from "@focuscode/asset-plane";
 import { TaskSpecSchema, assertSchema, type TaskSpecV1 } from "@focuscode/contracts";
 import { FileFactStore } from "@focuscode/persistence";
-import { createLocalHarness, type ApprovalMode, type ScriptedStep } from "@focuscode/sdk";
+import { createLocalHarness, type HarnessApprovalMode, type ScriptedStep } from "@focuscode/sdk";
 import type { ApprovalPort } from "@focuscode/action-domain";
 import { isAgentInvocation, runAgentCommand } from "./agent-command.js";
 import { runAuthCommand } from "./auth-command.js";
@@ -181,7 +181,7 @@ async function runCommand(args: ParsedArgs): Promise<void> {
   };
   assertSchema(TaskSpecSchema, task, "CLI task");
   const approvalMode = (option(args, "approval", stdin.isTTY ? "prompt" : "deny") ??
-    "deny") as ApprovalMode;
+    "deny") as HarnessApprovalMode;
   if (!(["deny", "prompt", "auto-safe"] as const).includes(approvalMode)) {
     throw new Error(`Unsupported approval mode: ${approvalMode}`);
   }
@@ -235,7 +235,7 @@ async function createOpenAIHarness(
   common: {
     repoRoot: string;
     stateDirectory: string;
-    approvalMode: ApprovalMode;
+    approvalMode: HarnessApprovalMode;
     trustRepoConfig: boolean;
     approval?: ApprovalPort;
   },
