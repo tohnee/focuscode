@@ -9,7 +9,14 @@
       "canvasData": {
         "x": 0,
         "y": 0,
-        "group": 0
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 900,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-ccb7b578",
+          "measuredAt": 1785337797114
+        }
       },
       "devMetadata": {
         "htmlSrc": "pages/mascots.html",
@@ -25,10 +32,86 @@
       "canvasData": {
         "x": 620,
         "y": 0,
-        "group": 0
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 900,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-b59fda8f",
+          "measuredAt": 1785337797114
+        }
       },
       "devMetadata": {
         "htmlSrc": "pages/architecture.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-app",
+      "title": "FocusCode App 原型",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785284845661,
+      "canvasData": {
+        "x": 1240,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 900,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-75662a8d",
+          "measuredAt": 1785337797114
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/app.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-app-personalized",
+      "title": "App 个性化版",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785336124898,
+      "canvasData": {
+        "x": 1860,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 24,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-bc3409e8",
+          "measuredAt": 1785337797114
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/app-personalized.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-mascots-gallery",
+      "title": "伙伴画廊",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1785336124898,
+      "canvasData": {
+        "x": 2480,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 900,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-f211c47d",
+          "measuredAt": 1785337797114
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/mascots-gallery.html",
         "interactions": []
       }
     }
@@ -36,6 +119,7 @@
   "config": {
     "autoLayout": true,
     "deviceType": "desktop",
-    "projectName": "FocusCode 设计系统"
+    "projectName": "FocusCode 设计系统",
+    "visualEditorEnabled": false
   }
 }

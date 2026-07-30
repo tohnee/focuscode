@@ -1,0 +1,3040 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusCode — Auditable AI Coding Workbench</title>
+    <style id="theme-vars">
+/* FocusCode Mascot Design - Foxglow Terminal Theme */
+/* Brand: Fox orange (#ff8700), dark terminal background */
+
+:root {
+  /* Brand single hue - foxglow orange */
+  --brand: #ff8700;
+  --brand-50: #fff7ed;
+  --brand-100: #ffedd5;
+  --brand-200: #fed7aa;
+  --brand-300: #fdba74;
+  --brand-400: #fb923c;
+  --brand-500: #ff8700;
+  --brand-600: #ea6c00;
+  --brand-700: #c25000;
+  --brand-ink: #1a0a00;
+
+  /* Surfaces - dark terminal */
+  --bg: #0d0d12;
+  --surface: #151520;
+  --surface-2: #1e1e2e;
+  --surface-3: #2a2a3e;
+
+  /* Text */
+  --ink: #e8e6e3;
+  --ink-2: #a8a39b;
+  --ink-3: #6b6560;
+
+  /* Borders & lines */
+  --line: #2a2a3a;
+
+  /* Semantic state colors */
+  --state-success: #5fd75f;
+  --state-warning: #ffaf00;
+  --state-error: #d75f5f;
+  --state-info: #87afd7;
+
+  /* Radius */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  /* Shadows */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+
+  /* Semantic aliases for head contract */
+  --focuscode-background: var(--bg);
+  --focuscode-foreground: var(--ink);
+  --focuscode-card: var(--surface);
+  --focuscode-card-foreground: var(--ink);
+  --focuscode-popover: var(--surface-2);
+  --focuscode-popover-foreground: var(--ink);
+  --focuscode-primary: var(--brand);
+  --focuscode-primary-foreground: var(--brand-ink);
+  --focuscode-muted: var(--surface-2);
+  --focuscode-muted-foreground: var(--ink-3);
+  --focuscode-border: var(--line);
+  --focuscode-input: var(--surface-3);
+  --focuscode-ring: var(--brand);
+  --focuscode-radius-sm: var(--r-sm);
+  --focuscode-radius-md: var(--r-md);
+  --focuscode-radius-lg: var(--r-lg);
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+
+  --color-state-success: var(--state-success);
+  --color-state-warning: var(--state-warning);
+  --color-state-error: var(--state-error);
+  --color-state-info: var(--state-info);
+}
+
+/* Terminal font stack */
+.font-mono {
+  font-family:
+    "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+}
+
+/* ASCII art uses mono */
+.mascot-art {
+  font-family:
+    "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+  font-size: 14px;
+  line-height: 1.3;
+  white-space: pre;
+  letter-spacing: 0;
+  tab-size: 4;
+}
+
+/* Subtle glow for evolution stages */
+@keyframes tailGlow {
+  0%,
+  100% {
+    text-shadow: 0 0 4px currentColor;
+  }
+  50% {
+    text-shadow:
+      0 0 12px currentColor,
+      0 0 24px currentColor;
+  }
+}
+
+@keyframes blink {
+  0%,
+  90%,
+  100% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.glow-pulse {
+  animation: tailGlow 2s ease-in-out infinite;
+}
+
+.float-gentle {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Scrollbar for terminal feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand);
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-brand: var(--brand);
+    --color-brand-50: var(--brand-50);
+    --color-brand-100: var(--brand-100);
+    --color-brand-200: var(--brand-200);
+    --color-brand-300: var(--brand-300);
+    --color-brand-400: var(--brand-400);
+    --color-brand-500: var(--brand-500);
+    --color-brand-600: var(--brand-600);
+    --color-brand-700: var(--brand-700);
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-surface-3: var(--surface-3);
+    --color-ink: var(--ink);
+    --color-ink-2: var(--ink-2);
+    --color-ink-3: var(--ink-3);
+    --color-line: var(--line);
+    --color-state-success: var(--state-success);
+    --color-state-warning: var(--state-warning);
+    --color-state-error: var(--state-error);
+    --color-state-info: var(--state-info);
+    --color-background: var(--focuscode-background);
+    --color-foreground: var(--focuscode-foreground);
+    --color-card: var(--focuscode-card);
+    --color-card-foreground: var(--focuscode-card-foreground);
+    --color-popover: var(--focuscode-popover);
+    --color-popover-foreground: var(--focuscode-popover-foreground);
+    --color-primary: var(--focuscode-primary);
+    --color-primary-foreground: var(--focuscode-primary-foreground);
+    --color-muted: var(--focuscode-muted);
+    --color-muted-foreground: var(--focuscode-muted-foreground);
+    --color-border: var(--focuscode-border);
+    --color-input: var(--focuscode-input);
+    --color-ring: var(--focuscode-ring);
+    --radius-sm: var(--focuscode-radius-sm);
+    --radius-md: var(--focuscode-radius-md);
+    --radius-lg: var(--focuscode-radius-lg);
+  }
+  @layer base {
+    body { background: var(--focuscode-background); color: var(--focuscode-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-brand { background-color: var(--brand); }
+      .text-brand { color: var(--brand); }
+      .border-brand { border-color: var(--brand); }
+      .ring-brand { --tw-ring-color: var(--brand); }
+      .bg-brand-50 { background-color: var(--brand-50); }
+      .text-brand-50 { color: var(--brand-50); }
+      .border-brand-50 { border-color: var(--brand-50); }
+      .ring-brand-50 { --tw-ring-color: var(--brand-50); }
+      .bg-brand-100 { background-color: var(--brand-100); }
+      .text-brand-100 { color: var(--brand-100); }
+      .border-brand-100 { border-color: var(--brand-100); }
+      .ring-brand-100 { --tw-ring-color: var(--brand-100); }
+      .bg-brand-200 { background-color: var(--brand-200); }
+      .text-brand-200 { color: var(--brand-200); }
+      .border-brand-200 { border-color: var(--brand-200); }
+      .ring-brand-200 { --tw-ring-color: var(--brand-200); }
+      .bg-brand-300 { background-color: var(--brand-300); }
+      .text-brand-300 { color: var(--brand-300); }
+      .border-brand-300 { border-color: var(--brand-300); }
+      .ring-brand-300 { --tw-ring-color: var(--brand-300); }
+      .bg-brand-400 { background-color: var(--brand-400); }
+      .text-brand-400 { color: var(--brand-400); }
+      .border-brand-400 { border-color: var(--brand-400); }
+      .ring-brand-400 { --tw-ring-color: var(--brand-400); }
+      .bg-brand-500 { background-color: var(--brand-500); }
+      .text-brand-500 { color: var(--brand-500); }
+      .border-brand-500 { border-color: var(--brand-500); }
+      .ring-brand-500 { --tw-ring-color: var(--brand-500); }
+      .bg-brand-600 { background-color: var(--brand-600); }
+      .text-brand-600 { color: var(--brand-600); }
+      .border-brand-600 { border-color: var(--brand-600); }
+      .ring-brand-600 { --tw-ring-color: var(--brand-600); }
+      .bg-brand-700 { background-color: var(--brand-700); }
+      .text-brand-700 { color: var(--brand-700); }
+      .border-brand-700 { border-color: var(--brand-700); }
+      .ring-brand-700 { --tw-ring-color: var(--brand-700); }
+      .bg-bg { background-color: var(--bg); }
+      .text-bg { color: var(--bg); }
+      .border-bg { border-color: var(--bg); }
+      .ring-bg { --tw-ring-color: var(--bg); }
+      .bg-surface { background-color: var(--surface); }
+      .text-surface { color: var(--surface); }
+      .border-surface { border-color: var(--surface); }
+      .ring-surface { --tw-ring-color: var(--surface); }
+      .bg-surface-2 { background-color: var(--surface-2); }
+      .text-surface-2 { color: var(--surface-2); }
+      .border-surface-2 { border-color: var(--surface-2); }
+      .ring-surface-2 { --tw-ring-color: var(--surface-2); }
+      .bg-surface-3 { background-color: var(--surface-3); }
+      .text-surface-3 { color: var(--surface-3); }
+      .border-surface-3 { border-color: var(--surface-3); }
+      .ring-surface-3 { --tw-ring-color: var(--surface-3); }
+      .bg-ink { background-color: var(--ink); }
+      .text-ink { color: var(--ink); }
+      .border-ink { border-color: var(--ink); }
+      .ring-ink { --tw-ring-color: var(--ink); }
+      .bg-ink-2 { background-color: var(--ink-2); }
+      .text-ink-2 { color: var(--ink-2); }
+      .border-ink-2 { border-color: var(--ink-2); }
+      .ring-ink-2 { --tw-ring-color: var(--ink-2); }
+      .bg-ink-3 { background-color: var(--ink-3); }
+      .text-ink-3 { color: var(--ink-3); }
+      .border-ink-3 { border-color: var(--ink-3); }
+      .ring-ink-3 { --tw-ring-color: var(--ink-3); }
+      .bg-line { background-color: var(--line); }
+      .text-line { color: var(--line); }
+      .border-line { border-color: var(--line); }
+      .ring-line { --tw-ring-color: var(--line); }
+      .bg-state-success { background-color: var(--state-success); }
+      .text-state-success { color: var(--state-success); }
+      .border-state-success { border-color: var(--state-success); }
+      .ring-state-success { --tw-ring-color: var(--state-success); }
+      .bg-state-warning { background-color: var(--state-warning); }
+      .text-state-warning { color: var(--state-warning); }
+      .border-state-warning { border-color: var(--state-warning); }
+      .ring-state-warning { --tw-ring-color: var(--state-warning); }
+      .bg-state-error { background-color: var(--state-error); }
+      .text-state-error { color: var(--state-error); }
+      .border-state-error { border-color: var(--state-error); }
+      .ring-state-error { --tw-ring-color: var(--state-error); }
+      .bg-state-info { background-color: var(--state-info); }
+      .text-state-info { color: var(--state-info); }
+      .border-state-info { border-color: var(--state-info); }
+      .ring-state-info { --tw-ring-color: var(--state-info); }
+      .bg-background { background-color: var(--focuscode-background); }
+      .text-background { color: var(--focuscode-background); }
+      .border-background { border-color: var(--focuscode-background); }
+      .ring-background { --tw-ring-color: var(--focuscode-background); }
+      .bg-foreground { background-color: var(--focuscode-foreground); }
+      .text-foreground { color: var(--focuscode-foreground); }
+      .border-foreground { border-color: var(--focuscode-foreground); }
+      .ring-foreground { --tw-ring-color: var(--focuscode-foreground); }
+      .bg-card { background-color: var(--focuscode-card); }
+      .text-card { color: var(--focuscode-card); }
+      .border-card { border-color: var(--focuscode-card); }
+      .ring-card { --tw-ring-color: var(--focuscode-card); }
+      .bg-card-foreground { background-color: var(--focuscode-card-foreground); }
+      .text-card-foreground { color: var(--focuscode-card-foreground); }
+      .border-card-foreground { border-color: var(--focuscode-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--focuscode-card-foreground); }
+      .bg-popover { background-color: var(--focuscode-popover); }
+      .text-popover { color: var(--focuscode-popover); }
+      .border-popover { border-color: var(--focuscode-popover); }
+      .ring-popover { --tw-ring-color: var(--focuscode-popover); }
+      .bg-popover-foreground { background-color: var(--focuscode-popover-foreground); }
+      .text-popover-foreground { color: var(--focuscode-popover-foreground); }
+      .border-popover-foreground { border-color: var(--focuscode-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--focuscode-popover-foreground); }
+      .bg-primary { background-color: var(--focuscode-primary); }
+      .text-primary { color: var(--focuscode-primary); }
+      .border-primary { border-color: var(--focuscode-primary); }
+      .ring-primary { --tw-ring-color: var(--focuscode-primary); }
+      .bg-primary-foreground { background-color: var(--focuscode-primary-foreground); }
+      .text-primary-foreground { color: var(--focuscode-primary-foreground); }
+      .border-primary-foreground { border-color: var(--focuscode-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--focuscode-primary-foreground); }
+      .bg-muted { background-color: var(--focuscode-muted); }
+      .text-muted { color: var(--focuscode-muted); }
+      .border-muted { border-color: var(--focuscode-muted); }
+      .ring-muted { --tw-ring-color: var(--focuscode-muted); }
+      .bg-muted-foreground { background-color: var(--focuscode-muted-foreground); }
+      .text-muted-foreground { color: var(--focuscode-muted-foreground); }
+      .border-muted-foreground { border-color: var(--focuscode-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--focuscode-muted-foreground); }
+      .bg-border { background-color: var(--focuscode-border); }
+      .text-border { color: var(--focuscode-border); }
+      .border-border { border-color: var(--focuscode-border); }
+      .ring-border { --tw-ring-color: var(--focuscode-border); }
+      .bg-input { background-color: var(--focuscode-input); }
+      .text-input { color: var(--focuscode-input); }
+      .border-input { border-color: var(--focuscode-input); }
+      .ring-input { --tw-ring-color: var(--focuscode-input); }
+      .bg-ring { background-color: var(--focuscode-ring); }
+      .text-ring { color: var(--focuscode-ring); }
+      .border-ring { border-color: var(--focuscode-ring); }
+      .ring-ring { --tw-ring-color: var(--focuscode-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+  <!-- ============================================================
+       TOP BAR
+       ============================================================ -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <!-- Foxy fox face SVG -->
+      <svg class="brand-mark" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Ears -->
+        <polygon points="4,2 9,10 2,9" fill="#ff8700"/>
+        <polygon points="24,2 19,10 26,9" fill="#ff8700"/>
+        <polygon points="5,4 8,9 4,8" fill="#1a0a00"/>
+        <polygon points="23,4 20,9 24,8" fill="#1a0a00"/>
+        <!-- Face -->
+        <ellipse cx="14" cy="17" rx="10" ry="9" fill="#fff7ed"/>
+        <!-- Cheeks -->
+        <ellipse cx="7" cy="19" rx="3" ry="2.5" fill="#ff8700" opacity="0.3"/>
+        <ellipse cx="21" cy="19" rx="3" ry="2.5" fill="#ff8700" opacity="0.3"/>
+        <!-- Eye mask -->
+        <ellipse cx="10.5" cy="15" rx="2.5" ry="2" fill="#1a0a00"/>
+        <ellipse cx="17.5" cy="15" rx="2.5" ry="2" fill="#1a0a00"/>
+        <!-- Eye shine -->
+        <circle cx="11" cy="14.3" r="0.8" fill="#fff"/>
+        <circle cx="18" cy="14.3" r="0.8" fill="#fff"/>
+        <!-- Nose -->
+        <ellipse cx="14" cy="18.5" rx="1.8" ry="1.3" fill="#1a0a00"/>
+        <!-- Mouth -->
+        <path d="M14 19.8 Q12 21.5 10 20.5" stroke="#1a0a00" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+        <path d="M14 19.8 Q16 21.5 18 20.5" stroke="#1a0a00" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="brand-name">
+        FocusCode
+        <span class="brand-version">v0.5.0-beta</span>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="breadcrumb">
+        <div class="breadcrumb-item project">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          project:harness-kernel
+        </div>
+        <span class="breadcrumb-sep">›</span>
+        <div class="breadcrumb-item session">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          refactor-auth-module
+        </div>
+        <span class="breadcrumb-sep">›</span>
+        <div class="breadcrumb-item branch">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg>
+          ⇡ feat/auth-refactor
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="status-pill sandbox-pill" title="Sandbox: gVisor (strong isolation)">
+        <span class="status-dot green"></span>
+        gVisor
+      </div>
+      <div class="status-pill model-pill" title="Active model">
+        qwen3-coder:latest
+        <span class="chev">▾</span>
+      </div>
+      <div class="foxy-level" title="Foxy companion level">
+        <span>🦊 Lv.7</span>
+        <div class="level-bar"><div class="level-bar-fill"></div></div>
+      </div>
+      <div class="window-controls">
+        <button class="wc-btn wc-close" title="Close"></button>
+        <button class="wc-btn wc-min" title="Minimize"></button>
+        <button class="wc-btn wc-max" title="Maximize"></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       NAV RAIL
+       ============================================================ -->
+  <nav class="navrail">
+    <!-- Search -->
+    <button class="nav-item" title="Search (⌘K)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span class="shortcut">⌘K</span>
+    </button>
+    <!-- Chat / Sessions (active) -->
+    <button class="nav-item active" title="Sessions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    </button>
+    <!-- Todo / Spec -->
+    <button class="nav-item" title="Specs & Tasks">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    </button>
+    <!-- Foxy -->
+    <button class="nav-item" title="Foxy Companion">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Simplified fox -->
+        <polygon points="4,3 9,11 2,10" fill="currentColor" stroke="none"/>
+        <polygon points="20,3 15,11 22,10" fill="currentColor" stroke="none"/>
+        <ellipse cx="12" cy="15" rx="8" ry="7" fill="none" stroke="currentColor"/>
+        <circle cx="9.5" cy="13" r="1.2" fill="currentColor"/>
+        <circle cx="14.5" cy="13" r="1.2" fill="currentColor"/>
+        <ellipse cx="12" cy="16" rx="1" ry="0.7" fill="currentColor"/>
+      </svg>
+    </button>
+    <!-- File Tree -->
+    <button class="nav-item" title="File Tree">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/><line x1="3" y1="13" x2="21" y2="13"/><line x1="9" y1="7" x2="9" y2="21"/></svg>
+    </button>
+    <!-- MCP / Extensions -->
+    <button class="nav-item" title="MCP & Extensions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 7.27L12 12m0 0l-8.5-4.73M12 12v9.5m0-9.5l8.5 4.73M3.5 7.27v9.46a1 1 0 00.5.87l8 4.48a1 1 0 001 0l8-4.48a1 1 0 00.5-.87V7.27a1 1 0 00-.5-.87l-8-4.48a1 1 0 00-1 0l-8 4.48a1 1 0 00-.5.87z"/></svg>
+    </button>
+
+    <div class="nav-spacer"></div>
+
+    <!-- Settings (bottom) -->
+    <button class="nav-item" title="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+  </nav>
+
+  <!-- ============================================================
+       CONVERSATION CANVAS
+       ============================================================ -->
+  <main class="canvas">
+    <div class="canvas-messages">
+      <!-- Session divider -->
+      <div class="session-divider">
+        <div class="session-divider-line"></div>
+        <span class="session-divider-label">Today · 14:30 · feat/auth-refactor</span>
+        <div class="session-divider-line"></div>
+      </div>
+
+      <!-- User message -->
+      <div class="msg-user">
+        <div class="msg-user-card">
+          <span class="msg-text">重构 auth 模块，支持 OAuth PKCE 流程，并把 token 存储从 localStorage 迁移到加密凭据库。保持现有 API 兼容，不要破坏 refresh token 逻辑。</span>
+        </div>
+        <span class="msg-meta">14:32</span>
+      </div>
+
+      <!-- Agent response block -->
+      <div class="msg-agent">
+        <!-- Agent header -->
+        <div class="msg-agent-header">
+          <svg class="agent-avatar" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="3,2 8,9 2,8" fill="#ff8700"/>
+            <polygon points="21,2 16,9 22,8" fill="#ff8700"/>
+            <polygon points="4,4 7,8 3,7" fill="#1a0a00"/>
+            <polygon points="20,4 17,8 21,7" fill="#1a0a00"/>
+            <ellipse cx="12" cy="15" rx="9" ry="8" fill="#fff7ed"/>
+            <ellipse cx="6" cy="16" rx="2.5" ry="2" fill="#ff8700" opacity="0.3"/>
+            <ellipse cx="18" cy="16" rx="2.5" ry="2" fill="#ff8700" opacity="0.3"/>
+            <ellipse cx="9" cy="13" rx="2" ry="1.6" fill="#1a0a00"/>
+            <ellipse cx="15" cy="13" rx="2" ry="1.6" fill="#1a0a00"/>
+            <circle cx="9.4" cy="12.5" r="0.6" fill="#fff"/>
+            <circle cx="15.4" cy="12.5" r="0.6" fill="#fff"/>
+            <ellipse cx="12" cy="16" rx="1.4" ry="1" fill="#1a0a00"/>
+            <path d="M12 17 Q10.5 18.3 9 17.7" stroke="#1a0a00" stroke-width="0.7" fill="none" stroke-linecap="round"/>
+            <path d="M12 17 Q13.5 18.3 15 17.7" stroke="#1a0a00" stroke-width="0.7" fill="none" stroke-linecap="round"/>
+          </svg>
+          <span class="agent-name">Foxy</span>
+          <span class="agent-model-pill">qwen3-coder</span>
+          <span class="agent-status-dot"></span>
+        </div>
+
+        <!-- Thinking bar (collapsed) -->
+        <div class="thinking-bar">
+          <div class="thinking-spinner"></div>
+          <span>Thinking…</span>
+          <span class="thinking-chev">▸</span>
+        </div>
+
+        <!-- Tool call: exploreCodebase (done) -->
+        <div class="tool-call">
+          <div class="tool-call-row">
+            <div class="tool-done"></div>
+            <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="#5fd75f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span class="tool-name">exploreCodebase</span>
+            <span class="tool-detail">auth module topology</span>
+            <span class="tool-meta">2.3s · 47 files scanned</span>
+          </div>
+          <div class="tool-progress">
+            <div class="tool-progress-fill" style="width:100%"></div>
+          </div>
+        </div>
+
+        <!-- Tool call: readFile (done) -->
+        <div class="tool-call" style="min-width:280px">
+          <div class="tool-call-row">
+            <div class="tool-done"></div>
+            <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="#5fd75f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="tool-detail">Read <code>src/auth/token-store.ts</code></span>
+            <span class="tool-meta">1.2s</span>
+          </div>
+        </div>
+
+        <!-- Tool call: readFile 2 (done) -->
+        <div class="tool-call" style="min-width:280px">
+          <div class="tool-call-row">
+            <div class="tool-done"></div>
+            <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="#5fd75f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="tool-detail">Read <code>src/auth/oauth-config.ts</code></span>
+            <span class="tool-meta">0.8s</span>
+          </div>
+        </div>
+
+        <!-- Tool call: searchSymbols (running) -->
+        <div class="tool-call" style="min-width:320px">
+          <div class="tool-call-row">
+            <div class="tool-running"></div>
+            <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="#ff9a3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span class="tool-name">searchSymbols</span>
+            <span class="tool-detail">credential store references</span>
+            <span class="tool-meta">running…</span>
+          </div>
+          <div class="tool-progress">
+            <div class="tool-progress-fill running"></div>
+          </div>
+        </div>
+
+        <!-- Spec Draft Card — key visual -->
+        <div class="spec-card">
+          <div class="spec-header">
+            <svg class="spec-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span class="spec-title">Spec Draft</span>
+            <span class="spec-badge">ready for review</span>
+          </div>
+          <div class="spec-body">
+            <div class="spec-field">
+              <span class="spec-field-label">Goal</span>
+              <span class="spec-field-value">重构 auth 模块以支持 OAuth 2.0 PKCE 授权码流程，将 token 存储从 <code>localStorage</code> 迁移到加密凭据库（<code>@focuscode/auth</code> credential store）。保持现有 Session API 向后兼容。</span>
+            </div>
+            <div class="spec-field">
+              <span class="spec-field-label">Constraints <span class="count">3</span></span>
+              <span class="spec-field-value dim">不得暴露 client_secret 到前端；所有 token 写入必须经 EncryptedCredentialStore；refresh token rotation 必须保留。</span>
+            </div>
+            <div class="spec-field">
+              <span class="spec-field-label">Acceptance <span class="count">5</span></span>
+              <span class="spec-field-value dim">PKCE code_verifier 熵 ≥ 32 bytes；credential store 写入路径覆盖 ≥ 80%；E2E 测试通过；旧 localStorage token 自动迁移；无明文 token 出现在日志。</span>
+            </div>
+            <div class="spec-field">
+              <span class="spec-field-label">Files affected <span class="count">8</span></span>
+              <span class="spec-field-value dim text-mono">src/auth/oauth.ts · src/auth/token-store.ts · src/auth/index.ts · src/auth/pkce.ts (new) · src/auth/credential-adapter.ts (new) · tests/auth/*.test.ts (3)</span>
+            </div>
+            <div class="spec-field">
+              <span class="spec-field-label">Task Breakdown</span>
+              <div class="task-list">
+                <div class="task-item done">
+                  <span class="task-marker"></span>
+                  <span>Design auth module interface & PKCE types</span>
+                </div>
+                <div class="task-item running">
+                  <span class="task-marker"></span>
+                  <span>Implement PKCE authorize &amp; token exchange flow</span>
+                </div>
+                <div class="task-item pending">
+                  <span class="task-marker"></span>
+                  <span>Migrate token storage to EncryptedCredentialStore</span>
+                </div>
+                <div class="task-item pending">
+                  <span class="task-marker">◆</span>
+                  <span>Add integration tests &amp; migration path</span>
+                </div>
+                <div class="task-item pending">
+                  <span class="task-marker">—</span>
+                  <span>Update docs &amp; ADR</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="spec-footer">
+            <button class="btn btn-primary">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Confirm &amp; Execute
+            </button>
+            <button class="btn btn-secondary">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Decline
+            </button>
+            <button class="btn btn-tertiary">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit Spec
+            </button>
+            <span class="decisions-badge">2 decisions needed</span>
+          </div>
+        </div>
+
+        <!-- Approval request notification -->
+        <div class="approval-card">
+          <div class="approval-header">
+            <svg class="approval-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="approval-title">File write approval</span>
+          </div>
+          <div class="approval-body">
+            <span class="approval-text">Foxy wants to modify <strong style="color:var(--app-ink)">3 files</strong>:</span>
+            <div class="file-changes-list">
+              <div class="file-change-row">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--app-info);flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="file-change-name">src/auth/oauth.ts</span>
+                <span class="file-add">+124</span>
+                <span class="file-del">-8</span>
+              </div>
+              <div class="file-change-row">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--app-info);flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="file-change-name">src/auth/token-store.ts</span>
+                <span class="file-add">+56</span>
+                <span class="file-del">-112</span>
+              </div>
+              <div class="file-change-row">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--app-info);flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="file-change-name">src/auth/index.ts</span>
+                <span class="file-add">+12</span>
+                <span class="file-del">-5</span>
+              </div>
+            </div>
+          </div>
+          <div class="approval-footer">
+            <button class="btn btn-primary">
+              Review in Diff
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button class="btn btn-secondary">Approve All</button>
+            <button class="btn btn-tertiary" style="color:var(--app-error)">Reject</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spacer for scroll -->
+      <div style="height:4px"></div>
+    </div>
+
+    <!-- Input Composer -->
+    <div class="composer-wrap">
+      <div class="composer">
+        <div class="composer-input-area">
+          <span class="pill pill-mention">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+            src/auth/
+            <span class="pill-x">×</span>
+          </span>
+          <span class="pill pill-slash">
+            /spec
+            <span class="pill-x">×</span>
+          </span>
+          <span class="composer-placeholder">refactor auth module to use PKCE flow…</span>
+        </div>
+        <div class="composer-toolbar">
+          <div class="composer-tools">
+            <button class="composer-tool-btn" title="Attach file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <button class="composer-tool-btn" title="Mention (@)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94"/></svg>
+            </button>
+            <button class="composer-tool-btn" title="Commands (/)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            </button>
+            <button class="composer-tool-btn" title="Voice input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+          </div>
+          <div class="composer-actions">
+            <span class="token-count">24 tokens</span>
+            <button class="stop-btn" title="Stop generation">
+              <div class="stop-btn-inner"></div>
+            </button>
+            <button class="send-btn" title="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="composer-hints">
+        <kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> newline · <kbd>Ctrl+P</kbd> command palette · <kbd>Alt+]</kbd> cycle panel
+      </div>
+    </div>
+  </main>
+
+  <!-- ============================================================
+       WORK PANEL
+       ============================================================ -->
+  <aside class="workpanel">
+    <div class="workpanel-tabs">
+      <button class="wp-tab" data-tab="code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span class="tab-label">Code</span>
+      </button>
+      <button class="wp-tab active" data-tab="diff">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="tab-label">Diff</span>
+      </button>
+      <button class="wp-tab" data-tab="spec">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="tab-label">Spec</span>
+      </button>
+      <button class="wp-tab" data-tab="audit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        <span class="tab-label">Audit</span>
+      </button>
+    </div>
+
+    <div class="workpanel-content">
+      <!-- DIFF TAB (active by default) -->
+      <div class="tab-panel active" id="tab-diff">
+        <div class="diff-header">
+          <span class="diff-header-title">Diff Review</span>
+          <div class="diff-stats">
+            <span>3 files</span>
+            <span class="diff-stat-add">+192</span>
+            <span class="diff-stat-del">-125</span>
+          </div>
+        </div>
+
+        <div class="file-list">
+          <div class="file-entry selected">
+            <svg class="file-entry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="file-entry-path">src/auth/oauth.ts</span>
+            <div class="file-entry-changes">
+              <span class="fe-add">+124</span>
+              <span class="fe-del">-8</span>
+            </div>
+          </div>
+          <div class="file-entry">
+            <svg class="file-entry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="file-entry-path">src/auth/token-store.ts</span>
+            <div class="file-entry-changes">
+              <span class="fe-add">+56</span>
+              <span class="fe-del">-112</span>
+            </div>
+          </div>
+          <div class="file-entry">
+            <svg class="file-entry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="file-entry-path">src/auth/index.ts</span>
+            <div class="file-entry-changes">
+              <span class="fe-add">+12</span>
+              <span class="fe-del">-5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="diff-viewer">
+          <div class="diff-hunk-header">
+            <span>@@ -23,15 +23,28 @@</span>
+            <span style="color:var(--app-ink-3);font-size:10px">async function getToken()</span>
+          </div>
+
+          <div class="diff-line ctx">
+            <div class="diff-gutter">
+              <span class="diff-linenum diff-linenum-old">23</span>
+              <span class="diff-linenum diff-linenum-new">23</span>
+            </div>
+            <span class="diff-sign"> </span>
+            <span class="diff-content"><span class="syn-com">/**</span></span>
+          </div>
+          <div class="diff-line ctx">
+            <div class="diff-gutter">
+              <span class="diff-linenum diff-linenum-old">24</span>
+              <span class="diff-linenum diff-linenum-new">24</span>
+            </div>
+            <span class="diff-sign"> </span>
+            <span class="diff-content"><span class="syn-com"> * Retrieve the current access token,</span></span>
+          </div>
+          <div class="diff-line ctx">
+            <div class="diff-gutter">
+              <span class="diff-linenum diff-linenum-old">25</span>
+              <span class="diff-linenum diff-linenum-new">25</span>
+            </div>
+            <span class="diff-sign"> </span>
+            <span class="diff-content"><span class="syn-com"> * refreshing if necessary.</span></span>
+          </div>
+          <div class="diff-line ctx">
+            <div class="diff-gutter">
+              <span class="diff-linenum diff-linenum-old">26</span>
+              <span class="diff-linenum diff-linenum-new">26</span>
+            </div>
+            <span class="diff-sign"> </span>
+            <span class="diff-content"><span class="syn-com"> */</span></span>
+          </div>
+          <div class="diff-line ctx">
+            <div class="diff-gutter">
+              <span class="diff-linenum diff-linenum-old">27</span>
+              <span class="diff-linenum diff-linenum-new">27</span>
+            </div>
+            <span class="diff-sign"> </span>
+            <span class="diff-content"><span class="syn-kw">async function</span> <span class="syn-fn">getToken</span>(): <span class="syn-type">Promise</span>&lt;<span class="syn-type">string</span>&gt; {</span>
+          </div>
+
+          <div class="diff-line del">
+            <div class="diff-gutter">
+              <span class="diff-linenum diff-linenum-old">28</span>
+              <span class="diff-linenum"></span>
+            </div>
+            <span class="diff-sign">-</span>
+            <span class="diff-content">  <span class="syn-kw">const</span> <span class="syn-var">token</span> = <span class="syn-var">localStorage</span>.<span class="syn-fn">getItem</span>(<span class="syn-str">'access_token'</span>);</span>
+          </div>
+          <div class="diff-line del">
+            <div class="diff-gutter">
+              <span class="diff-linenum diff-linenum-old">29</span>
+              <span class="diff-linenum"></span>
+            </div>
+            <span class="diff-sign">-</span>
+            <span class="diff-content">  <span class="syn-kw">if</span> (!<span class="syn-var">token</span>) <span class="syn-kw">throw new</span> <span class="syn-type">Error</span>(<span class="syn-str">'Not authenticated'</span>);</span>
+          </div>
+          <div class="diff-line del">
+            <div class="diff-gutter">
+              <span class="diff-linenum diff-linenum-old">30</span>
+              <span class="diff-linenum"></span>
+            </div>
+            <span class="diff-sign">-</span>
+            <span class="diff-content">  <span class="syn-kw">return</span> <span class="syn-var">token</span>;</span>
+          </div>
+
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">28</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">  <span class="syn-kw">const</span> <span class="syn-var">credentialStore</span> = <span class="syn-kw">await</span> <span class="syn-fn">getCredentialStore</span>();</span>
+          </div>
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">29</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">  <span class="syn-kw">const</span> <span class="syn-var">entry</span> = <span class="syn-kw">await</span> <span class="syn-var">credentialStore</span>.<span class="syn-fn">get</span>(<span class="syn-str">'oauth'</span>, <span class="syn-str">'access_token'</span>);</span>
+          </div>
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">30</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">  <span class="syn-kw">if</span> (!<span class="syn-var">entry</span>) {</span>
+          </div>
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">31</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">    <span class="syn-com">// Attempt migration from legacy localStorage</span></span>
+          </div>
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">32</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">    <span class="syn-kw">return</span> <span class="syn-kw">await</span> <span class="syn-fn">migrateLegacyToken</span>();</span>
+          </div>
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">33</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">  }</span>
+          </div>
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">34</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">  <span class="syn-kw">if</span> (<span class="syn-fn">isExpired</span>(<span class="syn-var">entry</span>)) {</span>
+          </div>
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">35</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">    <span class="syn-kw">return</span> <span class="syn-kw">await</span> <span class="syn-fn">refreshWithPKCE</span>(<span class="syn-var">entry</span>.<span class="syn-var">refreshToken</span>);</span>
+          </div>
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">36</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">  }</span>
+          </div>
+          <div class="diff-line add">
+            <div class="diff-gutter">
+              <span class="diff-linenum"></span>
+              <span class="diff-linenum diff-linenum-new">37</span>
+            </div>
+            <span class="diff-sign">+</span>
+            <span class="diff-content">  <span class="syn-kw">return</span> <span class="syn-var">entry</span>.<span class="syn-var">accessToken</span>;</span>
+          </div>
+
+          <div class="diff-line ctx">
+            <div class="diff-gutter">
+              <span class="diff-linenum diff-linenum-old">31</span>
+              <span class="diff-linenum diff-linenum-new">38</span>
+            </div>
+            <span class="diff-sign"> </span>
+            <span class="diff-content">}</span>
+          </div>
+
+          <div style="padding:6px 14px;color:var(--app-ink-3);font-size:10px;">
+            @@ -47,8 +60,15 @@ (PKCE helpers)
+          </div>
+        </div>
+
+        <div class="diff-actions">
+          <button class="btn btn-success">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Approve File
+          </button>
+          <button class="btn btn-danger">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Reject File
+          </button>
+          <button class="btn btn-secondary">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <div class="diff-actions-spacer"></div>
+          <button class="btn btn-primary">
+            Approve All 3
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- CODE TAB -->
+      <div class="tab-panel" id="tab-code">
+        <div class="code-tab-content">
+          <div class="code-file-header">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--app-info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="code-file-name">src/auth/token-store.ts</span>
+            <span class="code-file-lang">TypeScript</span>
+          </div>
+          <div class="code-content">
+            <div class="code-line"><span class="code-linenum">1</span><span class="code-text"><span class="syn-kw">import</span> { <span class="syn-type">EncryptedCredentialStore</span> } <span class="syn-kw">from</span> <span class="syn-str">'@focuscode/auth'</span>;</span></div>
+            <div class="code-line"><span class="code-linenum">2</span><span class="code-text"><span class="syn-kw">import</span> { <span class="syn-fn">createPKCEChallenge</span> } <span class="syn-kw">from</span> <span class="syn-str">'./pkce'</span>;</span></div>
+            <div class="code-line"><span class="code-linenum">3</span><span class="code-text"></span></div>
+            <div class="code-line"><span class="code-linenum">4</span><span class="code-text"><span class="syn-com">// Token store — migrated from localStorage to encrypted credential store</span></span></div>
+            <div class="code-line"><span class="code-linenum">5</span><span class="code-text"><span class="syn-kw">export class</span> <span class="syn-type">TokenStore</span> {</span></div>
+            <div class="code-line"><span class="code-linenum">6</span><span class="code-text">  <span class="syn-kw">private</span> <span class="syn-var">store</span>: <span class="syn-type">EncryptedCredentialStore</span>;</span></div>
+            <div class="code-line"><span class="code-linenum">7</span><span class="code-text"></span></div>
+            <div class="code-line"><span class="code-linenum">8</span><span class="code-text">  <span class="syn-kw">constructor</span>(<span class="syn-var">store</span>: <span class="syn-type">EncryptedCredentialStore</span>) {</span></div>
+            <div class="code-line"><span class="code-linenum">9</span><span class="code-text">    <span class="syn-kw">this</span>.<span class="syn-var">store</span> = <span class="syn-var">store</span>;</span></div>
+            <div class="code-line"><span class="code-linenum">10</span><span class="code-text">  }</span></div>
+            <div class="code-line"><span class="code-linenum">11</span><span class="code-text"></span></div>
+            <div class="code-line"><span class="code-linenum">12</span><span class="code-text">  <span class="syn-kw">async</span> <span class="syn-fn">saveTokens</span>(<span class="syn-var">tokens</span>: <span class="syn-type">TokenSet</span>): <span class="syn-type">Promise</span>&lt;<span class="syn-type">void</span>&gt; {</span></div>
+            <div class="code-line"><span class="code-linenum">13</span><span class="code-text">    <span class="syn-kw">await</span> <span class="syn-kw">this</span>.<span class="syn-var">store</span>.<span class="syn-fn">set</span>(<span class="syn-str">'oauth'</span>, <span class="syn-str">'access_token'</span>, <span class="syn-var">tokens</span>.<span class="syn-var">accessToken</span>);</span></div>
+            <div class="code-line"><span class="code-linenum">14</span><span class="code-text">    <span class="syn-kw">await</span> <span class="syn-kw">this</span>.<span class="syn-var">store</span>.<span class="syn-fn">set</span>(<span class="syn-str">'oauth'</span>, <span class="syn-str">'refresh_token'</span>, <span class="syn-var">tokens</span>.<span class="syn-var">refreshToken</span>);</span></div>
+            <div class="code-line"><span class="code-linenum">15</span><span class="code-text">  }</span></div>
+            <div class="code-line"><span class="code-linenum">16</span><span class="code-text">}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPEC TAB -->
+      <div class="tab-panel" id="tab-spec">
+        <div class="spec-tab-content">
+          <div class="spec-header" style="border-radius:var(--r-card);border:1px solid var(--app-line);border-left:3px solid var(--app-brand)">
+            <svg class="spec-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span class="spec-title">Spec-First Pipeline</span>
+            <span class="spec-badge">in progress</span>
+          </div>
+
+          <div class="pipeline">
+            <!-- Stage 1: done -->
+            <div class="pipeline-stage done">
+              <div class="pipeline-indicator">
+                <div class="pipeline-dot done">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="pipeline-line"></div>
+              </div>
+              <div class="pipeline-content">
+                <div class="pipeline-title">Explore &amp; Understand</div>
+                <div class="pipeline-desc">Scanned 47 files, mapped auth module topology</div>
+              </div>
+            </div>
+
+            <!-- Stage 2: done -->
+            <div class="pipeline-stage done">
+              <div class="pipeline-indicator">
+                <div class="pipeline-dot done">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="pipeline-line"></div>
+              </div>
+              <div class="pipeline-content">
+                <div class="pipeline-title">Draft Spec</div>
+                <div class="pipeline-desc">Goals, constraints, acceptance criteria, task breakdown</div>
+              </div>
+            </div>
+
+            <!-- Stage 3: active -->
+            <div class="pipeline-stage active">
+              <div class="pipeline-indicator">
+                <div class="pipeline-dot active">3</div>
+                <div class="pipeline-line"></div>
+              </div>
+              <div class="pipeline-content">
+                <div class="pipeline-title">Spec Review</div>
+                <div class="pipeline-desc">Awaiting human confirmation — 2 decisions needed</div>
+              </div>
+            </div>
+
+            <!-- Stage 4: pending -->
+            <div class="pipeline-stage pending">
+              <div class="pipeline-indicator">
+                <div class="pipeline-dot pending">4</div>
+                <div class="pipeline-line"></div>
+              </div>
+              <div class="pipeline-content">
+                <div class="pipeline-title">Execute &amp; Verify</div>
+                <div class="pipeline-desc">Implement per spec, run tests, generate receipts</div>
+              </div>
+            </div>
+
+            <!-- Stage 5: pending -->
+            <div class="pipeline-stage pending">
+              <div class="pipeline-indicator">
+                <div class="pipeline-dot pending">5</div>
+              </div>
+              <div class="pipeline-content">
+                <div class="pipeline-title">Audit &amp; Commit</div>
+                <div class="pipeline-desc">Diff review, receipt chain verification, Ed25519 sign-off</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:8px;padding:12px;background:var(--app-surface-code);border:1px solid var(--app-line);border-radius:var(--r-card)">
+            <div class="audit-section-title">Session Receipt (preview)</div>
+            <div class="audit-receipt" style="border:none;padding:4px 0;background:transparent">
+              <div class="receipt-row"><span class="receipt-key">session_id</span><span class="receipt-val">sess_8f3a…c291</span></div>
+              <div class="receipt-row"><span class="receipt-key">model</span><span class="receipt-val">qwen3-coder:latest</span></div>
+              <div class="receipt-row"><span class="receipt-key">spec_hash</span><span class="receipt-val hash">sha256:9b4e…f2a1</span></div>
+              <div class="receipt-row"><span class="receipt-key">sandbox</span><span class="receipt-val text-success">gVisor ✓</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUDIT TAB -->
+      <div class="tab-panel" id="tab-audit">
+        <div class="audit-tab-content">
+          <div>
+            <div class="audit-section-title">Receipt Chain</div>
+            <div class="audit-receipt">
+              <div class="receipt-row"><span class="receipt-key">Session ID</span><span class="receipt-val text-mono">sess_8f3a9c2e1b4d</span></div>
+              <div class="receipt-row"><span class="receipt-key">Model Pack</span><span class="receipt-val text-mono">qwen3-coder:latest</span></div>
+              <div class="receipt-row"><span class="receipt-key">Sandbox</span><span class="receipt-val text-success">gVisor (runsc)</span></div>
+              <div class="receipt-row"><span class="receipt-key">Intent Hash</span><span class="receipt-val hash">sha256:9b4ef2a1…c823</span></div>
+              <div class="receipt-row"><span class="receipt-key">Signing Key</span><span class="receipt-val hash">Ed25519:04a2…f8e1</span></div>
+              <div class="receipt-row"><span class="receipt-key">Started</span><span class="receipt-val">2026-07-29T14:32:01Z</span></div>
+              <div class="receipt-row"><span class="receipt-key">Tokens Used</span><span class="receipt-val">32,418 / 128,000</span></div>
+              <div class="receipt-row"><span class="receipt-key">Cost</span><span class="receipt-val text-brand">$0.042</span></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="audit-section-title">Verified Actions</div>
+            <div class="audit-chain">
+              <div class="chain-entry">
+                <span class="chain-num">1</span>
+                <span class="chain-type">explore</span>
+                <span class="chain-desc">codebase topology scan</span>
+                <span class="chain-time">2.3s</span>
+                <span class="chain-verified">✓</span>
+              </div>
+              <div class="chain-entry">
+                <span class="chain-num">2</span>
+                <span class="chain-type">read</span>
+                <span class="chain-desc">src/auth/token-store.ts</span>
+                <span class="chain-time">1.2s</span>
+                <span class="chain-verified">✓</span>
+              </div>
+              <div class="chain-entry">
+                <span class="chain-num">3</span>
+                <span class="chain-type">read</span>
+                <span class="chain-desc">src/auth/oauth-config.ts</span>
+                <span class="chain-time">0.8s</span>
+                <span class="chain-verified">✓</span>
+              </div>
+              <div class="chain-entry">
+                <span class="chain-num">4</span>
+                <span class="chain-type">spec</span>
+                <span class="chain-desc">spec_draft_v1 (awaiting approval)</span>
+                <span class="chain-time">pending</span>
+                <span class="chain-verified text-warning">⏳</span>
+              </div>
+              <div class="chain-entry">
+                <span class="chain-num">5</span>
+                <span class="chain-type">write</span>
+                <span class="chain-desc">3 files (gated — approval required)</span>
+                <span class="chain-time">blocked</span>
+                <span class="chain-verified" style="color:var(--app-warning)">🔒</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:auto;padding-top:8px;border-top:1px solid var(--app-line)">
+            <button class="btn btn-secondary" style="width:100%;justify-content:center">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export Signed Session Bundle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       STATUS BAR (vim-airline style)
+       ============================================================ -->
+  <footer class="statusbar">
+    <!-- VIM mode -->
+    <div class="sb-seg sb-mode">
+      NORMAL
+    </div>
+    <!-- Chevron from green to orange -->
+    <div class="sb-chev" style="color:var(--app-success)">
+      <svg width="14" height="28" viewBox="0 0 14 28" fill="none"><path d="M0 0 L14 14 L0 28 Z" fill="currentColor"/></svg>
+    </div>
+    <div class="sb-seg sb-layout">
+      SPLIT
+    </div>
+    <!-- Chevron from orange to surface-elev -->
+    <div class="sb-chev" style="color:var(--app-brand)">
+      <svg width="14" height="28" viewBox="0 0 14 28" fill="none"><path d="M0 0 L14 14 L0 28 Z" fill="currentColor"/></svg>
+    </div>
+    <div class="sb-seg sb-ctx">
+      <span>32k/128k ctx</span>
+      <div class="sb-ctx-bar"><div class="sb-ctx-bar-fill"></div></div>
+      <span class="sb-cost">$0.042</span>
+    </div>
+
+    <!-- Center -->
+    <div class="sb-center">
+      <span class="sb-center-dot"></span>
+      <span>qwen3-coder</span>
+      <span style="color:var(--app-success)">gVisor ✓</span>
+      <span>Foxy 🦊 working</span>
+    </div>
+
+    <!-- Right -->
+    <div class="sb-right">
+      <span>UTF-8</span>
+      <span>LF</span>
+      <span>TypeScript</span>
+      <span>Ln 24, Col 8</span>
+      <span class="sb-rec">
+        <span class="sb-rec-dot"></span>
+        recording
+      </span>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       MINIMAL JS — tab switching only
+       ============================================================ -->
+  <script>
+    (function() {
+      const tabs = document.querySelectorAll('.wp-tab');
+      const panels = document.querySelectorAll('.tab-panel');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const target = tab.getAttribute('data-tab');
+
+          tabs.forEach(t => t.classList.remove('active'));
+          panels.forEach(p => p.classList.remove('active'));
+
+          tab.classList.add('active');
+          const panel = document.getElementById('tab-' + target);
+          if (panel) panel.classList.add('active');
+        });
+      });
+
+      // File list selection
+      const fileEntries = document.querySelectorAll('.file-entry');
+      fileEntries.forEach(entry => {
+        entry.addEventListener('click', () => {
+          fileEntries.forEach(e => e.classList.remove('selected'));
+          entry.classList.add('selected');
+        });
+      });
+    })();
+  </script>
+
+    <style>
+    /* ============================================================
+       FocusCode App Shell — additional styles on top of brand tokens
+       ============================================================ */
+
+    :root {
+      /* Layout constants */
+      --topbar-h: 52px;
+      --navrail-w: 56px;
+      --statusbar-h: 28px;
+      --workpanel-w: 380px;
+
+      /* App-specific surfaces (map to brand tokens where possible) */
+      --app-bg: var(--bg, #0d0d12);
+      --app-surface: var(--surface, #151520);
+      --app-surface-elev: var(--surface-2, #1e1e2e);
+      --app-surface-code: #131318;
+      --app-surface-hover: #252538;
+      --app-ink: var(--ink, #e8e6e3);
+      --app-ink-2: var(--ink-2, #a8a39b);
+      --app-ink-3: var(--ink-3, #6b6560);
+      --app-line: var(--line, #2a2a3a);
+      --app-line-strong: #3a3a4e;
+
+      /* Brand */
+      --app-brand: var(--brand, #ff8700);
+      --app-brand-bright: #ff9a3c;
+      --app-brand-dim: rgba(255, 135, 0, 0.15);
+      --app-brand-glow: rgba(255, 135, 0, 0.25);
+
+      /* Semantic */
+      --app-success: var(--state-success, #5fd75f);
+      --app-success-dim: rgba(95, 215, 95, 0.12);
+      --app-warning: var(--state-warning, #ffaf00);
+      --app-warning-dim: rgba(255, 175, 0, 0.12);
+      --app-error: var(--state-error, #d75f5f);
+      --app-error-dim: rgba(215, 95, 95, 0.12);
+      --app-info: var(--state-info, #87afd7);
+      --app-info-dim: rgba(135, 175, 215, 0.15);
+      --app-purple: #bb9af7;
+      --app-purple-dim: rgba(187, 154, 247, 0.15);
+
+      /* Diff */
+      --diff-add-bg: rgba(95, 215, 95, 0.10);
+      --diff-add-fg: #9ae09a;
+      --diff-add-gutter: rgba(95, 215, 95, 0.25);
+      --diff-del-bg: rgba(215, 95, 95, 0.10);
+      --diff-del-fg: #e8a0a0;
+      --diff-del-gutter: rgba(215, 95, 95, 0.25);
+      --diff-hunk: rgba(135, 175, 215, 0.10);
+      --diff-hunk-fg: #87afd7;
+
+      /* Radii */
+      --r-card: 6px;
+      --r-btn: 8px;
+      --r-composer: 10px;
+      --r-pill: 999px;
+
+      /* Fonts */
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: var(--app-bg);
+      color: var(--app-ink);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: var(--navrail-w) 1fr var(--workpanel-w);
+      grid-template-rows: var(--topbar-h) 1fr var(--statusbar-h);
+      grid-template-areas:
+        "topbar topbar topbar"
+        "nav    canvas workpanel"
+        "status status status";
+      width: 1440px;
+      height: 900px;
+      position: relative;
+      border: 1px solid var(--app-line);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+
+    /* Allow selection in code/message areas */
+    .msg-text, .code-content, .diff-line, .spec-body, .file-path, .composer-input {
+      user-select: text;
+    }
+
+    /* ============================================================
+       TOP BAR
+       ============================================================ */
+    .topbar {
+      grid-area: topbar;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: var(--topbar-h);
+      padding: 0 14px;
+      background: var(--app-surface);
+      border-bottom: 1px solid var(--app-line);
+      -webkit-app-region: drag;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      -webkit-app-region: no-drag;
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--app-ink);
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-version {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--app-ink-3);
+      background: var(--app-surface-elev);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--app-line);
+    }
+
+    .topbar-center {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--app-ink-2);
+      font-family: var(--font-mono);
+    }
+
+    .breadcrumb-sep {
+      color: var(--app-ink-3);
+      margin: 0 2px;
+    }
+
+    .breadcrumb-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--app-surface-elev);
+      border: 1px solid var(--app-line);
+    }
+
+    .breadcrumb-item.project { color: var(--app-ink-2); }
+    .breadcrumb-item.session { color: var(--app-ink); font-weight: 500; }
+    .breadcrumb-item.branch {
+      color: var(--app-brand-bright);
+      background: var(--app-brand-dim);
+      border-color: rgba(255,135,0,0.25);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      -webkit-app-region: no-drag;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--r-pill);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      border: 1px solid var(--app-line);
+      background: var(--app-surface-elev);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .status-pill:hover { background: var(--app-surface-hover); }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.green { background: var(--app-success); box-shadow: 0 0 6px var(--app-success); }
+    .status-dot.yellow { background: var(--app-warning); box-shadow: 0 0 6px var(--app-warning); }
+    .status-dot.red { background: var(--app-error); box-shadow: 0 0 6px var(--app-error); }
+
+    .sandbox-pill .status-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .model-pill {
+      color: var(--app-ink-2);
+    }
+    .model-pill .chev {
+      color: var(--app-ink-3);
+      font-size: 9px;
+    }
+
+    .foxy-level {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--r-pill);
+      background: var(--app-brand-dim);
+      border: 1px solid rgba(255,135,0,0.3);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--app-brand-bright);
+    }
+
+    .level-bar {
+      width: 36px;
+      height: 4px;
+      background: rgba(255,135,0,0.2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .level-bar-fill {
+      height: 100%;
+      width: 65%;
+      background: linear-gradient(90deg, var(--app-brand), var(--app-brand-bright));
+      border-radius: 2px;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+      margin-left: 8px;
+      padding-left: 10px;
+      border-left: 1px solid var(--app-line);
+    }
+
+    .wc-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: filter 0.15s;
+    }
+    .wc-btn:hover { filter: brightness(1.2); }
+    .wc-close { background: #ff5f57; }
+    .wc-min { background: #febc2e; }
+    .wc-max { background: #28c840; }
+
+    /* ============================================================
+       NAV RAIL
+       ============================================================ */
+    .navrail {
+      grid-area: nav;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0;
+      background: var(--app-surface);
+      border-right: 1px solid var(--app-line);
+      gap: 4px;
+    }
+
+    .nav-item {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--r-btn);
+      color: var(--app-ink-3);
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      border: none;
+      background: transparent;
+    }
+
+    .nav-item:hover {
+      background: var(--app-surface-hover);
+      color: var(--app-ink-2);
+    }
+
+    .nav-item.active {
+      background: var(--app-brand);
+      color: #fff;
+      box-shadow: 0 2px 8px var(--app-brand-glow);
+    }
+
+    .nav-item.active svg { color: #fff; }
+
+    .nav-item .shortcut {
+      position: absolute;
+      bottom: -2px;
+      right: 2px;
+      font-size: 8px;
+      font-family: var(--font-mono);
+      color: var(--app-ink-3);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .nav-item:hover .shortcut { opacity: 1; }
+
+    .nav-spacer { flex: 1; }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* ============================================================
+       CONVERSATION CANVAS
+       ============================================================ */
+    .canvas {
+      grid-area: canvas;
+      display: flex;
+      flex-direction: column;
+      background: var(--app-bg);
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .canvas-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Scrollbar */
+    .canvas-messages::-webkit-scrollbar,
+    .workpanel-content::-webkit-scrollbar,
+    .diff-viewer::-webkit-scrollbar,
+    .file-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    .canvas-messages::-webkit-scrollbar-track,
+    .workpanel-content::-webkit-scrollbar-track,
+    .diff-viewer::-webkit-scrollbar-track,
+    .file-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .canvas-messages::-webkit-scrollbar-thumb,
+    .workpanel-content::-webkit-scrollbar-thumb,
+    .diff-viewer::-webkit-scrollbar-thumb,
+    .file-list::-webkit-scrollbar-thumb {
+      background: var(--app-surface-3);
+      border-radius: 4px;
+    }
+    .canvas-messages::-webkit-scrollbar-thumb:hover,
+    .workpanel-content::-webkit-scrollbar-thumb:hover,
+    .diff-viewer::-webkit-scrollbar-thumb:hover,
+    .file-list::-webkit-scrollbar-thumb:hover {
+      background: var(--app-brand);
+    }
+
+    /* Session divider / day marker */
+    .session-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 4px 0;
+    }
+    .session-divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--app-line);
+    }
+    .session-divider-label {
+      font-size: 11px;
+      color: var(--app-ink-3);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* User message */
+    .msg-user {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .msg-user-card {
+      max-width: 70%;
+      background: var(--app-surface-elev);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-card);
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--app-ink);
+      box-shadow: var(--shadow-1);
+    }
+
+    .msg-meta {
+      font-size: 11px;
+      color: var(--app-ink-3);
+      font-family: var(--font-mono);
+      padding: 0 4px;
+    }
+
+    /* Agent message block */
+    .msg-agent {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg-agent-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-avatar {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .agent-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--app-ink);
+    }
+
+    .agent-model-pill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--app-ink-3);
+      background: var(--app-surface-elev);
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid var(--app-line);
+    }
+
+    .agent-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--app-brand);
+      box-shadow: 0 0 8px var(--app-brand);
+      animation: pulse-dot 1.5s ease-in-out infinite;
+      margin-left: 4px;
+    }
+
+    /* Thinking bar */
+    .thinking-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--app-surface);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-card);
+      font-size: 12px;
+      color: var(--app-ink-2);
+      cursor: pointer;
+      width: fit-content;
+      transition: background 0.15s;
+    }
+    .thinking-bar:hover { background: var(--app-surface-elev); }
+
+    .thinking-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--app-line-strong);
+      border-top-color: var(--app-brand);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .thinking-chev {
+      font-size: 9px;
+      color: var(--app-ink-3);
+      margin-left: 4px;
+    }
+
+    /* Tool call chips */
+    .tool-call {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--app-surface);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-card);
+      font-size: 12px;
+      width: fit-content;
+      min-width: 320px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .tool-call-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tool-icon {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tool-done {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--app-success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tool-done::after {
+      content: "";
+      width: 4px;
+      height: 7px;
+      border: solid #0d0d12;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    .tool-running {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--app-line-strong);
+      border-top-color: var(--app-brand);
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .tool-name {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--app-ink);
+    }
+
+    .tool-detail {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--app-ink-2);
+    }
+
+    .tool-meta {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--app-ink-3);
+    }
+
+    .tool-progress {
+      height: 3px;
+      background: var(--app-bg);
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .tool-progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--app-success);
+    }
+    .tool-progress-fill.running {
+      background: linear-gradient(90deg, var(--app-brand), var(--app-brand-bright));
+      animation: progress-indeterminate 1.5s ease-in-out infinite;
+      width: 40% !important;
+    }
+
+    @keyframes progress-indeterminate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(300%); }
+    }
+
+    /* Spec Draft Card — key visual element */
+    .spec-card {
+      background: var(--app-surface);
+      border: 1px solid var(--app-line);
+      border-left: 3px solid var(--app-brand);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px var(--app-brand-dim);
+      max-width: 560px;
+    }
+
+    .spec-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: linear-gradient(90deg, var(--app-brand-dim), transparent);
+      border-bottom: 1px solid var(--app-line);
+    }
+
+    .spec-header-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--app-brand);
+      flex-shrink: 0;
+    }
+
+    .spec-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--app-brand-bright);
+    }
+
+    .spec-badge {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--app-success-dim);
+      color: var(--app-success);
+      font-family: var(--font-mono);
+      margin-left: auto;
+    }
+
+    .spec-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .spec-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .spec-field-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--app-ink-3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .spec-field-label .count {
+      font-family: var(--font-mono);
+      font-weight: 400;
+      color: var(--app-ink-3);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .spec-field-value {
+      font-size: 12.5px;
+      color: var(--app-ink);
+      line-height: 1.5;
+    }
+
+    .spec-field-value.dim {
+      color: var(--app-ink-2);
+      font-size: 12px;
+    }
+
+    /* Task breakdown */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .task-item.done {
+      color: var(--app-success);
+    }
+    .task-item.running {
+      color: var(--app-brand-bright);
+      background: var(--app-brand-dim);
+    }
+    .task-item.pending {
+      color: var(--app-ink-3);
+    }
+
+    .task-marker {
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .task-item.done .task-marker::after {
+      content: "";
+      width: 5px;
+      height: 8px;
+      border: solid var(--app-success);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    .task-item.running .task-marker {
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--app-line-strong);
+      border-top-color: var(--app-brand);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 1px;
+    }
+
+    .task-item.pending .task-marker {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--app-surface-3);
+      margin: 3px;
+    }
+
+    .spec-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--app-line);
+      background: var(--app-surface-elev);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: var(--r-btn);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--app-brand);
+      color: #1a0a00;
+      font-weight: 600;
+      border-color: var(--app-brand);
+    }
+    .btn-primary:hover {
+      background: var(--app-brand-bright);
+      box-shadow: 0 2px 8px var(--app-brand-glow);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--app-ink-2);
+      border-color: var(--app-line);
+    }
+    .btn-secondary:hover {
+      background: var(--app-surface-hover);
+      color: var(--app-ink);
+      border-color: var(--app-line-strong);
+    }
+
+    .btn-tertiary {
+      background: transparent;
+      color: var(--app-ink-3);
+      border: none;
+      padding: 6px 8px;
+    }
+    .btn-tertiary:hover {
+      color: var(--app-ink);
+      background: var(--app-surface-hover);
+    }
+
+    .btn-success {
+      background: var(--app-success-dim);
+      color: var(--app-success);
+      border-color: rgba(95,215,95,0.3);
+    }
+    .btn-success:hover { background: rgba(95,215,95,0.2); }
+
+    .btn-danger {
+      background: var(--app-error-dim);
+      color: var(--app-error);
+      border-color: rgba(215,95,95,0.3);
+    }
+    .btn-danger:hover { background: rgba(215,95,95,0.2); }
+
+    .decisions-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--app-brand);
+      background: var(--app-brand-dim);
+      padding: 3px 8px;
+      border-radius: var(--r-pill);
+      border: 1px solid rgba(255,135,0,0.25);
+      font-weight: 500;
+    }
+
+    /* Approval notification */
+    .approval-card {
+      background: var(--app-surface);
+      border: 1px solid var(--app-line);
+      border-left: 3px solid var(--app-warning);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      max-width: 520px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      animation: slide-in 0.3s ease-out;
+    }
+
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .approval-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--app-warning-dim);
+      border-bottom: 1px solid var(--app-line);
+    }
+
+    .approval-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--app-warning);
+      flex-shrink: 0;
+    }
+
+    .approval-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--app-warning);
+    }
+
+    .approval-body {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .approval-text {
+      font-size: 12px;
+      color: var(--app-ink-2);
+    }
+
+    .file-changes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: var(--app-surface-code);
+      border: 1px solid var(--app-line);
+      border-radius: 4px;
+      padding: 6px;
+    }
+
+    .file-change-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      border-radius: 3px;
+    }
+
+    .file-change-row:hover { background: var(--app-surface-hover); }
+
+    .file-change-name { color: var(--app-ink-2); flex: 1; }
+    .file-add { color: var(--app-success); }
+    .file-del { color: var(--app-error); }
+
+    .approval-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--app-line);
+      background: var(--app-surface-elev);
+    }
+
+    /* ============================================================
+       INPUT COMPOSER
+       ============================================================ */
+    .composer-wrap {
+      padding: 12px 28px 14px;
+      background: var(--app-bg);
+      border-top: 1px solid var(--app-line);
+    }
+
+    .composer {
+      background: var(--app-surface-elev);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-composer);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .composer:focus-within {
+      border-color: var(--app-brand);
+      box-shadow: 0 0 0 3px var(--app-brand-dim);
+    }
+
+    .composer-input-area {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      min-height: 22px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.6;
+      white-space: nowrap;
+    }
+
+    .pill-mention {
+      background: var(--app-info-dim);
+      color: var(--app-info);
+      border: 1px solid rgba(135,175,215,0.3);
+    }
+
+    .pill-slash {
+      background: var(--app-brand-dim);
+      color: var(--app-brand-bright);
+      border: 1px solid rgba(255,135,0,0.3);
+    }
+
+    .pill-x {
+      cursor: pointer;
+      opacity: 0.6;
+      margin-left: 2px;
+      font-size: 11px;
+    }
+    .pill-x:hover { opacity: 1; }
+
+    .composer-placeholder {
+      color: var(--app-ink-3);
+      font-size: 13px;
+    }
+
+    .composer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .composer-tools {
+      display: flex;
+      gap: 2px;
+    }
+
+    .composer-tool-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: var(--app-ink-3);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .composer-tool-btn:hover {
+      background: var(--app-surface-hover);
+      color: var(--app-ink-2);
+    }
+
+    .composer-tool-btn svg { width: 16px; height: 16px; }
+
+    .composer-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .token-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--app-ink-3);
+    }
+
+    .stop-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid var(--app-error);
+      background: var(--app-error-dim);
+      color: var(--app-error);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .stop-btn:hover { background: rgba(215,95,95,0.2); }
+    .stop-btn-inner {
+      width: 8px;
+      height: 8px;
+      background: currentColor;
+      border-radius: 1px;
+    }
+
+    .send-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: none;
+      background: var(--app-brand);
+      color: #1a0a00;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 6px var(--app-brand-glow);
+    }
+    .send-btn:hover {
+      background: var(--app-brand-bright);
+      transform: scale(1.05);
+    }
+    .send-btn svg { width: 14px; height: 14px; }
+
+    .composer-hints {
+      text-align: center;
+      font-size: 11px;
+      color: var(--app-ink-3);
+      font-family: var(--font-mono);
+      padding-top: 6px;
+    }
+
+    .composer-hints kbd {
+      font-family: var(--font-mono);
+      background: var(--app-surface-elev);
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid var(--app-line);
+      font-size: 10px;
+      color: var(--app-ink-2);
+    }
+
+    /* ============================================================
+       WORK PANEL
+       ============================================================ */
+    .workpanel {
+      grid-area: workpanel;
+      display: flex;
+      flex-direction: column;
+      background: var(--app-surface);
+      border-left: 1px solid var(--app-line);
+      overflow: hidden;
+    }
+
+    .workpanel-tabs {
+      display: flex;
+      height: 38px;
+      border-bottom: 1px solid var(--app-line);
+      background: var(--app-surface);
+      flex-shrink: 0;
+    }
+
+    .wp-tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--app-ink-3);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+      position: relative;
+      padding: 0 4px;
+    }
+
+    .wp-tab:hover {
+      color: var(--app-ink-2);
+      background: var(--app-surface-hover);
+    }
+
+    .wp-tab.active {
+      color: var(--app-brand);
+      border-bottom-color: var(--app-brand);
+      background: var(--app-brand-dim);
+    }
+
+    .wp-tab svg { width: 14px; height: 14px; }
+    .wp-tab .tab-label { font-size: 11px; }
+
+    .workpanel-content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .tab-panel.active { display: flex; }
+
+    /* Diff tab content */
+    .diff-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--app-line);
+      background: var(--app-surface-elev);
+      flex-shrink: 0;
+    }
+
+    .diff-header-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--app-ink-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: var(--font-mono);
+    }
+
+    .diff-stats {
+      display: flex;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .diff-stat-add { color: var(--app-success); }
+    .diff-stat-del { color: var(--app-error); }
+
+    .file-list {
+      max-height: 140px;
+      overflow-y: auto;
+      border-bottom: 1px solid var(--app-line);
+      flex-shrink: 0;
+    }
+
+    .file-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.1s;
+      font-size: 11px;
+      font-family: var(--font-mono);
+    }
+
+    .file-entry:hover { background: var(--app-surface-hover); }
+
+    .file-entry.selected {
+      background: var(--app-surface-elev);
+      border-left-color: var(--app-brand);
+    }
+
+    .file-entry-icon {
+      width: 14px;
+      height: 14px;
+      color: var(--app-info);
+      flex-shrink: 0;
+    }
+
+    .file-entry-path {
+      flex: 1;
+      color: var(--app-ink-2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-entry.selected .file-entry-path { color: var(--app-ink); }
+
+    .file-entry-changes {
+      display: flex;
+      gap: 6px;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .fe-add { color: var(--app-success); }
+    .fe-del { color: var(--app-error); }
+
+    .diff-viewer {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--app-surface-code);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.65;
+      min-height: 0;
+    }
+
+    .diff-hunk-header {
+      display: flex;
+      align-items: center;
+      padding: 4px 14px;
+      background: var(--diff-hunk);
+      color: var(--diff-hunk-fg);
+      font-size: 10.5px;
+      gap: 8px;
+    }
+
+    .diff-line {
+      display: flex;
+      align-items: stretch;
+      white-space: pre;
+    }
+
+    .diff-gutter {
+      display: flex;
+      width: 52px;
+      flex-shrink: 0;
+      color: var(--app-ink-3);
+      user-select: none;
+      font-size: 10.5px;
+    }
+
+    .diff-linenum {
+      width: 26px;
+      text-align: right;
+      padding-right: 8px;
+      color: var(--app-ink-3);
+      opacity: 0.6;
+    }
+
+    .diff-sign {
+      width: 26px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .diff-content {
+      flex: 1;
+      padding-right: 14px;
+    }
+
+    .diff-line.ctx { color: var(--app-ink-2); }
+    .diff-line.add {
+      background: var(--diff-add-bg);
+    }
+    .diff-line.add .diff-sign { color: var(--diff-add-fg); }
+    .diff-line.add .diff-content { color: var(--diff-add-fg); }
+    .diff-line.add .diff-linenum-new { background: var(--diff-add-gutter); color: var(--diff-add-fg); }
+
+    .diff-line.del {
+      background: var(--diff-del-bg);
+    }
+    .diff-line.del .diff-sign { color: var(--diff-del-fg); }
+    .diff-line.del .diff-content { color: var(--diff-del-fg); }
+    .diff-line.del .diff-linenum-old { background: var(--diff-del-gutter); color: var(--diff-del-fg); }
+
+    /* Syntax hints */
+    .syn-kw { color: #bb9af7; }
+    .syn-fn { color: #7aa2f7; }
+    .syn-str { color: #9ece6a; }
+    .syn-num { color: #ff9e64; }
+    .syn-com { color: #6b6560; font-style: italic; }
+    .syn-var { color: #e8e6e3; }
+    .syn-type { color: #2ac3de; }
+
+    .diff-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--app-line);
+      background: var(--app-surface-elev);
+      flex-shrink: 0;
+    }
+
+    .diff-actions .btn { padding: 5px 10px; font-size: 11px; }
+    .diff-actions-spacer { flex: 1; }
+
+    /* Spec tab content */
+    .spec-tab-content {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .pipeline-stage {
+      display: flex;
+      gap: 12px;
+      position: relative;
+    }
+
+    .pipeline-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 24px;
+      flex-shrink: 0;
+    }
+
+    .pipeline-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .pipeline-dot.done {
+      background: var(--app-success);
+      color: #0d0d12;
+    }
+
+    .pipeline-dot.active {
+      background: var(--app-brand);
+      color: #1a0a00;
+      box-shadow: 0 0 10px var(--app-brand-glow);
+    }
+
+    .pipeline-dot.pending {
+      background: var(--app-surface-3);
+      color: var(--app-ink-3);
+    }
+
+    .pipeline-line {
+      width: 2px;
+      flex: 1;
+      min-height: 16px;
+      background: var(--app-line);
+    }
+
+    .pipeline-stage.done .pipeline-line { background: var(--app-success); }
+    .pipeline-stage.active .pipeline-line {
+      background: linear-gradient(to bottom, var(--app-brand), var(--app-line));
+    }
+
+    .pipeline-content {
+      flex: 1;
+      padding-bottom: 18px;
+    }
+
+    .pipeline-stage:last-child .pipeline-content { padding-bottom: 0; }
+
+    .pipeline-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--app-ink);
+      margin-bottom: 2px;
+    }
+
+    .pipeline-desc {
+      font-size: 11px;
+      color: var(--app-ink-3);
+    }
+
+    .pipeline-stage.done .pipeline-title { color: var(--app-success); }
+    .pipeline-stage.active .pipeline-title { color: var(--app-brand-bright); }
+
+    /* Code tab content */
+    .code-tab-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .code-file-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--app-surface-elev);
+      border-bottom: 1px solid var(--app-line);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .code-file-name { color: var(--app-ink); }
+    .code-file-lang { color: var(--app-ink-3); margin-left: auto; }
+
+    .code-content {
+      flex: 1;
+      padding: 12px 0;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.65;
+      background: var(--app-surface-code);
+      overflow-y: auto;
+    }
+
+    .code-line {
+      display: flex;
+    }
+
+    .code-linenum {
+      width: 40px;
+      text-align: right;
+      padding-right: 12px;
+      color: var(--app-ink-3);
+      opacity: 0.5;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .code-text {
+      padding-right: 14px;
+      white-space: pre;
+    }
+
+    /* Audit tab content */
+    .audit-tab-content {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .audit-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--app-ink-3);
+      margin-bottom: 6px;
+      font-family: var(--font-mono);
+    }
+
+    .audit-receipt {
+      background: var(--app-surface-code);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-card);
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .receipt-key { color: var(--app-ink-3); }
+    .receipt-val { color: var(--app-ink-2); text-align: right; word-break: break-all; }
+    .receipt-val.hash {
+      color: var(--app-brand-bright);
+      font-size: 10px;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .audit-chain {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chain-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: var(--app-surface-code);
+      border: 1px solid var(--app-line);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+    }
+
+    .chain-num {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--app-brand-dim);
+      color: var(--app-brand);
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .chain-type { color: var(--app-info); flex-shrink: 0; }
+    .chain-desc { color: var(--app-ink-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chain-time { color: var(--app-ink-3); flex-shrink: 0; }
+    .chain-verified { color: var(--app-success); flex-shrink: 0; }
+
+    /* ============================================================
+       STATUS BAR (vim-airline style)
+       ============================================================ */
+    .statusbar {
+      grid-area: status;
+      display: flex;
+      align-items: center;
+      height: var(--statusbar-h);
+      background: var(--app-surface);
+      border-top: 1px solid var(--app-line);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      overflow: hidden;
+    }
+
+    .sb-seg {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      height: 100%;
+      white-space: nowrap;
+    }
+
+    .sb-chev {
+      color: var(--app-surface);
+      font-size: 14px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      margin: 0 -1px;
+    }
+
+    /* Left segment - vim mode */
+    .sb-mode {
+      background: var(--app-success);
+      color: #0d0d12;
+      font-weight: 700;
+      padding: 0 12px;
+    }
+
+    .sb-chev-after-mode {
+      color: var(--app-surface);
+      background: var(--app-success);
+      margin: 0;
+    }
+    .sb-chev-after-mode .chev-fill {
+      color: var(--app-success);
+      background: var(--app-brand);
+    }
+
+    /* Airline chevrons using CSS triangles */
+    .sb-seg-with-chev {
+      position: relative;
+    }
+    .sb-seg-with-chev::after {
+      content: "";
+      position: absolute;
+      right: -8px;
+      top: 0;
+      width: 0;
+      height: 0;
+      border-top: 14px solid transparent;
+      border-bottom: 14px solid transparent;
+      border-left: 8px solid currentColor;
+      z-index: 2;
+    }
+
+    .sb-layout {
+      background: var(--app-brand);
+      color: #1a0a00;
+      font-weight: 600;
+      padding-left: 16px;
+    }
+
+    .sb-ctx {
+      background: var(--app-surface-elev);
+      color: var(--app-ink-2);
+      padding-left: 16px;
+      gap: 10px;
+    }
+
+    .sb-ctx-bar {
+      width: 50px;
+      height: 4px;
+      background: var(--app-surface-3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .sb-ctx-bar-fill {
+      height: 100%;
+      width: 25%;
+      background: linear-gradient(90deg, var(--app-brand), var(--app-brand-bright));
+      border-radius: 2px;
+    }
+
+    .sb-cost {
+      color: var(--app-brand-bright);
+      font-weight: 500;
+    }
+
+    .sb-center {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      color: var(--app-ink-2);
+    }
+
+    .sb-center-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--app-brand);
+      animation: pulse-dot 2s infinite;
+    }
+
+    .sb-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      color: var(--app-ink-3);
+      background: var(--app-surface-elev);
+    }
+
+    .sb-rec {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--app-error);
+    }
+
+    .sb-rec-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--app-error);
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    /* ============================================================
+       UTILITIES
+       ============================================================ */
+    .icon-inline {
+      display: inline-flex;
+      vertical-align: middle;
+    }
+
+    .text-mono { font-family: var(--font-mono); }
+    .text-success { color: var(--app-success); }
+    .text-warning { color: var(--app-warning); }
+    .text-error { color: var(--app-error); }
+    .text-brand { color: var(--app-brand); }
+    .text-muted { color: var(--app-ink-3); }
+    .text-dim { color: var(--app-ink-2); }
+    .text-code { font-family: var(--font-mono); font-size: 0.92em; }
+
+    code {
+      font-family: var(--font-mono);
+      background: var(--app-surface-elev);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--app-line);
+      font-size: 0.9em;
+    }
+
+    /* Selection */
+    ::selection {
+      background: var(--app-brand-dim);
+      color: var(--app-brand-bright);
+    }
+  </style>
+</body>
+</html>

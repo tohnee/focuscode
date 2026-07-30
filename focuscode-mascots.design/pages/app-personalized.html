@@ -1,0 +1,2454 @@
+<!doctype html>
+<html lang="zh-CN" class="dark" data-mascot="mochi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusCode — Personalized Coding Workbench</title>
+    <style id="theme-vars">
+/* FocusCode Design System - Foxglow + Dreamy + Mascot Personalization */
+/* Brand: Fox orange (#ff8700), dark terminal background; Dreamy: night purple + cloud pink */
+
+:root {
+  /* ===== Brand single hue - foxglow orange (default theme) ===== */
+  --brand: #ff8700;
+  --brand-50: #fff7ed;
+  --brand-100: #ffedd5;
+  --brand-200: #fed7aa;
+  --brand-300: #fdba74;
+  --brand-400: #fb923c;
+  --brand-500: #ff8700;
+  --brand-600: #ea6c00;
+  --brand-700: #c25000;
+  --brand-ink: #1a0a00;
+
+  /* ===== Dreamy 星眠 theme (night purple + cloud pink + mint) ===== */
+  --dreamy-bg: #14101c;
+  --dreamy-surface: #1d1729;
+  --dreamy-surface-2: #271f38;
+  --dreamy-surface-3: #352a4d;
+  --dreamy-ink: #ece6f5;
+  --dreamy-ink-2: #a89bc4;
+  --dreamy-ink-3: #6b5f87;
+  --dreamy-line: #2f2644;
+  --dreamy-accent: #f4a8d8; /* cloud pink */
+  --dreamy-accent-ink: #2a1538;
+  --dreamy-success: #7ee0c8; /* mint */
+  --dreamy-warning: #e8c478;
+  --dreamy-danger: #e87a9a;
+  --dreamy-info: #9ab8f0;
+
+  /* Dreamy semantic aliases for head contract */
+  --dreamy-foreground: var(--dreamy-ink);
+  --dreamy-card: var(--dreamy-surface);
+  --dreamy-primary: var(--dreamy-accent);
+  --dreamy-border: var(--dreamy-line);
+  --dreamy-muted: var(--dreamy-surface-2);
+  --dreamy-radius-sm: var(--r-sm);
+  --dreamy-radius-md: var(--r-md);
+  --dreamy-radius-lg: var(--r-lg);
+
+  /* ===== Surfaces - dark terminal default (foxglow) ===== */
+  --bg: #0d0d12;
+  --surface: #151520;
+  --surface-2: #1e1e2e;
+  --surface-3: #2a2a3e;
+
+  /* ===== Text ===== */
+  --ink: #e8e6e3;
+  --ink-2: #a8a39b;
+  --ink-3: #6b6560;
+
+  /* ===== Borders & lines ===== */
+  --line: #2a2a3a;
+
+  /* ===== Semantic state colors ===== */
+  --state-success: #5fd75f;
+  --state-warning: #ffaf00;
+  --state-error: #d75f5f;
+  --state-info: #87afd7;
+
+  /* ===== Mascot personalization accent colors ===== */
+  --mascot-foxy: #ff8700;     /* fox orange */
+  --mascot-foxy-soft: #ffedd5;
+  --mascot-mochi: #f4a8d8;    /* cloud pink */
+  --mascot-mochi-soft: #fce7f4;
+  --mascot-byte: #7dd3fc;     /* pixel sky */
+  --mascot-byte-soft: #e0f2fe;
+  --mascot-nori: #86e5c1;     /* mint */
+  --mascot-nori-soft: #d1fae5;
+  --mascot-pico: #fcd34d;     /* penguin yellow */
+  --mascot-pico-soft: #fef9c3;
+  --mascot-bubu: #fca5a5;     /* cream bear pink */
+  --mascot-bubu-soft: #fee2e2;
+  --mascot-kumo: #c4a77d;     /* capybara coffee */
+  --mascot-kumo-soft: #f3e8d8;
+
+  /* ===== Mood state colors (idle/thinking/working/happy/oops/...) ===== */
+  --mood-idle: var(--ink-3);
+  --mood-thinking: var(--state-info);
+  --mood-working: var(--brand);
+  --mood-happy: var(--state-success);
+  --mood-oops: var(--state-warning);
+  --mood-sleeping: var(--ink-3);
+  --mood-celebrating: var(--brand);
+  --mood-levelup: var(--state-success);
+
+  /* ===== Radius ===== */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  /* ===== Shadows (alpha <=0.05 per quality gate for surface; deeper for overlays) ===== */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  --shadow-popover: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
+
+  /* ===== Semantic aliases for head contract (default to foxglow) ===== */
+  --focuscode-background: var(--bg);
+  --focuscode-foreground: var(--ink);
+  --focuscode-card: var(--surface);
+  --focuscode-card-foreground: var(--ink);
+  --focuscode-popover: var(--surface-2);
+  --focuscode-popover-foreground: var(--ink);
+  --focuscode-primary: var(--brand);
+  --focuscode-primary-foreground: var(--brand-ink);
+  --focuscode-muted: var(--surface-2);
+  --focuscode-muted-foreground: var(--ink-3);
+  --focuscode-border: var(--line);
+  --focuscode-input: var(--surface-3);
+  --focuscode-ring: var(--brand);
+  --focuscode-success: var(--state-success);
+  --focuscode-warning: var(--state-warning);
+  --focuscode-danger: var(--state-error);
+  --focuscode-radius-sm: var(--r-sm);
+  --focuscode-radius-md: var(--r-md);
+  --focuscode-radius-lg: var(--r-lg);
+}
+
+/* ===== Dreamy theme override (applied via <html data-theme="dreamy">) ===== */
+html[data-theme="dreamy"] {
+  --bg: var(--dreamy-bg);
+  --surface: var(--dreamy-surface);
+  --surface-2: var(--dreamy-surface-2);
+  --surface-3: var(--dreamy-surface-3);
+  --ink: var(--dreamy-ink);
+  --ink-2: var(--dreamy-ink-2);
+  --ink-3: var(--dreamy-ink-3);
+  --line: var(--dreamy-line);
+  --brand: var(--dreamy-accent);
+  --brand-ink: var(--dreamy-accent-ink);
+  --brand-50: #fce7f4;
+  --brand-100: #f9cfea;
+  --brand-200: #f4a8d8;
+  --brand-300: #ee7ec3;
+  --brand-400: #e55fb0;
+  --brand-500: #f4a8d8;
+  --brand-600: #d07fb0;
+  --brand-700: #a85e8b;
+  --state-success: var(--dreamy-success);
+  --state-warning: var(--dreamy-warning);
+  --state-error: var(--dreamy-danger);
+  --state-info: var(--dreamy-info);
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+
+  --color-state-success: var(--state-success);
+  --color-state-warning: var(--state-warning);
+  --color-state-error: var(--state-error);
+  --color-state-info: var(--state-info);
+
+  --color-mascot-foxy: var(--mascot-foxy);
+  --color-mascot-mochi: var(--mascot-mochi);
+  --color-mascot-byte: var(--mascot-byte);
+  --color-mascot-nori: var(--mascot-nori);
+  --color-mascot-pico: var(--mascot-pico);
+  --color-mascot-bubu: var(--mascot-bubu);
+  --color-mascot-kumo: var(--mascot-kumo);
+}
+
+/* Terminal font stack */
+.font-mono {
+  font-family:
+    "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+}
+
+/* ASCII art uses mono */
+.mascot-art {
+  font-family:
+    "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: pre;
+  letter-spacing: 0;
+  tab-size: 4;
+}
+
+/* ===== Mascot accent text/border helpers ===== */
+.text-mascot-foxy { color: var(--mascot-foxy); }
+.bg-mascot-foxy { background-color: var(--mascot-foxy); }
+.border-mascot-foxy { border-color: var(--mascot-foxy); }
+.text-mascot-mochi { color: var(--mascot-mochi); }
+.bg-mascot-mochi { background-color: var(--mascot-mochi); }
+.border-mascot-mochi { border-color: var(--mascot-mochi); }
+.text-mascot-byte { color: var(--mascot-byte); }
+.bg-mascot-byte { background-color: var(--mascot-byte); }
+.border-mascot-byte { border-color: var(--mascot-byte); }
+.text-mascot-nori { color: var(--mascot-nori); }
+.bg-mascot-nori { background-color: var(--mascot-nori); }
+.border-mascot-nori { border-color: var(--mascot-nori); }
+.text-mascot-pico { color: var(--mascot-pico); }
+.bg-mascot-pico { background-color: var(--mascot-pico); }
+.border-mascot-pico { border-color: var(--mascot-pico); }
+.text-mascot-bubu { color: var(--mascot-bubu); }
+.bg-mascot-bubu { background-color: var(--mascot-bubu); }
+.border-mascot-bubu { border-color: var(--mascot-bubu); }
+.text-mascot-kumo { color: var(--mascot-kumo); }
+.bg-mascot-kumo { background-color: var(--mascot-kumo); }
+.border-mascot-kumo { border-color: var(--mascot-kumo); }
+
+/* ===== Bond segments (4-segment ◆/◇ progress) ===== */
+.bond-seg-filled { color: var(--brand); }
+.bond-seg-empty { color: var(--ink-3); opacity: 0.5; }
+.bond-seg-max { color: var(--state-success); }
+
+/* ===== Mood dot states ===== */
+.mood-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.mood-dot.idle { background: var(--mood-idle); }
+.mood-dot.thinking { background: var(--mood-thinking); animation: pulse-dot 1.4s infinite; }
+.mood-dot.working { background: var(--mood-working); animation: pulse-dot 1s infinite; }
+.mood-dot.happy { background: var(--mood-happy); }
+.mood-dot.oops { background: var(--mood-oops); }
+.mood-dot.sleeping { background: var(--mood-sleeping); opacity: 0.5; }
+.mood-dot.celebrating { background: var(--mood-celebrating); animation: pulse-dot 0.8s infinite; }
+.mood-dot.levelup { background: var(--mood-levelup); box-shadow: 0 0 8px var(--mood-levelup); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Subtle glow for evolution stages */
+@keyframes tailGlow {
+  0%, 100% { text-shadow: 0 0 4px currentColor; }
+  50% { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { opacity: 1; }
+  95% { opacity: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.glow-pulse { animation: tailGlow 2s ease-in-out infinite; }
+.float-gentle { animation: float 3s ease-in-out infinite; }
+.bounce-in { animation: bounce-in 0.4s ease-out; }
+
+/* Speech bubble tail */
+.speech-bubble {
+  position: relative;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.speech-bubble::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: -7px;
+  width: 10px;
+  height: 10px;
+  background: var(--surface-2);
+  border-left: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  transform: rotate(45deg);
+}
+
+/* Scrollbar for terminal feel */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-brand: var(--brand);
+    --color-brand-50: var(--brand-50);
+    --color-brand-100: var(--brand-100);
+    --color-brand-200: var(--brand-200);
+    --color-brand-300: var(--brand-300);
+    --color-brand-400: var(--brand-400);
+    --color-brand-500: var(--brand-500);
+    --color-brand-600: var(--brand-600);
+    --color-brand-700: var(--brand-700);
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-surface-3: var(--surface-3);
+    --color-ink: var(--ink);
+    --color-ink-2: var(--ink-2);
+    --color-ink-3: var(--ink-3);
+    --color-line: var(--line);
+    --color-state-success: var(--state-success);
+    --color-state-warning: var(--state-warning);
+    --color-state-error: var(--state-error);
+    --color-state-info: var(--state-info);
+    --color-mascot-foxy: var(--mascot-foxy);
+    --color-mascot-mochi: var(--mascot-mochi);
+    --color-mascot-byte: var(--mascot-byte);
+    --color-mascot-nori: var(--mascot-nori);
+    --color-mascot-pico: var(--mascot-pico);
+    --color-mascot-bubu: var(--mascot-bubu);
+    --color-mascot-kumo: var(--mascot-kumo);
+    --color-foreground: var(--dreamy-foreground);
+    --color-card: var(--dreamy-card);
+    --color-primary: var(--dreamy-primary);
+    --color-muted: var(--dreamy-muted);
+    --color-accent: var(--dreamy-accent);
+    --color-border: var(--dreamy-border);
+    --color-background: var(--dreamy-bg);
+    --radius-sm: var(--dreamy-radius-sm);
+    --radius-md: var(--dreamy-radius-md);
+    --radius-lg: var(--dreamy-radius-lg);
+  }
+  @layer base {
+    body { background: var(--dreamy-bg); color: var(--dreamy-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-brand { background-color: var(--brand); }
+      .text-brand { color: var(--brand); }
+      .border-brand { border-color: var(--brand); }
+      .ring-brand { --tw-ring-color: var(--brand); }
+      .bg-brand-50 { background-color: var(--brand-50); }
+      .text-brand-50 { color: var(--brand-50); }
+      .border-brand-50 { border-color: var(--brand-50); }
+      .ring-brand-50 { --tw-ring-color: var(--brand-50); }
+      .bg-brand-100 { background-color: var(--brand-100); }
+      .text-brand-100 { color: var(--brand-100); }
+      .border-brand-100 { border-color: var(--brand-100); }
+      .ring-brand-100 { --tw-ring-color: var(--brand-100); }
+      .bg-brand-200 { background-color: var(--brand-200); }
+      .text-brand-200 { color: var(--brand-200); }
+      .border-brand-200 { border-color: var(--brand-200); }
+      .ring-brand-200 { --tw-ring-color: var(--brand-200); }
+      .bg-brand-300 { background-color: var(--brand-300); }
+      .text-brand-300 { color: var(--brand-300); }
+      .border-brand-300 { border-color: var(--brand-300); }
+      .ring-brand-300 { --tw-ring-color: var(--brand-300); }
+      .bg-brand-400 { background-color: var(--brand-400); }
+      .text-brand-400 { color: var(--brand-400); }
+      .border-brand-400 { border-color: var(--brand-400); }
+      .ring-brand-400 { --tw-ring-color: var(--brand-400); }
+      .bg-brand-500 { background-color: var(--brand-500); }
+      .text-brand-500 { color: var(--brand-500); }
+      .border-brand-500 { border-color: var(--brand-500); }
+      .ring-brand-500 { --tw-ring-color: var(--brand-500); }
+      .bg-brand-600 { background-color: var(--brand-600); }
+      .text-brand-600 { color: var(--brand-600); }
+      .border-brand-600 { border-color: var(--brand-600); }
+      .ring-brand-600 { --tw-ring-color: var(--brand-600); }
+      .bg-brand-700 { background-color: var(--brand-700); }
+      .text-brand-700 { color: var(--brand-700); }
+      .border-brand-700 { border-color: var(--brand-700); }
+      .ring-brand-700 { --tw-ring-color: var(--brand-700); }
+      .bg-bg { background-color: var(--bg); }
+      .text-bg { color: var(--bg); }
+      .border-bg { border-color: var(--bg); }
+      .ring-bg { --tw-ring-color: var(--bg); }
+      .bg-surface { background-color: var(--surface); }
+      .text-surface { color: var(--surface); }
+      .border-surface { border-color: var(--surface); }
+      .ring-surface { --tw-ring-color: var(--surface); }
+      .bg-surface-2 { background-color: var(--surface-2); }
+      .text-surface-2 { color: var(--surface-2); }
+      .border-surface-2 { border-color: var(--surface-2); }
+      .ring-surface-2 { --tw-ring-color: var(--surface-2); }
+      .bg-surface-3 { background-color: var(--surface-3); }
+      .text-surface-3 { color: var(--surface-3); }
+      .border-surface-3 { border-color: var(--surface-3); }
+      .ring-surface-3 { --tw-ring-color: var(--surface-3); }
+      .bg-ink { background-color: var(--ink); }
+      .text-ink { color: var(--ink); }
+      .border-ink { border-color: var(--ink); }
+      .ring-ink { --tw-ring-color: var(--ink); }
+      .bg-ink-2 { background-color: var(--ink-2); }
+      .text-ink-2 { color: var(--ink-2); }
+      .border-ink-2 { border-color: var(--ink-2); }
+      .ring-ink-2 { --tw-ring-color: var(--ink-2); }
+      .bg-ink-3 { background-color: var(--ink-3); }
+      .text-ink-3 { color: var(--ink-3); }
+      .border-ink-3 { border-color: var(--ink-3); }
+      .ring-ink-3 { --tw-ring-color: var(--ink-3); }
+      .bg-line { background-color: var(--line); }
+      .text-line { color: var(--line); }
+      .border-line { border-color: var(--line); }
+      .ring-line { --tw-ring-color: var(--line); }
+      .bg-state-success { background-color: var(--state-success); }
+      .text-state-success { color: var(--state-success); }
+      .border-state-success { border-color: var(--state-success); }
+      .ring-state-success { --tw-ring-color: var(--state-success); }
+      .bg-state-warning { background-color: var(--state-warning); }
+      .text-state-warning { color: var(--state-warning); }
+      .border-state-warning { border-color: var(--state-warning); }
+      .ring-state-warning { --tw-ring-color: var(--state-warning); }
+      .bg-state-error { background-color: var(--state-error); }
+      .text-state-error { color: var(--state-error); }
+      .border-state-error { border-color: var(--state-error); }
+      .ring-state-error { --tw-ring-color: var(--state-error); }
+      .bg-state-info { background-color: var(--state-info); }
+      .text-state-info { color: var(--state-info); }
+      .border-state-info { border-color: var(--state-info); }
+      .ring-state-info { --tw-ring-color: var(--state-info); }
+      .bg-mascot-foxy { background-color: var(--mascot-foxy); }
+      .text-mascot-foxy { color: var(--mascot-foxy); }
+      .border-mascot-foxy { border-color: var(--mascot-foxy); }
+      .ring-mascot-foxy { --tw-ring-color: var(--mascot-foxy); }
+      .bg-mascot-mochi { background-color: var(--mascot-mochi); }
+      .text-mascot-mochi { color: var(--mascot-mochi); }
+      .border-mascot-mochi { border-color: var(--mascot-mochi); }
+      .ring-mascot-mochi { --tw-ring-color: var(--mascot-mochi); }
+      .bg-mascot-byte { background-color: var(--mascot-byte); }
+      .text-mascot-byte { color: var(--mascot-byte); }
+      .border-mascot-byte { border-color: var(--mascot-byte); }
+      .ring-mascot-byte { --tw-ring-color: var(--mascot-byte); }
+      .bg-mascot-nori { background-color: var(--mascot-nori); }
+      .text-mascot-nori { color: var(--mascot-nori); }
+      .border-mascot-nori { border-color: var(--mascot-nori); }
+      .ring-mascot-nori { --tw-ring-color: var(--mascot-nori); }
+      .bg-mascot-pico { background-color: var(--mascot-pico); }
+      .text-mascot-pico { color: var(--mascot-pico); }
+      .border-mascot-pico { border-color: var(--mascot-pico); }
+      .ring-mascot-pico { --tw-ring-color: var(--mascot-pico); }
+      .bg-mascot-bubu { background-color: var(--mascot-bubu); }
+      .text-mascot-bubu { color: var(--mascot-bubu); }
+      .border-mascot-bubu { border-color: var(--mascot-bubu); }
+      .ring-mascot-bubu { --tw-ring-color: var(--mascot-bubu); }
+      .bg-mascot-kumo { background-color: var(--mascot-kumo); }
+      .text-mascot-kumo { color: var(--mascot-kumo); }
+      .border-mascot-kumo { border-color: var(--mascot-kumo); }
+      .ring-mascot-kumo { --tw-ring-color: var(--mascot-kumo); }
+      .bg-foreground { background-color: var(--dreamy-foreground); }
+      .text-foreground { color: var(--dreamy-foreground); }
+      .border-foreground { border-color: var(--dreamy-foreground); }
+      .ring-foreground { --tw-ring-color: var(--dreamy-foreground); }
+      .bg-card { background-color: var(--dreamy-card); }
+      .text-card { color: var(--dreamy-card); }
+      .border-card { border-color: var(--dreamy-card); }
+      .ring-card { --tw-ring-color: var(--dreamy-card); }
+      .bg-primary { background-color: var(--dreamy-primary); }
+      .text-primary { color: var(--dreamy-primary); }
+      .border-primary { border-color: var(--dreamy-primary); }
+      .ring-primary { --tw-ring-color: var(--dreamy-primary); }
+      .bg-muted { background-color: var(--dreamy-muted); }
+      .text-muted { color: var(--dreamy-muted); }
+      .border-muted { border-color: var(--dreamy-muted); }
+      .ring-muted { --tw-ring-color: var(--dreamy-muted); }
+      .bg-accent { background-color: var(--dreamy-accent); }
+      .text-accent { color: var(--dreamy-accent); }
+      .border-accent { border-color: var(--dreamy-accent); }
+      .ring-accent { --tw-ring-color: var(--dreamy-accent); }
+      .bg-border { background-color: var(--dreamy-border); }
+      .text-border { color: var(--dreamy-border); }
+      .border-border { border-color: var(--dreamy-border); }
+      .ring-border { --tw-ring-color: var(--dreamy-border); }
+      .bg-background { background-color: var(--dreamy-bg); }
+      .text-background { color: var(--dreamy-bg); }
+      .border-background { border-color: var(--dreamy-bg); }
+      .ring-background { --tw-ring-color: var(--dreamy-bg); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+  <!-- ============================================================
+       APP SHELL LAYOUT (1440x900 desktop)
+       ============================================================ -->
+  <div class="app-shell">
+
+    <!-- ============================================================
+         TOP BAR (~48px)
+         ============================================================ -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <!-- Mascot selector dropdown -->
+        <div class="mascot-selector" id="mascotSelector">
+          <button class="mascot-selector-btn" id="mascotBtn" title="切换伙伴">
+            <span class="mascot-btn-icon" id="mascotBtnIcon">🐱</span>
+            <span class="mascot-btn-name" id="mascotBtnName">Mochi</span>
+            <span class="mascot-btn-chev">▾</span>
+          </button>
+          <!-- Mascot dropdown popover -->
+          <div class="mascot-dropdown" id="mascotDropdown">
+            <div class="mascot-dd-header">选择伙伴</div>
+            <div class="mascot-dd-list" id="mascotDdList">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Theme toggle segmented pill -->
+        <div class="theme-toggle" id="themeToggle">
+          <button class="theme-seg active" data-theme="foxglow" title="Foxglow 主题">
+            <span class="theme-dot theme-dot-fox"></span>
+            <span>Foxglow</span>
+          </button>
+          <button class="theme-seg" data-theme="dreamy" title="Dreamy 星眠主题">
+            <span class="theme-dot theme-dot-dream"></span>
+            <span>Dreamy</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="topbar-center">
+        <div class="breadcrumb">
+          <div class="bc-item bc-project">
+            <i data-lucide="folder" width="12" height="12"></i>
+            project:harness-kernel
+          </div>
+          <span class="bc-sep">›</span>
+          <div class="bc-item bc-session">
+            <i data-lucide="message-square" width="12" height="12"></i>
+            refactor-auth-module
+          </div>
+          <span class="bc-sep">›</span>
+          <div class="bc-item bc-branch">
+            <i data-lucide="git-branch" width="12" height="12"></i>
+            ⇡ feat/auth-refactor
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="status-pill sandbox-pill">
+          <span class="sdot sdot-green"></span>
+          gVisor
+        </div>
+        <div class="status-pill model-pill">
+          qwen3-coder:latest
+          <span class="chev">▾</span>
+        </div>
+        <!-- Companion badge -->
+        <div class="companion-badge" id="companionBadge">
+          <span class="cb-icon" id="cbIcon">🐱</span>
+          <span class="cb-text" id="cbText">Lv 3 · 软糖调试员</span>
+          <span class="cb-bond" id="cbBond">◆◆◆◇</span>
+        </div>
+        <!-- Window controls -->
+        <div class="window-controls">
+          <button class="wc wc-close" title="关闭"></button>
+          <button class="wc wc-min" title="最小化"></button>
+          <button class="wc wc-max" title="最大化"></button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         NAV RAIL (~56px)
+         ============================================================ -->
+    <nav class="navrail">
+      <button class="nav-item" title="搜索 (⌘K)">
+        <i data-lucide="search" width="20" height="20"></i>
+        <span class="nav-shortcut">⌘K</span>
+      </button>
+      <button class="nav-item active" title="会话">
+        <i data-lucide="message-square" width="20" height="20"></i>
+      </button>
+      <button class="nav-item" title="规格与任务">
+        <i data-lucide="check-square" width="20" height="20"></i>
+      </button>
+      <!-- Companion nav item (shows current mascot icon) -->
+      <button class="nav-item nav-companion" title="伙伴" id="navCompanion">
+        <span class="nav-companion-icon" id="navCompanionIcon">🐱</span>
+        <span class="mood-dot working nav-mood-dot"></span>
+      </button>
+      <button class="nav-item" title="文件树">
+        <i data-lucide="folder-tree" width="20" height="20"></i>
+      </button>
+      <button class="nav-item" title="MCP 扩展">
+        <i data-lucide="box" width="20" height="20"></i>
+      </button>
+      <div class="nav-spacer"></div>
+      <button class="nav-item" title="设置">
+        <i data-lucide="settings" width="20" height="20"></i>
+      </button>
+    </nav>
+
+    <!-- ============================================================
+         CONVERSATION CANVAS (flex-grow)
+         ============================================================ -->
+    <main class="canvas">
+      <div class="canvas-inner">
+        <!-- Mascot column (~120px) -->
+        <aside class="mascot-col" id="mascotCol">
+          <!-- Mascot frame card -->
+          <div class="mascot-frame" id="mascotFrame">
+            <div class="mascot-frame-glow" id="mascotFrameGlow"></div>
+            <div class="mascot-frame-inner">
+              <div class="mascot-art-big" id="mascotArtBig">🐱</div>
+              <div class="mascot-frame-mood">
+                <span class="mood-dot working" id="mascotMoodDot"></span>
+                <span class="mood-label" id="mascotMoodLabel">执行中</span>
+              </div>
+            </div>
+          </div>
+          <!-- Speech bubble -->
+          <div class="speech-bubble mascot-speech" id="mascotSpeech">
+            正在轻轻地把 bug 推回窝里。
+          </div>
+          <!-- Level badge -->
+          <div class="mascot-level-badge" id="mascotLevelBadge">
+            <span class="mlb-level">Lv 3</span>
+            <span class="mlb-sep">·</span>
+            <span class="mlb-title" id="mlbTitle">软糖调试员</span>
+          </div>
+        </aside>
+
+        <!-- Transcript area -->
+        <div class="transcript">
+          <!-- Session divider -->
+          <div class="session-divider">
+            <div class="sd-line"></div>
+            <span class="sd-label">Today · 14:30 · feat/auth-refactor</span>
+            <div class="sd-line"></div>
+          </div>
+
+          <!-- User message -->
+          <div class="msg-user-wrap">
+            <div class="msg-user">
+              <span class="msg-prefix msg-prefix-you">you ›</span>
+              <span class="msg-text">重构 auth 模块，支持 OAuth PKCE 流程，并把 token 存储从 localStorage 迁移到加密凭据库。保持现有 API 兼容，不要破坏 refresh token 逻辑。</span>
+            </div>
+            <span class="msg-meta">14:32</span>
+          </div>
+
+          <!-- Assistant message -->
+          <div class="msg-agent-wrap">
+            <div class="msg-agent-header">
+              <span class="msg-prefix msg-prefix-mascot" id="msgPrefix">mochi ›</span>
+              <span class="agent-model-pill">qwen3-coder</span>
+              <span class="mood-dot working"></span>
+            </div>
+            <div class="msg-agent-body">
+              <p>好呀，我先把 auth 模块的代码过一遍，确认当前的 token 存储和 refresh 逻辑，再给你一个 PKCE 迁移方案。不会动到现有 API 的，放心。</p>
+            </div>
+
+            <!-- Tool call chip (running) -->
+            <div class="tool-call-chip">
+              <div class="tool-chip-spinner"></div>
+              <span class="tool-chip-icon">⚙</span>
+              <span class="tool-chip-name">write_file</span>
+              <span class="tool-chip-target">src/auth/oauth.ts</span>
+            </div>
+
+            <!-- Spec Draft Card -->
+            <div class="spec-card">
+              <div class="spec-left-border"></div>
+              <div class="spec-card-inner">
+                <div class="spec-card-header">
+                  <div class="spec-card-title-row">
+                    <i data-lucide="sparkles" width="14" height="14"></i>
+                    <span class="spec-card-title">Spec 草稿</span>
+                    <span class="spec-badge-need">2 decisions needed</span>
+                  </div>
+                </div>
+                <div class="spec-card-body">
+                  <div class="spec-field">
+                    <span class="spec-label">目标</span>
+                    <span class="spec-value">重构 auth 模块以支持 OAuth 2.0 PKCE 授权码流程，将 token 存储从 <code class="code-inline">localStorage</code> 迁移到加密凭据库。保持 Session API 向后兼容。</span>
+                  </div>
+                  <div class="spec-field">
+                    <span class="spec-label">任务分解</span>
+                    <div class="task-mini-list">
+                      <div class="task-mini done"><span class="tm-check">✓</span> 设计 PKCE 类型与接口</div>
+                      <div class="task-mini active"><span class="tm-spinner"></span> 实现 authorize 与 token exchange</div>
+                      <div class="task-mini pending"><span class="tm-dot">○</span> 迁移 token 存储到 EncryptedCredentialStore</div>
+                      <div class="task-mini pending"><span class="tm-dot">○</span> 添加集成测试与迁移路径</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="spec-card-footer">
+                  <button class="btn btn-primary btn-sm">
+                    <i data-lucide="check" width="12" height="12"></i>
+                    Confirm Plan
+                  </button>
+                  <button class="btn btn-ghost btn-sm">
+                    <i data-lucide="x" width="12" height="12"></i>
+                    Decline
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Approval notification -->
+            <div class="approval-card">
+              <div class="approval-icon-wrap">
+                <i data-lucide="shield-alert" width="16" height="16"></i>
+              </div>
+              <div class="approval-body">
+                <div class="approval-title" id="approvalTitle">Mochi 想要写入 src/auth/oauth.ts</div>
+                <div class="approval-sub">需要你的授权才能修改文件系统</div>
+              </div>
+              <div class="approval-actions">
+                <button class="btn btn-primary btn-xs">Approve</button>
+                <button class="btn btn-ghost btn-xs btn-danger-text">Reject</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="transcript-end-spacer"></div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           COMPOSER (~120px)
+           ============================================================ -->
+      <div class="composer-wrap">
+        <div class="composer">
+          <!-- Attachment pills row -->
+          <div class="composer-pills">
+            <span class="pill pill-mention" id="composerMention">
+              <span class="pill-at">@</span><span id="composerMentionName">mochi</span>
+              <span class="pill-x">×</span>
+            </span>
+            <span class="pill pill-slash">
+              /spec
+              <span class="pill-x">×</span>
+            </span>
+            <span class="pill pill-file">
+              <i data-lucide="paperclip" width="10" height="10"></i>
+              src/auth/oauth.ts
+            </span>
+          </div>
+          <!-- Textarea -->
+          <div class="composer-input-row">
+            <span class="composer-prefix" id="composerPrefix">mochi» </span>
+            <textarea class="composer-textarea" placeholder="描述你的需求，或粘贴代码片段…" rows="2">继续实现 PKCE token exchange 部分，注意处理过期 refresh token 的情况</textarea>
+          </div>
+          <!-- Button row -->
+          <div class="composer-toolbar">
+            <div class="composer-tools-left">
+              <button class="ct-btn" title="附加文件"><i data-lucide="paperclip" width="15" height="15"></i></button>
+              <button class="ct-btn" title="提及伙伴"><i data-lucide="at-sign" width="15" height="15"></i></button>
+              <button class="ct-btn" title="斜杠命令"><i data-lucide="slash" width="15" height="15"></i></button>
+              <button class="ct-btn" title="语音输入"><i data-lucide="mic" width="15" height="15"></i></button>
+            </div>
+            <div class="composer-tools-right">
+              <span class="composer-hint">Enter send · Shift+Enter newline · ⌘K search</span>
+              <button class="btn-stop" title="停止">
+                <span class="stop-square"></span>
+              </button>
+              <button class="btn-send" id="btnSend" title="发送">
+                <i data-lucide="send-horizontal" width="15" height="15"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ============================================================
+         WORK PANEL (~380px, right) with 4 TABS
+         ============================================================ -->
+    <aside class="workpanel">
+      <div class="wp-tabs">
+        <button class="wp-tab active" data-wptab="diff">
+          <i data-lucide="bar-chart-2" width="14" height="14"></i>
+          <span>Diff</span>
+        </button>
+        <button class="wp-tab" data-wptab="code">
+          <i data-lucide="code-2" width="14" height="14"></i>
+          <span>Code</span>
+        </button>
+        <button class="wp-tab" data-wptab="spec">
+          <i data-lucide="git-branch" width="14" height="14"></i>
+          <span>Spec</span>
+        </button>
+        <button class="wp-tab" data-wptab="audit">
+          <i data-lucide="search-check" width="14" height="14"></i>
+          <span>Audit</span>
+        </button>
+      </div>
+
+      <div class="wp-content">
+        <!-- ===== DIFF TAB (active default) ===== -->
+        <div class="wp-panel active" id="wptab-diff">
+          <div class="diff-layout">
+            <!-- File list (left of panel) -->
+            <div class="diff-filelist">
+              <div class="fl-header">已修改文件 <span class="fl-count">3</span></div>
+              <div class="fl-entries">
+                <div class="fl-entry selected">
+                  <i data-lucide="file-text" width="12" height="12"></i>
+                  <span class="fl-name">oauth.ts</span>
+                  <span class="fl-badge fl-badge-mod">M</span>
+                </div>
+                <div class="fl-entry">
+                  <i data-lucide="file-plus" width="12" height="12"></i>
+                  <span class="fl-name">pkce.ts</span>
+                  <span class="fl-badge fl-badge-add">A</span>
+                </div>
+                <div class="fl-entry">
+                  <i data-lucide="file-text" width="12" height="12"></i>
+                  <span class="fl-name">token-store.ts</span>
+                  <span class="fl-badge fl-badge-mod">M</span>
+                </div>
+              </div>
+            </div>
+            <!-- Diff viewer (right) -->
+            <div class="diff-viewer">
+              <div class="diff-header">
+                <span class="diff-filename">src/auth/oauth.ts</span>
+                <div class="diff-stats">
+                  <span class="ds-add">+124</span>
+                  <span class="ds-del">-8</span>
+                </div>
+              </div>
+              <div class="diff-body">
+                <div class="dhunk">
+                  <span class="dhunk-label">@@ -23,15 +23,28 @@ getToken()</span>
+                </div>
+                <div class="dline ctx">
+                  <span class="dln-old">23</span><span class="dln-new">23</span>
+                  <span class="dsign"> </span><span class="dcode"><span class="syn-com">/** Retrieve access token, refreshing if needed */</span></span>
+                </div>
+                <div class="dline ctx">
+                  <span class="dln-old">27</span><span class="dln-new">27</span>
+                  <span class="dsign"> </span><span class="dcode"><span class="syn-kw">async function</span> <span class="syn-fn">getToken</span>(): <span class="syn-type">Promise</span>&lt;<span class="syn-type">string</span>&gt; {</span>
+                </div>
+                <div class="dline del">
+                  <span class="dln-old">28</span><span class="dln-new"></span>
+                  <span class="dsign">-</span><span class="dcode">  <span class="syn-kw">const</span> token = <span class="syn-var">localStorage</span>.<span class="syn-fn">getItem</span>(<span class="syn-str">'access_token'</span>);</span>
+                </div>
+                <div class="dline del">
+                  <span class="dln-old">29</span><span class="dln-new"></span>
+                  <span class="dsign">-</span><span class="dcode">  <span class="syn-kw">if</span> (!token) <span class="syn-kw">throw new</span> <span class="syn-type">Error</span>(<span class="syn-str">'Not authenticated'</span>);</span>
+                </div>
+                <div class="dline del">
+                  <span class="dln-old">30</span><span class="dln-new"></span>
+                  <span class="dsign">-</span><span class="dcode">  <span class="syn-kw">return</span> token;</span>
+                </div>
+                <div class="dline add">
+                  <span class="dln-old"></span><span class="dln-new">28</span>
+                  <span class="dsign">+</span><span class="dcode">  <span class="syn-kw">const</span> store = <span class="syn-kw">await</span> <span class="syn-fn">getCredentialStore</span>();</span>
+                </div>
+                <div class="dline add">
+                  <span class="dln-old"></span><span class="dln-new">29</span>
+                  <span class="dsign">+</span><span class="dcode">  <span class="syn-kw">const</span> entry = <span class="syn-kw">await</span> store.<span class="syn-fn">get</span>(<span class="syn-str">'oauth'</span>, <span class="syn-str">'access_token'</span>);</span>
+                </div>
+                <div class="dline add">
+                  <span class="dln-old"></span><span class="dln-new">30</span>
+                  <span class="dsign">+</span><span class="dcode">  <span class="syn-kw">if</span> (!entry) <span class="syn-kw">return</span> <span class="syn-kw">await</span> <span class="syn-fn">migrateLegacyToken</span>();</span>
+                </div>
+                <div class="dline add">
+                  <span class="dln-old"></span><span class="dln-new">34</span>
+                  <span class="dsign">+</span><span class="dcode">  <span class="syn-kw">if</span> (<span class="syn-fn">isExpired</span>(entry)) <span class="syn-kw">return</span> <span class="syn-kw">await</span> <span class="syn-fn">refreshWithPKCE</span>(entry.refreshToken);</span>
+                </div>
+                <div class="dline add">
+                  <span class="dln-old"></span><span class="dln-new">37</span>
+                  <span class="dsign">+</span><span class="dcode">  <span class="syn-kw">return</span> entry.accessToken;</span>
+                </div>
+                <div class="dline ctx">
+                  <span class="dln-old">31</span><span class="dln-new">38</span>
+                  <span class="dsign"> </span><span class="dcode">}</span>
+                </div>
+                <div class="dhunk">
+                  <span class="dhunk-label">@@ -47,8 +60,15 @@ PKCE helpers</span>
+                </div>
+                <div class="dline add">
+                  <span class="dln-old"></span><span class="dln-new">60</span>
+                  <span class="dsign">+</span><span class="dcode"><span class="syn-kw">async function</span> <span class="syn-fn">refreshWithPKCE</span>(rt: <span class="syn-type">string</span>) {</span>
+                </div>
+                <div class="dline add">
+                  <span class="dln-old"></span><span class="dln-new">61</span>
+                  <span class="dsign">+</span><span class="dcode">  <span class="syn-kw">const</span> res = <span class="syn-kw">await</span> <span class="syn-fn">fetchToken</span>({ grant_type: <span class="syn-str">'refresh_token'</span>, refresh_token: rt });</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Bottom action bar -->
+          <div class="diff-actions">
+            <button class="btn btn-primary btn-sm">
+              <i data-lucide="check-circle" width="12" height="12"></i>
+              Approve All
+            </button>
+            <button class="btn btn-ghost btn-sm btn-danger-text">
+              <i data-lucide="x-circle" width="12" height="12"></i>
+              Reject
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== CODE TAB ===== -->
+        <div class="wp-panel" id="wptab-code">
+          <div class="code-tab">
+            <div class="code-file-bar">
+              <i data-lucide="file-code" width="13" height="13"></i>
+              <span class="cf-name">src/auth/oauth.ts</span>
+              <span class="cf-lang">TypeScript</span>
+            </div>
+            <div class="code-preview">
+              <div class="cpline"><span class="cln">1</span><span class="ct"><span class="syn-kw">import</span> { <span class="syn-type">EncryptedCredentialStore</span> } <span class="syn-kw">from</span> <span class="syn-str">'@focuscode/auth'</span>;</span></div>
+              <div class="cpline"><span class="cln">2</span><span class="ct"><span class="syn-kw">import</span> { <span class="syn-fn">createPKCEChallenge</span> } <span class="syn-kw">from</span> <span class="syn-str">'./pkce'</span>;</span></div>
+              <div class="cpline"><span class="cln">3</span><span class="ct"></span></div>
+              <div class="cpline"><span class="cln">4</span><span class="ct"><span class="syn-com">// OAuth 2.0 PKCE flow with encrypted credential storage</span></span></div>
+              <div class="cpline"><span class="cln">5</span><span class="ct"><span class="syn-kw">export class</span> <span class="syn-type">OAuthClient</span> {</span></div>
+              <div class="cpline"><span class="cln">6</span><span class="ct">  <span class="syn-kw">private</span> <span class="syn-var">store</span>: <span class="syn-type">EncryptedCredentialStore</span>;</span></div>
+              <div class="cpline"><span class="cln">7</span><span class="ct"></span></div>
+              <div class="cpline"><span class="cln">27</span><span class="ct">  <span class="syn-kw">async function</span> <span class="syn-fn">getToken</span>(): <span class="syn-type">Promise</span>&lt;<span class="syn-type">string</span>&gt; {</span></div>
+              <div class="cpline"><span class="cln">28</span><span class="ct hl-add">    <span class="syn-kw">const</span> store = <span class="syn-kw">await</span> <span class="syn-fn">getCredentialStore</span>();</span></div>
+              <div class="cpline"><span class="cln">29</span><span class="ct hl-add">    <span class="syn-kw">const</span> entry = <span class="syn-kw">await</span> store.<span class="syn-fn">get</span>(<span class="syn-str">'oauth'</span>, <span class="syn-str">'access_token'</span>);</span></div>
+              <div class="cpline"><span class="cln">30</span><span class="ct hl-add">    <span class="syn-kw">if</span> (!entry) <span class="syn-kw">return</span> <span class="syn-kw">await</span> <span class="syn-fn">migrateLegacyToken</span>();</span></div>
+              <div class="cpline"><span class="cln">31</span><span class="ct"></span></div>
+              <div class="cpline"><span class="cln">32</span><span class="ct">    <span class="syn-kw">return</span> entry.accessToken;</span></div>
+              <div class="cpline"><span class="cln">33</span><span class="ct">  }</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SPEC TAB ===== -->
+        <div class="wp-panel" id="wptab-spec">
+          <div class="spec-tab">
+            <div class="pipeline-title">
+              <i data-lucide="git-branch" width="14" height="14"></i>
+              Spec Pipeline
+            </div>
+            <div class="pipeline">
+              <div class="pstage done">
+                <div class="pdot-wrap"><div class="pdot pdot-done"><i data-lucide="check" width="10" height="10"></i></div><div class="pline"></div></div>
+                <div class="pinfo"><div class="pname">Discover</div><div class="pdesc">扫描 47 个文件，理解 auth 拓扑</div></div>
+              </div>
+              <div class="pstage done">
+                <div class="pdot-wrap"><div class="pdot pdot-done"><i data-lucide="check" width="10" height="10"></i></div><div class="pline"></div></div>
+                <div class="pinfo"><div class="pname">Plan</div><div class="pdesc">生成 Spec 草稿，含目标与任务分解</div></div>
+              </div>
+              <div class="pstage active">
+                <div class="pdot-wrap"><div class="pdot pdot-active">3</div><div class="pline pline-active"></div></div>
+                <div class="pinfo"><div class="pname pname-active">Confirm</div><div class="pdesc pdesc-active">等待确认 — 2 个决策待处理</div></div>
+              </div>
+              <div class="pstage pending">
+                <div class="pdot-wrap"><div class="pdot pdot-pending">4</div><div class="pline"></div></div>
+                <div class="pinfo"><div class="pname">Execute</div><div class="pdesc">按 Spec 实现，运行测试</div></div>
+              </div>
+              <div class="pstage pending">
+                <div class="pdot-wrap"><div class="pdot pdot-pending">5</div></div>
+                <div class="pinfo"><div class="pname">Verify</div><div class="pdesc">Diff 审查，收据链验证</div></div>
+              </div>
+            </div>
+            <div class="spec-preview-card">
+              <div class="spc-row"><span class="spc-k">spec_hash</span><span class="spc-v hash">sha256:9b4e…f2a1</span></div>
+              <div class="spc-row"><span class="spc-k">constraints</span><span class="spc-v">3 项约束已记录</span></div>
+              <div class="spc-row"><span class="spc-k">acceptance</span><span class="spc-v">5 项验收标准</span></div>
+              <div class="spc-row"><span class="spc-k">files</span><span class="spc-v">8 个文件受影响</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== AUDIT TAB ===== -->
+        <div class="wp-panel" id="wptab-audit">
+          <div class="audit-tab">
+            <div class="audit-section-title">Receipt Chain</div>
+            <div class="audit-receipt">
+              <div class="ar-row"><span class="ar-k">session_id</span><span class="ar-v mono">sess_8f3a…c291</span></div>
+              <div class="ar-row"><span class="ar-k">model</span><span class="ar-v">qwen3-coder:latest</span></div>
+              <div class="ar-row"><span class="ar-k">sandbox</span><span class="ar-v text-success">gVisor ✓</span></div>
+              <div class="ar-row"><span class="ar-k">intent_hash</span><span class="ar-v hash">sha256:9b4e…c823</span></div>
+              <div class="ar-row"><span class="ar-k">tokens</span><span class="ar-v">32,418 / 128k</span></div>
+              <div class="ar-row"><span class="ar-k">cost</span><span class="ar-v text-brand">$0.042</span></div>
+            </div>
+            <div class="audit-section-title">Verified Actions</div>
+            <div class="audit-chain">
+              <div class="achain-entry">
+                <span class="achain-num">1</span>
+                <span class="achain-type">explore</span>
+                <span class="achain-desc">codebase topology</span>
+                <span class="achain-v">✓</span>
+              </div>
+              <div class="achain-entry">
+                <span class="achain-num">2</span>
+                <span class="achain-type">read</span>
+                <span class="achain-desc">token-store.ts</span>
+                <span class="achain-v">✓</span>
+              </div>
+              <div class="achain-entry">
+                <span class="achain-num">3</span>
+                <span class="achain-type">read</span>
+                <span class="achain-desc">oauth-config.ts</span>
+                <span class="achain-v">✓</span>
+              </div>
+              <div class="achain-entry">
+                <span class="achain-num">4</span>
+                <span class="achain-type">spec</span>
+                <span class="achain-desc">spec_draft_v1 (pending)</span>
+                <span class="achain-v text-warning">⏳</span>
+              </div>
+              <div class="achain-entry">
+                <span class="achain-num">5</span>
+                <span class="achain-type">write</span>
+                <span class="achain-desc">3 files (gated)</span>
+                <span class="achain-v text-warning">🔒</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============================================================
+         STATUS BAR (~28px, vim-airline style)
+         ============================================================ -->
+    <footer class="statusbar">
+      <div class="sb-seg sb-mode">
+        <span>NORMAL</span>
+      </div>
+      <div class="sb-chev sb-chev-mode"><svg width="12" height="28" viewBox="0 0 12 28"><path d="M0 0 L12 14 L0 28 Z" fill="currentColor"/></svg></div>
+      <div class="sb-seg sb-mascot" id="sbMascot">
+        <span id="sbMascotText">mochi</span>
+      </div>
+      <div class="sb-chev sb-chev-mascot"><svg width="12" height="28" viewBox="0 0 12 28"><path d="M0 0 L12 14 L0 28 Z" fill="currentColor"/></svg></div>
+      <div class="sb-seg sb-file">
+        <span>src/auth/oauth.ts</span>
+      </div>
+      <div class="sb-chev sb-chev-file"><svg width="12" height="28" viewBox="0 0 12 28"><path d="M0 0 L12 14 L0 28 Z" fill="currentColor"/></svg></div>
+      <div class="sb-seg sb-info">
+        <span>UTF-8</span>
+        <span class="sb-dot">·</span>
+        <span>LF</span>
+        <span class="sb-dot">·</span>
+        <span>TypeScript</span>
+      </div>
+
+      <div class="sb-center" id="sbCenter">
+        <span class="sb-sandbox"><span class="sdot sdot-green sdot-sm"></span>gVisor</span>
+        <span class="sb-cost">$0.0034</span>
+        <span class="sb-ctx">ctx 42%</span>
+        <span class="sb-bond" id="sbBond">◆ 3/4</span>
+        <span class="sb-level" id="sbLevel">🎯 软糖调试员</span>
+      </div>
+
+      <div class="sb-right">
+        <span>Ln 28, Col 8</span>
+        <span class="sb-rec"><span class="sb-rec-dot"></span>REC</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ============================================================
+       PAGE-SPECIFIC STYLES
+       ============================================================ -->
+  <style>
+    /* ============================================================
+       APP LAYOUT CONSTANTS
+       ============================================================ */
+    :root {
+      --topbar-h: 48px;
+      --navrail-w: 56px;
+      --statusbar-h: 28px;
+      --workpanel-w: 380px;
+      --composer-h: 128px;
+      --mascot-col-w: 120px;
+
+      --app-bg: var(--bg);
+      --app-surface: var(--surface);
+      --app-surface-2: var(--surface-2);
+      --app-surface-3: var(--surface-3);
+      --app-ink: var(--ink);
+      --app-ink-2: var(--ink-2);
+      --app-ink-3: var(--ink-3);
+      --app-line: var(--line);
+
+      --app-brand: var(--brand);
+      --app-success: var(--state-success);
+      --app-warning: var(--state-warning);
+      --app-error: var(--state-error);
+      --app-info: var(--state-info);
+
+      --app-mascot-accent: var(--mascot-mochi);
+      --app-mascot-soft: var(--mascot-mochi-soft);
+
+      --diff-add-bg: rgba(95,215,95,0.10);
+      --diff-add-fg: #9ae09a;
+      --diff-del-bg: rgba(215,95,95,0.10);
+      --diff-del-fg: #e8a0a0;
+      --diff-hunk-bg: rgba(135,175,215,0.10);
+
+      --r-card: 8px;
+      --r-pill: 999px;
+      --r-btn: 6px;
+
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    /* Mascot accent variable is used throughout; updated by JS */
+    [data-mascot="foxy"]  { --app-mascot-accent: var(--mascot-foxy); --app-mascot-soft: var(--mascot-foxy-soft); }
+    [data-mascot="mochi"] { --app-mascot-accent: var(--mascot-mochi); --app-mascot-soft: var(--mascot-mochi-soft); }
+    [data-mascot="byte"]  { --app-mascot-accent: var(--mascot-byte); --app-mascot-soft: var(--mascot-byte-soft); }
+    [data-mascot="nori"]  { --app-mascot-accent: var(--mascot-nori); --app-mascot-soft: var(--mascot-nori-soft); }
+    [data-mascot="pico"]  { --app-mascot-accent: var(--mascot-pico); --app-mascot-soft: var(--mascot-pico-soft); }
+    [data-mascot="bubu"]  { --app-mascot-accent: var(--mascot-bubu); --app-mascot-soft: var(--mascot-bubu-soft); }
+    [data-mascot="kumo"]  { --app-mascot-accent: var(--mascot-kumo); --app-mascot-soft: var(--mascot-kumo-soft); }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #07070b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--app-ink);
+      -webkit-font-smoothing: antialiased;
+      padding: 24px;
+    }
+
+    .app-shell {
+      width: 1440px;
+      height: 900px;
+      display: grid;
+      grid-template-columns: var(--navrail-w) 1fr var(--workpanel-w);
+      grid-template-rows: var(--topbar-h) 1fr var(--statusbar-h);
+      grid-template-areas:
+        "topbar topbar topbar"
+        "nav    canvas workpanel"
+        "status status status";
+      background: var(--app-bg);
+      border: 1px solid var(--app-line);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03);
+      position: relative;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--app-brand); }
+
+    .code-inline {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--surface-3);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--app-ink);
+    }
+
+    /* ============================================================
+       TOP BAR
+       ============================================================ */
+    .topbar {
+      grid-area: topbar;
+      height: var(--topbar-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      background: var(--app-surface);
+      border-bottom: 1px solid var(--app-line);
+    }
+
+    .topbar-left, .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Mascot selector */
+    .mascot-selector { position: relative; }
+
+    .mascot-selector-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px 4px 6px;
+      background: var(--app-surface-2);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-pill);
+      color: var(--app-ink);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+    }
+    .mascot-selector-btn:hover { background: var(--surface-3); border-color: var(--app-mascot-accent); }
+
+    .mascot-btn-icon { font-size: 16px; line-height: 1; }
+    .mascot-btn-name { color: var(--app-ink); }
+    .mascot-btn-chev { color: var(--app-ink-3); font-size: 9px; margin-left: 2px; }
+
+    .mascot-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      width: 240px;
+      background: var(--app-surface-2);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-card);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+      z-index: 100;
+      display: none;
+      overflow: hidden;
+    }
+    .mascot-dropdown.open { display: block; animation: bounce-in 0.18s ease-out; }
+
+    .mascot-dd-header {
+      padding: 8px 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--app-ink-3);
+      border-bottom: 1px solid var(--app-line);
+      background: var(--app-surface);
+    }
+
+    .mascot-dd-list { padding: 4px; }
+
+    .mascot-dd-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .mascot-dd-item:hover { background: var(--surface-3); }
+    .mascot-dd-item.active { background: var(--surface-3); box-shadow: inset 3px 0 0 var(--app-mascot-accent); }
+
+    .mdd-icon { font-size: 22px; line-height: 1; width: 28px; text-align: center; }
+    .mdd-info { flex: 1; min-width: 0; }
+    .mdd-name { font-size: 12px; font-weight: 600; color: var(--app-ink); }
+    .mdd-species { font-size: 10px; color: var(--app-ink-3); }
+    .mdd-short { font-family: var(--font-mono); font-size: 10px; color: var(--app-ink-3); background: var(--app-surface); padding: 2px 5px; border-radius: 3px; border: 1px solid var(--app-line); }
+
+    /* Theme toggle */
+    .theme-toggle {
+      display: flex;
+      background: var(--app-surface-2);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-pill);
+      padding: 2px;
+      gap: 0;
+    }
+
+    .theme-seg {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--app-ink-3);
+      background: transparent;
+      border: none;
+      border-radius: var(--r-pill);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+    }
+    .theme-seg.active { background: var(--app-brand); color: var(--brand-ink); }
+
+    .theme-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .theme-dot-fox { background: #ff8700; }
+    .theme-dot-dream { background: #f4a8d8; }
+
+    /* Breadcrumb */
+    .topbar-center { flex: 1; display: flex; justify-content: center; }
+    .breadcrumb { display: flex; align-items: center; gap: 4px; font-size: 11px; font-family: var(--font-mono); }
+    .bc-item { display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; background: var(--app-surface-2); border: 1px solid var(--app-line); color: var(--app-ink-2); }
+    .bc-item.bc-project { color: var(--app-ink-2); }
+    .bc-item.bc-session { color: var(--app-ink); font-weight: 500; }
+    .bc-item.bc-branch { color: var(--app-brand); background: rgba(255,135,0,0.08); border-color: rgba(255,135,0,0.2); }
+    .bc-sep { color: var(--app-ink-3); margin: 0 2px; }
+
+    /* Status pills */
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: var(--r-pill);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      border: 1px solid var(--app-line);
+      background: var(--app-surface-2);
+      cursor: pointer;
+    }
+    .status-pill:hover { background: var(--surface-3); }
+
+    .sdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .sdot-green { background: var(--app-success); box-shadow: 0 0 6px var(--app-success); animation: pulse-dot 2s infinite; }
+    .sdot-sm { width: 5px; height: 5px; }
+
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+    .chev { color: var(--app-ink-3); font-size: 8px; }
+
+    /* Companion badge */
+    .companion-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: var(--r-pill);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      border: 1px solid var(--app-mascot-accent);
+      background: color-mix(in srgb, var(--app-mascot-accent) 10%, transparent);
+      color: var(--app-ink);
+    }
+    .cb-icon { font-size: 13px; }
+    .cb-bond { color: var(--app-mascot-accent); font-size: 10px; }
+
+    /* Window controls */
+    .window-controls { display: flex; gap: 6px; margin-left: 6px; }
+    .wc { width: 11px; height: 11px; border-radius: 50%; border: none; cursor: pointer; padding: 0; }
+    .wc-close { background: #ff5f57; }
+    .wc-min { background: #febc2e; }
+    .wc-max { background: #28c840; }
+
+    /* ============================================================
+       NAV RAIL
+       ============================================================ */
+    .navrail {
+      grid-area: nav;
+      width: var(--navrail-w);
+      background: var(--app-surface);
+      border-right: 1px solid var(--app-line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 2px;
+    }
+
+    .nav-item {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: var(--app-ink-3);
+      border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+    }
+    .nav-item:hover { background: var(--surface-3); color: var(--app-ink); }
+    .nav-item.active { background: var(--surface-3); color: var(--app-brand); }
+    .nav-item.active::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: 8px; bottom: 8px;
+      width: 3px;
+      background: var(--app-brand);
+      border-radius: 0 3px 3px 0;
+    }
+
+    .nav-shortcut {
+      position: absolute;
+      bottom: 2px;
+      right: 4px;
+      font-size: 8px;
+      font-family: var(--font-mono);
+      color: var(--app-ink-3);
+      opacity: 0.7;
+    }
+
+    .nav-companion { position: relative; }
+    .nav-companion-icon { font-size: 22px; line-height: 1; }
+    .nav-mood-dot { position: absolute; bottom: 6px; right: 6px; width: 7px; height: 7px; }
+
+    .nav-spacer { flex: 1; }
+
+    /* ============================================================
+       CANVAS
+       ============================================================ */
+    .canvas {
+      grid-area: canvas;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--app-bg);
+    }
+
+    .canvas-inner {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* Mascot column */
+    .mascot-col {
+      width: var(--mascot-col-w);
+      flex-shrink: 0;
+      padding: 16px 10px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      border-right: 1px solid var(--app-line);
+      background: var(--app-surface);
+    }
+
+    .mascot-frame {
+      width: 92px;
+      height: 92px;
+      border-radius: 14px;
+      background: var(--app-surface-2);
+      border: 2px solid var(--app-mascot-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 20px color-mix(in srgb, var(--app-mascot-accent) 25%, transparent), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .mascot-frame-glow {
+      position: absolute;
+      inset: -4px;
+      border-radius: 16px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--app-mascot-accent) 30%, transparent) 0%, transparent 70%);
+      opacity: 0.6;
+      z-index: 0;
+      animation: glow-breathe 3s ease-in-out infinite;
+    }
+    @keyframes glow-breathe { 0%,100%{opacity:0.4} 50%{opacity:0.7} }
+
+    .mascot-frame-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mascot-art-big {
+      font-size: 42px;
+      line-height: 1;
+      animation: float-gentle 3s ease-in-out infinite;
+    }
+    @keyframes float-gentle { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+
+    .mascot-frame-mood {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mood-label { font-size: 9px; color: var(--app-ink-2); font-weight: 500; }
+
+    /* Speech bubble */
+    .speech-bubble {
+      background: var(--app-surface-2);
+      border: 1px solid var(--app-line);
+      border-left-color: var(--app-mascot-accent);
+      border-left-width: 2px;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--app-ink-2);
+      width: 100%;
+      position: relative;
+    }
+    .speech-bubble::before {
+      content: "";
+      position: absolute;
+      left: 20px;
+      top: -6px;
+      width: 9px;
+      height: 9px;
+      background: var(--app-surface-2);
+      border-left: 1px solid var(--app-line);
+      border-top: 1px solid var(--app-line);
+      transform: rotate(45deg);
+    }
+
+    .mascot-speech { border-left-color: var(--app-mascot-accent); }
+
+    /* Level badge */
+    .mascot-level-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      background: var(--app-surface-2);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-pill);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+    .mlb-level { color: var(--app-mascot-accent); font-weight: 700; }
+    .mlb-sep { color: var(--app-ink-3); }
+    .mlb-title { color: var(--app-ink-2); }
+
+    /* Transcript */
+    .transcript {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px 8px;
+    }
+
+    .session-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .sd-line { flex: 1; height: 1px; background: var(--app-line); }
+    .sd-label { font-size: 10px; font-family: var(--font-mono); color: var(--app-ink-3); white-space: nowrap; }
+
+    /* Messages */
+    .msg-user-wrap, .msg-agent-wrap { margin-bottom: 18px; }
+
+    .msg-user {
+      display: flex;
+      gap: 8px;
+      background: var(--app-surface);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-card);
+      padding: 10px 14px;
+      margin-left: 20px;
+    }
+    .msg-prefix-you {
+      color: var(--app-ink-3);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .msg-text { font-size: 13px; color: var(--app-ink-2); line-height: 1.6; }
+    .msg-meta { font-size: 10px; font-family: var(--font-mono); color: var(--app-ink-3); text-align: right; margin-top: 4px; display: block; }
+
+    .msg-agent-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .msg-prefix-mascot {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--app-mascot-accent);
+    }
+
+    .agent-model-pill {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--surface-3);
+      color: var(--app-ink-3);
+      border: 1px solid var(--app-line);
+    }
+
+    .msg-agent-body { margin-left: 0; margin-bottom: 12px; }
+    .msg-agent-body p { font-size: 13px; color: var(--app-ink); line-height: 1.65; }
+
+    /* Tool call chip */
+    .tool-call-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--app-surface-2);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-pill);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      margin-bottom: 12px;
+    }
+    .tool-chip-spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--app-line);
+      border-top-color: var(--app-mascot-accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .tool-chip-icon { font-size: 12px; }
+    .tool-chip-name { color: var(--app-ink-2); font-weight: 600; }
+    .tool-chip-target { color: var(--app-mascot-accent); }
+
+    /* Spec card */
+    .spec-card {
+      display: flex;
+      background: color-mix(in srgb, var(--app-mascot-accent) 5%, var(--app-surface));
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-card);
+      overflow: hidden;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    .spec-left-border {
+      width: 3px;
+      background: var(--app-mascot-accent);
+      flex-shrink: 0;
+    }
+    .spec-card-inner { flex: 1; padding: 12px 14px; }
+    .spec-card-header { margin-bottom: 10px; }
+    .spec-card-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--app-mascot-accent);
+    }
+    .spec-card-title { font-size: 12px; font-weight: 700; color: var(--app-ink); }
+    .spec-badge-need {
+      margin-left: auto;
+      font-size: 9px;
+      font-family: var(--font-mono);
+      padding: 2px 7px;
+      border-radius: var(--r-pill);
+      background: rgba(255,175,0,0.15);
+      color: var(--app-warning);
+      font-weight: 600;
+    }
+
+    .spec-card-body { margin-bottom: 12px; }
+    .spec-field { margin-bottom: 8px; }
+    .spec-label {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--app-ink-3);
+      margin-bottom: 3px;
+    }
+    .spec-value { font-size: 12px; color: var(--app-ink-2); line-height: 1.55; }
+
+    .task-mini-list { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+    .task-mini { display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: var(--font-mono); color: var(--app-ink-2); }
+    .task-mini.done .tm-check { color: var(--app-success); }
+    .task-mini.active { color: var(--app-ink); }
+    .task-mini.active .tm-spinner {
+      width: 10px; height: 10px; border: 1.5px solid var(--app-line);
+      border-top-color: var(--app-mascot-accent); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .task-mini.pending .tm-dot { color: var(--app-ink-3); }
+
+    .spec-card-footer { display: flex; gap: 8px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: none;
+      border-radius: var(--r-btn);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s;
+      font-family: var(--font-sans);
+    }
+    .btn-sm { padding: 5px 12px; }
+    .btn-xs { padding: 4px 10px; font-size: 10px; }
+
+    .btn-primary {
+      background: var(--app-mascot-accent);
+      color: var(--brand-ink);
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--app-ink-2);
+      border: 1px solid var(--app-line);
+    }
+    .btn-ghost:hover { background: var(--surface-3); color: var(--app-ink); }
+    .btn-danger-text { color: var(--app-error); border-color: color-mix(in srgb, var(--app-error) 30%, var(--app-line)); }
+    .btn-danger-text:hover { background: color-mix(in srgb, var(--app-error) 10%, transparent); }
+
+    /* Approval card */
+    .approval-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: rgba(255,175,0,0.06);
+      border: 1px solid color-mix(in srgb, var(--app-warning) 30%, var(--app-line));
+      border-radius: var(--r-card);
+    }
+    .approval-icon-wrap {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: rgba(255,175,0,0.12);
+      color: var(--app-warning);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .approval-body { flex: 1; }
+    .approval-title { font-size: 12px; font-weight: 600; color: var(--app-ink); }
+    .approval-sub { font-size: 10px; color: var(--app-ink-3); margin-top: 1px; }
+    .approval-actions { display: flex; gap: 6px; }
+
+    .transcript-end-spacer { height: 12px; }
+
+    /* ============================================================
+       COMPOSER
+       ============================================================ */
+    .composer-wrap {
+      padding: 0 16px 12px;
+      flex-shrink: 0;
+    }
+    .composer {
+      background: var(--app-surface);
+      border: 1px solid var(--app-line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
+    }
+
+    .composer-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: var(--r-pill);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+    .pill-mention {
+      background: color-mix(in srgb, var(--app-mascot-accent) 15%, transparent);
+      color: var(--app-mascot-accent);
+      border: 1px solid color-mix(in srgb, var(--app-mascot-accent) 30%, transparent);
+    }
+    .pill-slash {
+      background: rgba(135,175,215,0.1);
+      color: var(--app-info);
+      border: 1px solid rgba(135,175,215,0.25);
+    }
+    .pill-file {
+      background: var(--surface-3);
+      color: var(--app-ink-2);
+      border: 1px solid var(--app-line);
+    }
+    .pill-x { cursor: pointer; opacity: 0.6; }
+    .pill-x:hover { opacity: 1; }
+
+    .composer-input-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .composer-prefix {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--app-mascot-accent);
+      padding-top: 4px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .composer-textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--app-ink);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.55;
+      resize: none;
+      outline: none;
+      padding: 4px 0;
+      min-height: 40px;
+    }
+    .composer-textarea::placeholder { color: var(--app-ink-3); }
+
+    .composer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--app-line);
+    }
+    .composer-tools-left, .composer-tools-right {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .composer-tools-right { gap: 8px; }
+
+    .ct-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: var(--app-ink-3);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .ct-btn:hover { background: var(--surface-3); color: var(--app-ink); }
+
+    .composer-hint { font-size: 10px; font-family: var(--font-mono); color: var(--app-ink-3); }
+
+    .btn-stop {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface-3);
+      border: 1px solid var(--app-line);
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--app-ink-2);
+    }
+    .btn-stop:hover { background: var(--app-error); color: white; border-color: var(--app-error); }
+    .stop-square { width: 8px; height: 8px; background: currentColor; border-radius: 1px; }
+
+    .btn-send {
+      width: 32px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--app-mascot-accent);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--brand-ink);
+      transition: all 0.12s;
+    }
+    .btn-send:hover { filter: brightness(1.1); }
+
+    /* ============================================================
+       WORK PANEL
+       ============================================================ */
+    .workpanel {
+      grid-area: workpanel;
+      width: var(--workpanel-w);
+      background: var(--app-surface);
+      border-left: 1px solid var(--app-line);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .wp-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--app-line);
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+    .wp-tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 10px 4px;
+      background: transparent;
+      border: none;
+      color: var(--app-ink-3);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.12s;
+      font-family: var(--font-sans);
+    }
+    .wp-tab:hover { color: var(--app-ink-2); }
+    .wp-tab.active { color: var(--app-mascot-accent); }
+    .wp-tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: -1px; left: 20%; right: 20%;
+      height: 2px;
+      background: var(--app-mascot-accent);
+      border-radius: 2px 2px 0 0;
+    }
+
+    .wp-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    .wp-panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .wp-panel.active { display: flex; }
+
+    /* ---- DIFF TAB ---- */
+    .diff-layout { flex: 1; display: flex; overflow: hidden; }
+
+    .diff-filelist {
+      width: 130px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--app-line);
+      background: var(--app-surface);
+      overflow-y: auto;
+    }
+    .fl-header {
+      padding: 8px 10px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--app-ink-3);
+      border-bottom: 1px solid var(--app-line);
+      display: flex;
+      justify-content: space-between;
+    }
+    .fl-count {
+      font-family: var(--font-mono);
+      background: var(--surface-3);
+      padding: 0 5px;
+      border-radius: 3px;
+    }
+    .fl-entries { padding: 4px; }
+    .fl-entry {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      color: var(--app-ink-2);
+      transition: background 0.1s;
+    }
+    .fl-entry:hover { background: var(--surface-3); }
+    .fl-entry.selected { background: color-mix(in srgb, var(--app-mascot-accent) 12%, var(--surface-3)); color: var(--app-ink); }
+    .fl-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fl-badge {
+      font-size: 8px;
+      font-weight: 700;
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .fl-badge-mod { background: rgba(135,175,215,0.2); color: var(--app-info); }
+    .fl-badge-add { background: rgba(95,215,95,0.15); color: var(--app-success); }
+
+    .diff-viewer { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .diff-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--app-line);
+      background: var(--app-surface);
+      flex-shrink: 0;
+      position: sticky; top: 0; z-index: 2;
+    }
+    .diff-filename { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--app-ink); }
+    .diff-stats { display: flex; gap: 8px; font-family: var(--font-mono); font-size: 10px; }
+    .ds-add { color: var(--app-success); }
+    .ds-del { color: var(--app-error); }
+
+    .diff-body { font-family: var(--font-mono); font-size: 11px; line-height: 1.55; }
+    .dhunk {
+      padding: 4px 12px;
+      background: var(--diff-hunk-bg);
+      color: var(--app-info);
+      font-size: 10px;
+    }
+    .dline {
+      display: flex;
+      padding: 0;
+    }
+    .dline.add { background: var(--diff-add-bg); }
+    .dline.del { background: var(--diff-del-bg); }
+    .dln-old, .dln-new {
+      width: 36px;
+      padding: 0 6px;
+      text-align: right;
+      color: var(--app-ink-3);
+      font-size: 10px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .dline.add .dln-new { color: var(--diff-add-fg); }
+    .dline.del .dln-old { color: var(--diff-del-fg); }
+    .dsign { width: 16px; text-align: center; flex-shrink: 0; }
+    .dline.add .dsign { color: var(--app-success); }
+    .dline.del .dsign { color: var(--app-error); }
+    .dcode { flex: 1; white-space: pre; padding-right: 12px; }
+    .dline.del .dcode { color: var(--diff-del-fg); }
+    .dline.add .dcode { color: var(--diff-add-fg); }
+
+    .syn-kw { color: #c792ea; }
+    .syn-str { color: #c3e88d; }
+    .syn-com { color: var(--app-ink-3); font-style: italic; }
+    .syn-fn { color: #82aaff; }
+    .syn-type { color: #ffcb6b; }
+    .syn-var { color: #eeffff; }
+
+    .diff-actions {
+      padding: 10px 12px;
+      border-top: 1px solid var(--app-line);
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+      background: var(--app-surface);
+    }
+
+    /* ---- CODE TAB ---- */
+    .code-tab { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .code-file-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--app-line);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .cf-name { flex: 1; font-weight: 600; }
+    .cf-lang { font-size: 9px; color: var(--app-ink-3); background: var(--surface-3); padding: 2px 6px; border-radius: 3px; }
+
+    .code-preview { font-family: var(--font-mono); font-size: 11px; line-height: 1.6; padding: 8px 0; }
+    .cpline { display: flex; }
+    .cpline.hl-add { background: var(--diff-add-bg); }
+    .cln {
+      width: 36px;
+      padding: 0 8px;
+      text-align: right;
+      color: var(--app-ink-3);
+      font-size: 10px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .ct { flex: 1; padding-right: 12px; white-space: pre; }
+
+    /* ---- SPEC TAB ---- */
+    .spec-tab { flex: 1; overflow-y: auto; padding: 16px; }
+    .pipeline-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--app-ink);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--app-line);
+    }
+
+    .pipeline { display: flex; flex-direction: column; gap: 0; }
+    .pstage { display: flex; gap: 12px; }
+    .pdot-wrap { display: flex; flex-direction: column; align-items: center; width: 20px; }
+    .pdot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .pdot-done { background: var(--app-success); color: var(--bg); }
+    .pdot-active { background: var(--app-mascot-accent); color: var(--brand-ink); box-shadow: 0 0 10px color-mix(in srgb, var(--app-mascot-accent) 50%, transparent); }
+    .pdot-pending { background: var(--surface-3); color: var(--app-ink-3); border: 1px solid var(--app-line); }
+    .pline { width: 2px; flex: 1; background: var(--surface-3); margin: 4px 0; min-height: 24px; }
+    .pline-active { background: linear-gradient(to bottom, var(--app-mascot-accent), var(--surface-3)); }
+    .pstage:last-child .pline { display: none; }
+
+    .pinfo { padding-bottom: 16px; flex: 1; }
+    .pname { font-size: 12px; font-weight: 600; color: var(--app-ink); margin-bottom: 2px; }
+    .pname-active { color: var(--app-mascot-accent); }
+    .pdesc { font-size: 10px; color: var(--app-ink-3); line-height: 1.4; }
+    .pdesc-active { color: var(--app-ink-2); }
+
+    .spec-preview-card {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--app-surface-2);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-card);
+    }
+    .spc-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 11px;
+    }
+    .spc-row + .spc-row { border-top: 1px solid var(--app-line); }
+    .spc-k { color: var(--app-ink-3); font-family: var(--font-mono); font-size: 10px; }
+    .spc-v { color: var(--app-ink-2); font-size: 11px; }
+    .spc-v.hash { font-family: var(--font-mono); font-size: 10px; color: var(--app-info); }
+    .spc-v.text-brand { color: var(--app-mascot-accent); font-weight: 600; }
+
+    /* ---- AUDIT TAB ---- */
+    .audit-tab { flex: 1; overflow-y: auto; padding: 16px; }
+    .audit-section-title {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--app-ink-3);
+      margin-bottom: 8px;
+      margin-top: 4px;
+    }
+    .audit-receipt {
+      background: var(--app-surface-2);
+      border: 1px solid var(--app-line);
+      border-radius: var(--r-card);
+      padding: 10px 12px;
+      margin-bottom: 16px;
+    }
+    .ar-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 11px;
+    }
+    .ar-row + .ar-row { border-top: 1px solid var(--app-line); }
+    .ar-k { color: var(--app-ink-3); font-family: var(--font-mono); font-size: 10px; }
+    .ar-v { color: var(--app-ink-2); }
+    .ar-v.mono { font-family: var(--font-mono); font-size: 10px; }
+    .ar-v.hash { font-family: var(--font-mono); font-size: 10px; color: var(--app-info); }
+    .ar-v.text-success { color: var(--app-success); }
+    .ar-v.text-brand { color: var(--app-mascot-accent); font-weight: 600; }
+    .text-success { color: var(--app-success); }
+    .text-warning { color: var(--app-warning); }
+    .text-brand { color: var(--app-mascot-accent); }
+
+    .audit-chain { display: flex; flex-direction: column; gap: 0; }
+    .achain-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      border-bottom: 1px solid var(--app-line);
+    }
+    .achain-entry:last-child { border-bottom: none; }
+    .achain-num {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--surface-3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 700;
+      color: var(--app-ink-3);
+      flex-shrink: 0;
+    }
+    .achain-type { color: var(--app-mascot-accent); font-weight: 600; width: 50px; flex-shrink: 0; }
+    .achain-desc { flex: 1; color: var(--app-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .achain-v { color: var(--app-success); font-weight: 700; }
+
+    /* ============================================================
+       STATUS BAR (vim-airline)
+       ============================================================ */
+    .statusbar {
+      grid-area: status;
+      height: var(--statusbar-h);
+      display: flex;
+      align-items: stretch;
+      background: var(--app-surface);
+      border-top: 1px solid var(--app-line);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      overflow: hidden;
+    }
+
+    .sb-seg {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+      height: 100%;
+      white-space: nowrap;
+    }
+
+    .sb-mode { background: var(--app-success); color: #062006; }
+    .sb-mascot { background: var(--app-mascot-accent); color: var(--brand-ink); }
+    .sb-file { background: var(--surface-3); color: var(--app-ink); }
+    .sb-info { background: var(--app-surface-2); color: var(--app-ink-3); font-weight: 500; }
+
+    .sb-chev { display: flex; align-items: center; height: 100%; line-height: 0; }
+    .sb-chev svg { display: block; }
+    .sb-chev-mode { color: var(--app-success); }
+    .sb-chev-mascot { color: var(--app-mascot-accent); }
+    .sb-chev-file { color: var(--surface-3); }
+
+    .sb-dot { color: var(--app-ink-3); }
+
+    .sb-center {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: var(--app-ink-3);
+      font-weight: 500;
+      padding: 0 12px;
+    }
+    .sb-sandbox { display: flex; align-items: center; gap: 4px; color: var(--app-success); }
+    .sb-cost { color: var(--app-mascot-accent); font-weight: 600; }
+    .sb-bond { color: var(--app-mascot-accent); }
+    .sb-level { color: var(--app-ink); }
+
+    .sb-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      background: var(--app-surface-2);
+      color: var(--app-ink-3);
+      font-weight: 500;
+    }
+    .sb-rec { display: flex; align-items: center; gap: 4px; color: var(--app-error); }
+    .sb-rec-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--app-error); animation: pulse-dot 1.2s infinite; }
+
+    /* ============================================================
+       ANIMATIONS
+       ============================================================ */
+    @keyframes bounce-in {
+      0% { transform: scale(0.92); opacity: 0; }
+      60% { transform: scale(1.02); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+
+  <!-- ============================================================
+       MINIMAL JS: mascot switching + tab switching + theme toggle
+       ============================================================ -->
+  <script>
+    (function() {
+      // ===== MASCOT DATA =====
+      const mascots = [
+        { id:"foxy", name:"Foxy 小福", species:"Focus 小狐狸", icon:"🦊", shortName:"fox",
+          level:3, levelNames:["幼尾小福","学徒狐","机灵狐","猎码狐","灵尾狐","幻尾狐","玄尾狐","天尾狐","九尾天福"],
+          voice:{ idle:"准备好了，慢慢写，我陪你。", thinking:"让我想想…你尽管放心。", working:"一步一步来，不慌。", happy:"漂亮，这一步很稳！", oops:"没关系，报错也是线索。", done:"这一轮收工，记得休息一下眼睛。", compact:"上下文我帮你理顺了，继续。", levelup:"尾巴多了一束光，我们升级啦！" }
+        },
+        { id:"mochi", name:"Mochi", species:"云朵猫", icon:"🐱", shortName:"mochi",
+          level:3, levelNames:["糯米小云","团子学徒","软糖调试员","云端巧手","绵绵架构师","月光守护猫","星云引路猫","天际愿望猫","云海大福神"],
+          voice:{ idle:"软乎乎地开工吧，我在旁边。", thinking:"让我把线索揉成一小团。", working:"正在轻轻地把 bug 推回窝里。", happy:"这一团代码顺滑多啦！", oops:"没关系，皱掉的团子还能再揉。", done:"收工啦，伸个懒腰吧。", compact:"线索都叠成整齐的小云了。", levelup:"云朵又蓬松了一层，升级啦！" }
+        },
+        { id:"byte", name:"Byte", species:"像素小狐", icon:"▣", shortName:"byte",
+          level:3, levelNames:["一位小狐","像素学徒","缓存巡游者","断点猎手","字节工匠","全绿守护者","光栅贤者","终端幻影","满级像素狐"],
+          voice:{ idle:"READY，等你按下开始。", thinking:"扫描线索中…", working:"逐帧推进，别跳过边界。", happy:"STATUS: GREEN，全绿漂亮！", oops:"发现坏像素，定位它就好。", done:"关卡完成，存档成功。", compact:"缓存清爽了，可以继续跑。", levelup:"LEVEL UP！新像素已点亮。" }
+        },
+        { id:"nori", name:"Nori", species:"薄荷六角恐龙", icon:"🦕", shortName:"nori",
+          level:3, levelNames:["薄荷小芽","栈边学徒","浅水巡游者","递归潜行者","洋流工程师","深栈领航员","海图架构师","潮汐守护龙","星海六角龙"],
+          voice:{ idle:"水面很稳，我们慢慢来。", thinking:"先看看栈底藏着什么。", working:"顺着洋流，一层一层游过去。", happy:"浮上来啦，这一步很清澈。", oops:"只是呛了一口水，换条路线。", done:"靠岸收工，记得喝水。", compact:"海图重新折好了，继续航行。", levelup:"背鳍亮了一格，升级啦！" }
+        },
+        { id:"pico", name:"Pico", species:"布丁企鹅", icon:"🐧", shortName:"pico",
+          level:3, levelNames:["小布丁","滑行学徒","稳落测试员","冰面调试员","极光工程师","雪原架构师","星光领航员","极夜守护者","银河布丁王"],
+          voice:{ idle:"冰面准备好啦，出发吧。", thinking:"先找一条最稳的滑行线。", working:"滑过去，稳稳接住这一段。", happy:"漂亮落地，连晃都没晃！", oops:"只是小打滑，站稳再来。", done:"安全抵达，奖励一口布丁。", compact:"雪道整理平了，继续滑。", levelup:"围巾多了一颗星，升级啦！" }
+        },
+        { id:"bubu", name:"Bubu", species:"奶油小熊", icon:"🧸", shortName:"bubu",
+          level:3, levelNames:["奶油小团","拥抱学徒","边界看护员","需求整理师","奶油工程师","温柔架构师","暖炉守护熊","星夜抱抱熊","满怀心愿熊"],
+          voice:{ idle:"需求给我抱好，你放心写。", thinking:"先把边界一条条理清楚。", working:"抱紧范围，稳稳实现。", happy:"做好啦，值得一个大抱抱。", oops:"别担心，我还抱着上下文呢。", done:"收工，给肩膀放个小假。", compact:"需求和边界都重新叠整齐了。", levelup:"怀里多了一颗星，升级啦！" }
+        },
+        { id:"kumo", name:"Kumo", species:"代码水豚", icon:"☕", shortName:"kumo",
+          level:3, levelNames:["小小水豚","慢读学徒","冷静调试员","栈边观察家","咖啡工程师","沉稳架构师","河岸领航员","云海守护豚","不慌大贤豚"],
+          voice:{ idle:"不赶，先把代码看明白。", thinking:"安静读一会儿，答案会浮出来。", working:"保持节奏，一次只做好一步。", happy:"嗯，很稳。就按这个节奏。", oops:"先喝口水，再看错误现场。", done:"这轮结束，咖啡也刚刚好。", compact:"桌面收干净了，思路还在。", levelup:"杯子添满了，默契也升级了。" }
+        }
+      ];
+
+      function bondSegments(level) {
+        const filled = Math.min(4, Math.max(1, Math.round(level / 2.25)));
+        return '◆'.repeat(filled) + '◇'.repeat(4 - filled);
+      }
+
+      let currentMascot = mascots.find(m => m.id === 'mochi');
+
+      function applyMascot(m) {
+        currentMascot = m;
+        const html = document.documentElement;
+        html.setAttribute('data-mascot', m.id);
+
+        // Mascot selector button
+        document.getElementById('mascotBtnIcon').textContent = m.icon;
+        document.getElementById('mascotBtnName').textContent = m.name.split(' ')[0];
+
+        // Companion badge
+        document.getElementById('cbIcon').textContent = m.icon;
+        const levelName = m.levelNames[m.level - 1];
+        document.getElementById('cbText').textContent = `Lv ${m.level} · ${levelName}`;
+        document.getElementById('cbBond').textContent = bondSegments(m.level);
+
+        // Nav companion
+        document.getElementById('navCompanionIcon').textContent = m.icon;
+
+        // Mascot column
+        document.getElementById('mascotArtBig').textContent = m.icon;
+        document.getElementById('mascotSpeech').textContent = m.voice.working;
+        document.getElementById('mlbTitle').textContent = levelName;
+
+        // Message prefix
+        document.getElementById('msgPrefix').textContent = `${m.shortName} ›`;
+
+        // Composer
+        document.getElementById('composerPrefix').textContent = `${m.shortName}» `;
+        document.getElementById('composerMentionName').textContent = m.shortName;
+
+        // Approval title
+        const displayName = m.name.split(' ')[0];
+        document.getElementById('approvalTitle').textContent = `${displayName} 想要写入 src/auth/oauth.ts`;
+
+        // Status bar
+        document.getElementById('sbMascotText').textContent = m.shortName;
+        document.getElementById('sbBond').textContent = `◆ ${Math.round(m.level/2.25)}/4`;
+        document.getElementById('sbLevel').textContent = `🎯 ${levelName}`;
+
+        // Update dropdown active state
+        document.querySelectorAll('.mascot-dd-item').forEach(item => {
+          item.classList.toggle('active', item.dataset.id === m.id);
+        });
+      }
+
+      // Populate mascot dropdown
+      function buildDropdown() {
+        const list = document.getElementById('mascotDdList');
+        list.innerHTML = mascots.map(m => `
+          <div class="mascot-dd-item" data-id="${m.id}">
+            <span class="mdd-icon">${m.icon}</span>
+            <div class="mdd-info">
+              <div class="mdd-name">${m.name}</div>
+              <div class="mdd-species">${m.species}</div>
+            </div>
+            <span class="mdd-short">${m.shortName}»</span>
+          </div>
+        `).join('');
+
+        list.querySelectorAll('.mascot-dd-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const id = item.dataset.id;
+            const m = mascots.find(x => x.id === id);
+            if (m) {
+              applyMascot(m);
+              document.getElementById('mascotDropdown').classList.remove('open');
+            }
+          });
+        });
+      }
+
+      // Mascot dropdown toggle
+      document.getElementById('mascotBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('mascotDropdown').classList.toggle('open');
+      });
+      document.addEventListener('click', () => {
+        document.getElementById('mascotDropdown').classList.remove('open');
+      });
+
+      // ===== TAB SWITCHING (work panel) =====
+      document.querySelectorAll('.wp-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const target = tab.dataset.wptab;
+          document.querySelectorAll('.wp-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.wp-panel').forEach(p => p.classList.remove('active'));
+          tab.classList.add('active');
+          const panel = document.getElementById('wptab-' + target);
+          if (panel) panel.classList.add('active');
+        });
+      });
+
+      // File list selection
+      document.querySelectorAll('.fl-entry').forEach(entry => {
+        entry.addEventListener('click', () => {
+          document.querySelectorAll('.fl-entry').forEach(e => e.classList.remove('selected'));
+          entry.classList.add('selected');
+        });
+      });
+
+      // ===== THEME TOGGLE (visual only) =====
+      document.querySelectorAll('.theme-seg').forEach(seg => {
+        seg.addEventListener('click', () => {
+          document.querySelectorAll('.theme-seg').forEach(s => s.classList.remove('active'));
+          seg.classList.add('active');
+          const theme = seg.dataset.theme;
+          if (theme === 'dreamy') {
+            document.documentElement.setAttribute('data-theme', 'dreamy');
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
+        });
+      });
+
+      // Init
+      buildDropdown();
+      applyMascot(currentMascot);
+
+      // Init lucide icons
+      if (window.lucide) lucide.createIcons();
+    })();
+  </script>
+</body>
+</html>

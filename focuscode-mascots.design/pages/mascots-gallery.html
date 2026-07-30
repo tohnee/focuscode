@@ -1,0 +1,1501 @@
+<!doctype html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusCode — 编程伙伴画廊</title>
+    <style id="theme-vars">
+/* FocusCode Design System - Foxglow + Dreamy + Mascot Personalization */
+/* Brand: Fox orange (#ff8700), dark terminal background; Dreamy: night purple + cloud pink */
+
+:root {
+  /* ===== Brand single hue - foxglow orange (default theme) ===== */
+  --brand: #ff8700;
+  --brand-50: #fff7ed;
+  --brand-100: #ffedd5;
+  --brand-200: #fed7aa;
+  --brand-300: #fdba74;
+  --brand-400: #fb923c;
+  --brand-500: #ff8700;
+  --brand-600: #ea6c00;
+  --brand-700: #c25000;
+  --brand-ink: #1a0a00;
+
+  /* ===== Dreamy 星眠 theme (night purple + cloud pink + mint) ===== */
+  --dreamy-bg: #14101c;
+  --dreamy-surface: #1d1729;
+  --dreamy-surface-2: #271f38;
+  --dreamy-surface-3: #352a4d;
+  --dreamy-ink: #ece6f5;
+  --dreamy-ink-2: #a89bc4;
+  --dreamy-ink-3: #6b5f87;
+  --dreamy-line: #2f2644;
+  --dreamy-accent: #f4a8d8; /* cloud pink */
+  --dreamy-accent-ink: #2a1538;
+  --dreamy-success: #7ee0c8; /* mint */
+  --dreamy-warning: #e8c478;
+  --dreamy-danger: #e87a9a;
+  --dreamy-info: #9ab8f0;
+
+  /* Dreamy semantic aliases for head contract */
+  --dreamy-foreground: var(--dreamy-ink);
+  --dreamy-card: var(--dreamy-surface);
+  --dreamy-primary: var(--dreamy-accent);
+  --dreamy-border: var(--dreamy-line);
+  --dreamy-muted: var(--dreamy-surface-2);
+  --dreamy-radius-sm: var(--r-sm);
+  --dreamy-radius-md: var(--r-md);
+  --dreamy-radius-lg: var(--r-lg);
+
+  /* ===== Surfaces - dark terminal default (foxglow) ===== */
+  --bg: #0d0d12;
+  --surface: #151520;
+  --surface-2: #1e1e2e;
+  --surface-3: #2a2a3e;
+
+  /* ===== Text ===== */
+  --ink: #e8e6e3;
+  --ink-2: #a8a39b;
+  --ink-3: #6b6560;
+
+  /* ===== Borders & lines ===== */
+  --line: #2a2a3a;
+
+  /* ===== Semantic state colors ===== */
+  --state-success: #5fd75f;
+  --state-warning: #ffaf00;
+  --state-error: #d75f5f;
+  --state-info: #87afd7;
+
+  /* ===== Mascot personalization accent colors ===== */
+  --mascot-foxy: #ff8700;     /* fox orange */
+  --mascot-foxy-soft: #ffedd5;
+  --mascot-mochi: #f4a8d8;    /* cloud pink */
+  --mascot-mochi-soft: #fce7f4;
+  --mascot-byte: #7dd3fc;     /* pixel sky */
+  --mascot-byte-soft: #e0f2fe;
+  --mascot-nori: #86e5c1;     /* mint */
+  --mascot-nori-soft: #d1fae5;
+  --mascot-pico: #fcd34d;     /* penguin yellow */
+  --mascot-pico-soft: #fef9c3;
+  --mascot-bubu: #fca5a5;     /* cream bear pink */
+  --mascot-bubu-soft: #fee2e2;
+  --mascot-kumo: #c4a77d;     /* capybara coffee */
+  --mascot-kumo-soft: #f3e8d8;
+
+  /* ===== Mood state colors (idle/thinking/working/happy/oops/...) ===== */
+  --mood-idle: var(--ink-3);
+  --mood-thinking: var(--state-info);
+  --mood-working: var(--brand);
+  --mood-happy: var(--state-success);
+  --mood-oops: var(--state-warning);
+  --mood-sleeping: var(--ink-3);
+  --mood-celebrating: var(--brand);
+  --mood-levelup: var(--state-success);
+
+  /* ===== Radius ===== */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  /* ===== Shadows (alpha <=0.05 per quality gate for surface; deeper for overlays) ===== */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  --shadow-popover: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
+
+  /* ===== Semantic aliases for head contract (default to foxglow) ===== */
+  --focuscode-background: var(--bg);
+  --focuscode-foreground: var(--ink);
+  --focuscode-card: var(--surface);
+  --focuscode-card-foreground: var(--ink);
+  --focuscode-popover: var(--surface-2);
+  --focuscode-popover-foreground: var(--ink);
+  --focuscode-primary: var(--brand);
+  --focuscode-primary-foreground: var(--brand-ink);
+  --focuscode-muted: var(--surface-2);
+  --focuscode-muted-foreground: var(--ink-3);
+  --focuscode-border: var(--line);
+  --focuscode-input: var(--surface-3);
+  --focuscode-ring: var(--brand);
+  --focuscode-success: var(--state-success);
+  --focuscode-warning: var(--state-warning);
+  --focuscode-danger: var(--state-error);
+  --focuscode-radius-sm: var(--r-sm);
+  --focuscode-radius-md: var(--r-md);
+  --focuscode-radius-lg: var(--r-lg);
+}
+
+/* ===== Dreamy theme override (applied via <html data-theme="dreamy">) ===== */
+html[data-theme="dreamy"] {
+  --bg: var(--dreamy-bg);
+  --surface: var(--dreamy-surface);
+  --surface-2: var(--dreamy-surface-2);
+  --surface-3: var(--dreamy-surface-3);
+  --ink: var(--dreamy-ink);
+  --ink-2: var(--dreamy-ink-2);
+  --ink-3: var(--dreamy-ink-3);
+  --line: var(--dreamy-line);
+  --brand: var(--dreamy-accent);
+  --brand-ink: var(--dreamy-accent-ink);
+  --brand-50: #fce7f4;
+  --brand-100: #f9cfea;
+  --brand-200: #f4a8d8;
+  --brand-300: #ee7ec3;
+  --brand-400: #e55fb0;
+  --brand-500: #f4a8d8;
+  --brand-600: #d07fb0;
+  --brand-700: #a85e8b;
+  --state-success: var(--dreamy-success);
+  --state-warning: var(--dreamy-warning);
+  --state-error: var(--dreamy-danger);
+  --state-info: var(--dreamy-info);
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+
+  --color-state-success: var(--state-success);
+  --color-state-warning: var(--state-warning);
+  --color-state-error: var(--state-error);
+  --color-state-info: var(--state-info);
+
+  --color-mascot-foxy: var(--mascot-foxy);
+  --color-mascot-mochi: var(--mascot-mochi);
+  --color-mascot-byte: var(--mascot-byte);
+  --color-mascot-nori: var(--mascot-nori);
+  --color-mascot-pico: var(--mascot-pico);
+  --color-mascot-bubu: var(--mascot-bubu);
+  --color-mascot-kumo: var(--mascot-kumo);
+}
+
+/* Terminal font stack */
+.font-mono {
+  font-family:
+    "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+}
+
+/* ASCII art uses mono */
+.mascot-art {
+  font-family:
+    "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: pre;
+  letter-spacing: 0;
+  tab-size: 4;
+}
+
+/* ===== Mascot accent text/border helpers ===== */
+.text-mascot-foxy { color: var(--mascot-foxy); }
+.bg-mascot-foxy { background-color: var(--mascot-foxy); }
+.border-mascot-foxy { border-color: var(--mascot-foxy); }
+.text-mascot-mochi { color: var(--mascot-mochi); }
+.bg-mascot-mochi { background-color: var(--mascot-mochi); }
+.border-mascot-mochi { border-color: var(--mascot-mochi); }
+.text-mascot-byte { color: var(--mascot-byte); }
+.bg-mascot-byte { background-color: var(--mascot-byte); }
+.border-mascot-byte { border-color: var(--mascot-byte); }
+.text-mascot-nori { color: var(--mascot-nori); }
+.bg-mascot-nori { background-color: var(--mascot-nori); }
+.border-mascot-nori { border-color: var(--mascot-nori); }
+.text-mascot-pico { color: var(--mascot-pico); }
+.bg-mascot-pico { background-color: var(--mascot-pico); }
+.border-mascot-pico { border-color: var(--mascot-pico); }
+.text-mascot-bubu { color: var(--mascot-bubu); }
+.bg-mascot-bubu { background-color: var(--mascot-bubu); }
+.border-mascot-bubu { border-color: var(--mascot-bubu); }
+.text-mascot-kumo { color: var(--mascot-kumo); }
+.bg-mascot-kumo { background-color: var(--mascot-kumo); }
+.border-mascot-kumo { border-color: var(--mascot-kumo); }
+
+/* ===== Bond segments (4-segment ◆/◇ progress) ===== */
+.bond-seg-filled { color: var(--brand); }
+.bond-seg-empty { color: var(--ink-3); opacity: 0.5; }
+.bond-seg-max { color: var(--state-success); }
+
+/* ===== Mood dot states ===== */
+.mood-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.mood-dot.idle { background: var(--mood-idle); }
+.mood-dot.thinking { background: var(--mood-thinking); animation: pulse-dot 1.4s infinite; }
+.mood-dot.working { background: var(--mood-working); animation: pulse-dot 1s infinite; }
+.mood-dot.happy { background: var(--mood-happy); }
+.mood-dot.oops { background: var(--mood-oops); }
+.mood-dot.sleeping { background: var(--mood-sleeping); opacity: 0.5; }
+.mood-dot.celebrating { background: var(--mood-celebrating); animation: pulse-dot 0.8s infinite; }
+.mood-dot.levelup { background: var(--mood-levelup); box-shadow: 0 0 8px var(--mood-levelup); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Subtle glow for evolution stages */
+@keyframes tailGlow {
+  0%, 100% { text-shadow: 0 0 4px currentColor; }
+  50% { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { opacity: 1; }
+  95% { opacity: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.glow-pulse { animation: tailGlow 2s ease-in-out infinite; }
+.float-gentle { animation: float 3s ease-in-out infinite; }
+.bounce-in { animation: bounce-in 0.4s ease-out; }
+
+/* Speech bubble tail */
+.speech-bubble {
+  position: relative;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.speech-bubble::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: -7px;
+  width: 10px;
+  height: 10px;
+  background: var(--surface-2);
+  border-left: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  transform: rotate(45deg);
+}
+
+/* Scrollbar for terminal feel */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-brand: var(--brand);
+    --color-brand-50: var(--brand-50);
+    --color-brand-100: var(--brand-100);
+    --color-brand-200: var(--brand-200);
+    --color-brand-300: var(--brand-300);
+    --color-brand-400: var(--brand-400);
+    --color-brand-500: var(--brand-500);
+    --color-brand-600: var(--brand-600);
+    --color-brand-700: var(--brand-700);
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-surface-3: var(--surface-3);
+    --color-ink: var(--ink);
+    --color-ink-2: var(--ink-2);
+    --color-ink-3: var(--ink-3);
+    --color-line: var(--line);
+    --color-state-success: var(--state-success);
+    --color-state-warning: var(--state-warning);
+    --color-state-error: var(--state-error);
+    --color-state-info: var(--state-info);
+    --color-mascot-foxy: var(--mascot-foxy);
+    --color-mascot-mochi: var(--mascot-mochi);
+    --color-mascot-byte: var(--mascot-byte);
+    --color-mascot-nori: var(--mascot-nori);
+    --color-mascot-pico: var(--mascot-pico);
+    --color-mascot-bubu: var(--mascot-bubu);
+    --color-mascot-kumo: var(--mascot-kumo);
+    --color-foreground: var(--dreamy-foreground);
+    --color-card: var(--dreamy-card);
+    --color-primary: var(--dreamy-primary);
+    --color-muted: var(--dreamy-muted);
+    --color-accent: var(--dreamy-accent);
+    --color-border: var(--dreamy-border);
+    --color-background: var(--dreamy-bg);
+    --radius-sm: var(--dreamy-radius-sm);
+    --radius-md: var(--dreamy-radius-md);
+    --radius-lg: var(--dreamy-radius-lg);
+  }
+  @layer base {
+    body { background: var(--dreamy-bg); color: var(--dreamy-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-brand { background-color: var(--brand); }
+      .text-brand { color: var(--brand); }
+      .border-brand { border-color: var(--brand); }
+      .ring-brand { --tw-ring-color: var(--brand); }
+      .bg-brand-50 { background-color: var(--brand-50); }
+      .text-brand-50 { color: var(--brand-50); }
+      .border-brand-50 { border-color: var(--brand-50); }
+      .ring-brand-50 { --tw-ring-color: var(--brand-50); }
+      .bg-brand-100 { background-color: var(--brand-100); }
+      .text-brand-100 { color: var(--brand-100); }
+      .border-brand-100 { border-color: var(--brand-100); }
+      .ring-brand-100 { --tw-ring-color: var(--brand-100); }
+      .bg-brand-200 { background-color: var(--brand-200); }
+      .text-brand-200 { color: var(--brand-200); }
+      .border-brand-200 { border-color: var(--brand-200); }
+      .ring-brand-200 { --tw-ring-color: var(--brand-200); }
+      .bg-brand-300 { background-color: var(--brand-300); }
+      .text-brand-300 { color: var(--brand-300); }
+      .border-brand-300 { border-color: var(--brand-300); }
+      .ring-brand-300 { --tw-ring-color: var(--brand-300); }
+      .bg-brand-400 { background-color: var(--brand-400); }
+      .text-brand-400 { color: var(--brand-400); }
+      .border-brand-400 { border-color: var(--brand-400); }
+      .ring-brand-400 { --tw-ring-color: var(--brand-400); }
+      .bg-brand-500 { background-color: var(--brand-500); }
+      .text-brand-500 { color: var(--brand-500); }
+      .border-brand-500 { border-color: var(--brand-500); }
+      .ring-brand-500 { --tw-ring-color: var(--brand-500); }
+      .bg-brand-600 { background-color: var(--brand-600); }
+      .text-brand-600 { color: var(--brand-600); }
+      .border-brand-600 { border-color: var(--brand-600); }
+      .ring-brand-600 { --tw-ring-color: var(--brand-600); }
+      .bg-brand-700 { background-color: var(--brand-700); }
+      .text-brand-700 { color: var(--brand-700); }
+      .border-brand-700 { border-color: var(--brand-700); }
+      .ring-brand-700 { --tw-ring-color: var(--brand-700); }
+      .bg-bg { background-color: var(--bg); }
+      .text-bg { color: var(--bg); }
+      .border-bg { border-color: var(--bg); }
+      .ring-bg { --tw-ring-color: var(--bg); }
+      .bg-surface { background-color: var(--surface); }
+      .text-surface { color: var(--surface); }
+      .border-surface { border-color: var(--surface); }
+      .ring-surface { --tw-ring-color: var(--surface); }
+      .bg-surface-2 { background-color: var(--surface-2); }
+      .text-surface-2 { color: var(--surface-2); }
+      .border-surface-2 { border-color: var(--surface-2); }
+      .ring-surface-2 { --tw-ring-color: var(--surface-2); }
+      .bg-surface-3 { background-color: var(--surface-3); }
+      .text-surface-3 { color: var(--surface-3); }
+      .border-surface-3 { border-color: var(--surface-3); }
+      .ring-surface-3 { --tw-ring-color: var(--surface-3); }
+      .bg-ink { background-color: var(--ink); }
+      .text-ink { color: var(--ink); }
+      .border-ink { border-color: var(--ink); }
+      .ring-ink { --tw-ring-color: var(--ink); }
+      .bg-ink-2 { background-color: var(--ink-2); }
+      .text-ink-2 { color: var(--ink-2); }
+      .border-ink-2 { border-color: var(--ink-2); }
+      .ring-ink-2 { --tw-ring-color: var(--ink-2); }
+      .bg-ink-3 { background-color: var(--ink-3); }
+      .text-ink-3 { color: var(--ink-3); }
+      .border-ink-3 { border-color: var(--ink-3); }
+      .ring-ink-3 { --tw-ring-color: var(--ink-3); }
+      .bg-line { background-color: var(--line); }
+      .text-line { color: var(--line); }
+      .border-line { border-color: var(--line); }
+      .ring-line { --tw-ring-color: var(--line); }
+      .bg-state-success { background-color: var(--state-success); }
+      .text-state-success { color: var(--state-success); }
+      .border-state-success { border-color: var(--state-success); }
+      .ring-state-success { --tw-ring-color: var(--state-success); }
+      .bg-state-warning { background-color: var(--state-warning); }
+      .text-state-warning { color: var(--state-warning); }
+      .border-state-warning { border-color: var(--state-warning); }
+      .ring-state-warning { --tw-ring-color: var(--state-warning); }
+      .bg-state-error { background-color: var(--state-error); }
+      .text-state-error { color: var(--state-error); }
+      .border-state-error { border-color: var(--state-error); }
+      .ring-state-error { --tw-ring-color: var(--state-error); }
+      .bg-state-info { background-color: var(--state-info); }
+      .text-state-info { color: var(--state-info); }
+      .border-state-info { border-color: var(--state-info); }
+      .ring-state-info { --tw-ring-color: var(--state-info); }
+      .bg-mascot-foxy { background-color: var(--mascot-foxy); }
+      .text-mascot-foxy { color: var(--mascot-foxy); }
+      .border-mascot-foxy { border-color: var(--mascot-foxy); }
+      .ring-mascot-foxy { --tw-ring-color: var(--mascot-foxy); }
+      .bg-mascot-mochi { background-color: var(--mascot-mochi); }
+      .text-mascot-mochi { color: var(--mascot-mochi); }
+      .border-mascot-mochi { border-color: var(--mascot-mochi); }
+      .ring-mascot-mochi { --tw-ring-color: var(--mascot-mochi); }
+      .bg-mascot-byte { background-color: var(--mascot-byte); }
+      .text-mascot-byte { color: var(--mascot-byte); }
+      .border-mascot-byte { border-color: var(--mascot-byte); }
+      .ring-mascot-byte { --tw-ring-color: var(--mascot-byte); }
+      .bg-mascot-nori { background-color: var(--mascot-nori); }
+      .text-mascot-nori { color: var(--mascot-nori); }
+      .border-mascot-nori { border-color: var(--mascot-nori); }
+      .ring-mascot-nori { --tw-ring-color: var(--mascot-nori); }
+      .bg-mascot-pico { background-color: var(--mascot-pico); }
+      .text-mascot-pico { color: var(--mascot-pico); }
+      .border-mascot-pico { border-color: var(--mascot-pico); }
+      .ring-mascot-pico { --tw-ring-color: var(--mascot-pico); }
+      .bg-mascot-bubu { background-color: var(--mascot-bubu); }
+      .text-mascot-bubu { color: var(--mascot-bubu); }
+      .border-mascot-bubu { border-color: var(--mascot-bubu); }
+      .ring-mascot-bubu { --tw-ring-color: var(--mascot-bubu); }
+      .bg-mascot-kumo { background-color: var(--mascot-kumo); }
+      .text-mascot-kumo { color: var(--mascot-kumo); }
+      .border-mascot-kumo { border-color: var(--mascot-kumo); }
+      .ring-mascot-kumo { --tw-ring-color: var(--mascot-kumo); }
+      .bg-foreground { background-color: var(--dreamy-foreground); }
+      .text-foreground { color: var(--dreamy-foreground); }
+      .border-foreground { border-color: var(--dreamy-foreground); }
+      .ring-foreground { --tw-ring-color: var(--dreamy-foreground); }
+      .bg-card { background-color: var(--dreamy-card); }
+      .text-card { color: var(--dreamy-card); }
+      .border-card { border-color: var(--dreamy-card); }
+      .ring-card { --tw-ring-color: var(--dreamy-card); }
+      .bg-primary { background-color: var(--dreamy-primary); }
+      .text-primary { color: var(--dreamy-primary); }
+      .border-primary { border-color: var(--dreamy-primary); }
+      .ring-primary { --tw-ring-color: var(--dreamy-primary); }
+      .bg-muted { background-color: var(--dreamy-muted); }
+      .text-muted { color: var(--dreamy-muted); }
+      .border-muted { border-color: var(--dreamy-muted); }
+      .ring-muted { --tw-ring-color: var(--dreamy-muted); }
+      .bg-accent { background-color: var(--dreamy-accent); }
+      .text-accent { color: var(--dreamy-accent); }
+      .border-accent { border-color: var(--dreamy-accent); }
+      .ring-accent { --tw-ring-color: var(--dreamy-accent); }
+      .bg-border { background-color: var(--dreamy-border); }
+      .text-border { color: var(--dreamy-border); }
+      .border-border { border-color: var(--dreamy-border); }
+      .ring-border { --tw-ring-color: var(--dreamy-border); }
+      .bg-background { background-color: var(--dreamy-bg); }
+      .text-background { color: var(--dreamy-bg); }
+      .border-background { border-color: var(--dreamy-bg); }
+      .ring-background { --tw-ring-color: var(--dreamy-bg); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="gallery-body">
+  <!-- ============================================================
+       PAGE CONTAINER
+       ============================================================ -->
+  <div class="gallery-page">
+
+    <!-- ============================================================
+         HEADER
+         ============================================================ -->
+    <header class="gal-header">
+      <div class="gal-header-inner">
+        <div class="gal-header-top">
+          <div class="gal-brand">
+            <span class="gal-brand-icon">🦊</span>
+            <span class="gal-brand-name">FocusCode</span>
+            <span class="gal-brand-tag">Companions</span>
+          </div>
+          <!-- Theme toggle -->
+          <div class="gal-theme-toggle" id="galThemeToggle">
+            <button class="gtt-seg active" data-gtheme="foxglow">
+              <span class="gtt-dot gtt-fox"></span>
+              <span>Foxglow</span>
+            </button>
+            <button class="gtt-seg" data-gtheme="dreamy">
+              <span class="gtt-dot gtt-dream"></span>
+              <span>Dreamy 星眠</span>
+            </button>
+          </div>
+        </div>
+        <h1 class="gal-title">你的编程伙伴</h1>
+        <p class="gal-subtitle">7 位伙伴，各自的性格与口吻。安静的愉悦感，代码仍是主角。</p>
+        <div class="gal-meta-row">
+          <span class="gal-meta-item"><span class="gmi-dot" style="background:var(--state-success)"></span>8 种心情状态</span>
+          <span class="gal-meta-item"><span class="gmi-dot" style="background:var(--brand)"></span>9 级成长路径</span>
+          <span class="gal-meta-item"><span class="gmi-dot" style="background:var(--state-info)"></span>4 段羁绊进度</span>
+          <span class="gal-meta-item"><span class="gmi-dot" style="background:var(--state-warning)"></span>Dreamy 星眠主题</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         MASCOT CARDS GRID
+         ============================================================ -->
+    <section class="gal-section" id="mascotsGrid">
+      <!-- Cards generated by JS -->
+    </section>
+
+    <!-- ============================================================
+         DESIGN PRINCIPLES
+         ============================================================ -->
+    <section class="gal-section">
+      <div class="section-header">
+        <i data-lucide="sparkles" width="18" height="18"></i>
+        <h2 class="section-title">设计原则</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="principles-grid">
+        <div class="principle-card">
+          <div class="pc-icon-wrap pc-icon-identity">
+            <i data-lucide="fingerprint" width="18" height="18"></i>
+          </div>
+          <div class="pc-title">身份一致</div>
+          <div class="pc-desc">图标 / 名字 / 标签 / 口吻 / 称号来自同一档案，切换伙伴时全局同步，不会出现身份错乱。</div>
+        </div>
+        <div class="principle-card">
+          <div class="pc-icon-wrap pc-icon-feedback">
+            <i data-lucide="activity" width="18" height="18"></i>
+          </div>
+          <div class="pc-title">反馈有因</div>
+          <div class="pc-desc">思考 / 执行 / 成功 / 失败 / 压缩 / 完成 / 升级分别触发专属口吻，情绪点与状态一一对应。</div>
+        </div>
+        <div class="principle-card">
+          <div class="pc-icon-wrap pc-icon-restraint">
+            <i data-lucide="minimize-2" width="18" height="18"></i>
+          </div>
+          <div class="pc-title">可爱但克制</div>
+          <div class="pc-desc">短句最多 4 行；专注布局（如 Zen 模式）自动隐藏角色形象，不干扰深度编码。</div>
+        </div>
+        <div class="principle-card">
+          <div class="pc-icon-wrap pc-icon-growth">
+            <i data-lucide="trending-up" width="18" height="18"></i>
+          </div>
+          <div class="pc-title">成长可见</div>
+          <div class="pc-desc">等级改变角色帧、配色光晕与阶段称号，每段羁绊（4 段 ◆/◇）都有明确的解锁反馈。</div>
+        </div>
+        <div class="principle-card">
+          <div class="pc-icon-wrap pc-icon-compat">
+            <i data-lucide="git-branch" width="18" height="18"></i>
+          </div>
+          <div class="pc-title">向后兼容</div>
+          <div class="pc-desc">persona 字段可选，旧 JSON 配置安全回退到默认 Foxy，不会破坏已有会话与配置。</div>
+        </div>
+        <div class="principle-card">
+          <div class="pc-icon-wrap pc-icon-zero">
+            <i data-lucide="zap" width="18" height="18"></i>
+          </div>
+          <div class="pc-title">零运行时依赖</div>
+          <div class="pc-desc">复用现有终端渲染器，伙伴信息只是数据（JSON），不需要额外的图片、字体或运行时。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         MOOD REFERENCE TABLE
+         ============================================================ -->
+    <section class="gal-section">
+      <div class="section-header">
+        <i data-lucide="heart-pulse" width="18" height="18"></i>
+        <h2 class="section-title">心情状态参考</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="mood-table-wrap">
+        <table class="mood-table">
+          <thead>
+            <tr>
+              <th>状态</th>
+              <th>指示器</th>
+              <th>标签</th>
+              <th>触发时机</th>
+              <th>动画</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="mood-name">idle</span></td>
+              <td><span class="mood-ref-dot mood-dot-idle"></span><span class="mood-ref-glyph">○</span></td>
+              <td><span class="mood-tag mood-tag-muted">ready</span></td>
+              <td class="mood-desc-cell">空闲就绪，等待输入</td>
+              <td class="mood-anim-cell">—</td>
+            </tr>
+            <tr>
+              <td><span class="mood-name">thinking</span></td>
+              <td><span class="mood-ref-dot mood-dot-thinking"></span><span class="mood-ref-glyph">◉</span></td>
+              <td><span class="mood-tag mood-tag-info">thinking</span></td>
+              <td class="mood-desc-cell">模型思考中，正在分析上下文</td>
+              <td class="mood-anim-cell">蓝色脉冲</td>
+            </tr>
+            <tr>
+              <td><span class="mood-name">working</span></td>
+              <td><span class="mood-ref-dot mood-dot-working"></span><span class="mood-ref-glyph">◉</span></td>
+              <td><span class="mood-tag mood-tag-accent">coding</span></td>
+              <td class="mood-desc-cell">执行工具调用、写代码、操作文件</td>
+              <td class="mood-anim-cell">主题色脉冲</td>
+            </tr>
+            <tr>
+              <td><span class="mood-name">happy</span></td>
+              <td><span class="mood-ref-dot mood-dot-happy"></span><span class="mood-ref-glyph">●</span></td>
+              <td><span class="mood-tag mood-tag-success">all good</span></td>
+              <td class="mood-desc-cell">任务完成、测试通过、得到正确结果</td>
+              <td class="mood-anim-cell">—</td>
+            </tr>
+            <tr>
+              <td><span class="mood-name">oops</span></td>
+              <td><span class="mood-ref-dot mood-dot-oops"></span><span class="mood-ref-glyph">●</span></td>
+              <td><span class="mood-tag mood-tag-warning">needs care</span></td>
+              <td class="mood-desc-cell">遇到错误、测试失败、需要用户介入</td>
+              <td class="mood-anim-cell">—</td>
+            </tr>
+            <tr>
+              <td><span class="mood-name">sleeping</span></td>
+              <td><span class="mood-ref-dot mood-dot-sleeping"></span><span class="mood-ref-glyph">○</span></td>
+              <td><span class="mood-tag mood-tag-muted">resting</span></td>
+              <td class="mood-desc-cell">长时间无操作、休眠状态</td>
+              <td class="mood-anim-cell">半透明</td>
+            </tr>
+            <tr>
+              <td><span class="mood-name">celebrating</span></td>
+              <td><span class="mood-ref-dot mood-dot-celebrating"></span><span class="mood-ref-glyph">●</span></td>
+              <td><span class="mood-tag mood-tag-accent">celebrating</span></td>
+              <td class="mood-desc-cell">大任务完成、里程碑达成、特殊成就</td>
+              <td class="mood-anim-cell">主题色快闪</td>
+            </tr>
+            <tr>
+              <td><span class="mood-name">levelup</span></td>
+              <td><span class="mood-ref-dot mood-dot-levelup"></span><span class="mood-ref-glyph">●</span></td>
+              <td><span class="mood-tag mood-tag-success">level up</span></td>
+              <td class="mood-desc-cell">羁绊等级提升，解锁新称号</td>
+              <td class="mood-anim-cell">绿色光晕</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         BOND & GROWTH VISUAL REFERENCE
+         ============================================================ -->
+    <section class="gal-section">
+      <div class="section-header">
+        <i data-lucide="gem" width="18" height="18"></i>
+        <h2 class="section-title">羁绊与成长</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="bond-ref-grid">
+        <div class="bond-ref-card">
+          <div class="brc-title">4 段羁绊进度</div>
+          <div class="brc-bonds">
+            <div class="brc-bond-row">
+              <span class="brb-label">Lv 1-2</span>
+              <span class="brb-segs"><span class="seg-f">◆</span><span class="seg-e">◇</span><span class="seg-e">◇</span><span class="seg-e">◇</span></span>
+              <span class="brb-desc">初识</span>
+            </div>
+            <div class="brc-bond-row">
+              <span class="brb-label">Lv 3-4</span>
+              <span class="brb-segs"><span class="seg-f">◆</span><span class="seg-f">◆</span><span class="seg-e">◇</span><span class="seg-e">◇</span></span>
+              <span class="brb-desc">熟悉</span>
+            </div>
+            <div class="brc-bond-row">
+              <span class="brb-label">Lv 5-6</span>
+              <span class="brb-segs"><span class="seg-f">◆</span><span class="seg-f">◆</span><span class="seg-f">◆</span><span class="seg-e">◇</span></span>
+              <span class="brb-desc">默契</span>
+            </div>
+            <div class="brc-bond-row">
+              <span class="brb-label">Lv 7-9</span>
+              <span class="brb-segs"><span class="seg-max">◆</span><span class="seg-max">◆</span><span class="seg-max">◆</span><span class="seg-max">◆</span></span>
+              <span class="brb-desc">灵魂伙伴</span>
+            </div>
+          </div>
+        </div>
+        <div class="bond-ref-card">
+          <div class="brc-title">徽章格式</div>
+          <div class="brc-badges">
+            <div class="badge-preview">
+              <span class="bp-icon">🐱</span>
+              <span class="bp-text">Lv 3 · 软糖调试员 · <span class="bp-bond">◆◆◆◇</span></span>
+            </div>
+            <div class="badge-preview">
+              <span class="bp-icon">🦊</span>
+              <span class="bp-text">Lv 7 · 玄尾狐 · <span class="bp-bond-max">◆◆◆◆</span></span>
+            </div>
+            <div class="badge-preview">
+              <span class="bp-icon">🐧</span>
+              <span class="bp-text">Lv 1 · 小布丁 · <span class="bp-bond">◆◇◇◇</span></span>
+            </div>
+          </div>
+          <div class="brc-note">状态栏始终显示当前伙伴短名、等级、称号与羁绊段数，vim-airline 风格。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="gal-footer">
+      <div class="gal-footer-inner">
+        <div class="gf-note">
+          <span class="gf-moon">🌙</span>
+          <span class="gf-text"><strong>Dreamy 星眠</strong>：夜紫 (#14101c) + 云粉 (#f4a8d8) + 薄荷 (#7ee0c8)，搭配非像素版 Mochi 与柔光粒子。切换后所有面板、伙伴光晕与状态色自动跟随主题。</span>
+        </div>
+        <div class="gf-meta">FocusCode v0.5.0-beta · Companion Personalization Spec</div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ============================================================
+       PAGE-SPECIFIC STYLES
+       ============================================================ -->
+  <style>
+    /* ===== Layout constants ===== */
+    :root {
+      --gal-bg: var(--bg, #0d0d12);
+      --gal-surface: var(--surface, #151520);
+      --gal-surface-2: var(--surface-2, #1e1e2e);
+      --gal-surface-3: var(--surface-3, #2a2a3e);
+      --gal-ink: var(--ink, #e8e6e3);
+      --gal-ink-2: var(--ink-2, #a8a39b);
+      --gal-ink-3: var(--ink-3, #6b6560);
+      --gal-line: var(--line, #2a2a3a);
+      --gal-brand: var(--brand, #ff8700);
+      --gal-success: var(--state-success, #5fd75f);
+      --gal-warning: var(--state-warning, #ffaf00);
+      --gal-error: var(--state-error, #d75f5f);
+      --gal-info: var(--state-info, #87afd7);
+      --gal-radius: 12px;
+      --gal-radius-sm: 8px;
+      --gal-mono: "JetBrains Mono", "Fira Code", "SF Mono", Menlo, Consolas, monospace;
+      --gal-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body.gallery-body {
+      background: var(--gal-bg);
+      color: var(--gal-ink);
+      font-family: var(--gal-sans);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--gal-bg); }
+    ::-webkit-scrollbar-thumb { background: var(--gal-surface-3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gal-brand); }
+
+    .gallery-page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 32px 60px;
+    }
+
+    /* ===== HEADER ===== */
+    .gal-header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--gal-line);
+    }
+    .gal-header-inner { max-width: 720px; }
+    .gal-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .gal-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .gal-brand-icon { font-size: 24px; }
+    .gal-brand-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gal-ink);
+      letter-spacing: -0.2px;
+    }
+    .gal-brand-tag {
+      font-family: var(--gal-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--gal-brand);
+      background: color-mix(in srgb, var(--gal-brand) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--gal-brand) 25%, transparent);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* Theme toggle */
+    .gal-theme-toggle {
+      display: flex;
+      background: var(--gal-surface-2);
+      border: 1px solid var(--gal-line);
+      border-radius: 999px;
+      padding: 3px;
+    }
+    .gtt-seg {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gal-ink-3);
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--gal-sans);
+    }
+    .gtt-seg.active { background: var(--gal-brand); color: var(--brand-ink, #1a0a00); }
+    .gtt-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .gtt-fox { background: #ff8700; }
+    .gtt-dream { background: #f4a8d8; }
+
+    .gal-title {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--gal-ink);
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    .gal-subtitle {
+      font-size: 15px;
+      color: var(--gal-ink-2);
+      margin-bottom: 16px;
+    }
+    .gal-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .gal-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-family: var(--gal-mono);
+      color: var(--gal-ink-3);
+      font-weight: 500;
+    }
+    .gmi-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /* ===== SECTION HEADERS ===== */
+    .gal-section { margin-bottom: 48px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      color: var(--gal-brand);
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gal-ink);
+      letter-spacing: -0.2px;
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--gal-line);
+    }
+
+    /* ===== MASCOT GRID ===== */
+    .mascots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .mascot-card {
+      background: var(--gal-surface);
+      border: 1px solid var(--gal-line);
+      border-radius: var(--gal-radius);
+      overflow: hidden;
+      transition: all 0.2s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .mascot-card:hover {
+      border-color: var(--mc-accent);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3), 0 0 0 1px color-mix(in srgb, var(--mc-accent) 30%, transparent);
+    }
+
+    /* Top accent border */
+    .mc-accent-bar {
+      height: 3px;
+      background: var(--mc-accent);
+      flex-shrink: 0;
+    }
+
+    .mc-header {
+      padding: 20px 20px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .mc-icon-big {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--mc-accent) 10%, var(--gal-surface-2));
+      border: 2px solid color-mix(in srgb, var(--mc-accent) 30%, transparent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px color-mix(in srgb, var(--mc-accent) 15%, transparent);
+    }
+    .mc-info { flex: 1; min-width: 0; padding-top: 4px; }
+    .mc-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gal-ink);
+      margin-bottom: 2px;
+    }
+    .mc-species {
+      font-size: 12px;
+      color: var(--gal-ink-3);
+      margin-bottom: 6px;
+    }
+    .mc-short-chip {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--gal-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--mc-accent);
+      background: color-mix(in srgb, var(--mc-accent) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--mc-accent) 20%, transparent);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .mc-catchphrase {
+      padding: 0 20px 14px;
+      font-size: 12px;
+      font-style: italic;
+      color: var(--gal-ink-2);
+      line-height: 1.5;
+      border-bottom: 1px solid var(--gal-line);
+      margin: 0 20px;
+      padding-bottom: 14px;
+    }
+
+    /* Voice lines */
+    .mc-voices {
+      padding: 14px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .mc-voices-title {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gal-ink-3);
+      margin-bottom: 2px;
+    }
+    .mc-voice {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .mv-mood {
+      flex-shrink: 0;
+      font-family: var(--gal-mono);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-top: 2px;
+      min-width: 44px;
+      text-align: center;
+    }
+    .mv-mood.mv-working { background: color-mix(in srgb, var(--mc-accent) 15%, transparent); color: var(--mc-accent); }
+    .mv-mood.mv-happy { background: rgba(95,215,95,0.12); color: var(--gal-success); }
+    .mv-mood.mv-oops { background: rgba(255,175,0,0.12); color: var(--gal-warning); }
+    .mv-mood.mv-levelup { background: rgba(95,215,95,0.12); color: var(--gal-success); }
+    .mv-quote { color: var(--gal-ink-2); font-style: italic; }
+
+    /* Level timeline */
+    .mc-levels {
+      padding: 0 20px 14px;
+    }
+    .mc-levels-title {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gal-ink-3);
+      margin-bottom: 8px;
+    }
+    .mc-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+    .mc-timeline::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 6px;
+      bottom: 6px;
+      width: 1px;
+      background: var(--gal-line);
+    }
+    .mc-level-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 3px 0;
+      font-size: 11px;
+      position: relative;
+    }
+    .mli-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--gal-surface-3);
+      border: 2px solid var(--gal-line);
+      flex-shrink: 0;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--gal-mono);
+      font-size: 8px;
+      font-weight: 700;
+      color: var(--gal-ink-3);
+    }
+    .mc-level-item.active .mli-dot {
+      background: var(--mc-accent);
+      border-color: var(--mc-accent);
+      color: var(--brand-ink, #1a0a00);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--mc-accent) 50%, transparent);
+    }
+    .mc-level-item.active .mli-name {
+      color: var(--mc-accent);
+      font-weight: 700;
+    }
+    .mli-name {
+      color: var(--gal-ink-3);
+      font-family: var(--gal-mono);
+      font-size: 11px;
+    }
+    .mli-num {
+      font-family: var(--gal-mono);
+      font-size: 9px;
+      color: var(--gal-ink-3);
+      margin-left: auto;
+    }
+    .mc-level-item.active .mli-num { color: var(--mc-accent); }
+
+    /* Card footer */
+    .mc-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--gal-line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--gal-surface-2);
+      margin-top: auto;
+    }
+    .mc-bond-display {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--gal-mono);
+      font-size: 11px;
+    }
+    .mbd-segs { letter-spacing: 1px; }
+    .mbd-segs .seg-f { color: var(--mc-accent); }
+    .mbd-segs .seg-e { color: var(--gal-ink-3); opacity: 0.4; }
+    .mbd-label { color: var(--gal-ink-3); font-size: 10px; }
+    .mc-select-btn {
+      padding: 5px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--brand-ink, #1a0a00);
+      background: var(--mc-accent);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.12s;
+      font-family: var(--gal-sans);
+    }
+    .mc-select-btn:hover { filter: brightness(1.1); }
+
+    /* ===== PRINCIPLES ===== */
+    .principles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .principle-card {
+      background: var(--gal-surface);
+      border: 1px solid var(--gal-line);
+      border-radius: var(--gal-radius-sm);
+      padding: 20px;
+      transition: all 0.15s;
+    }
+    .principle-card:hover {
+      border-color: color-mix(in srgb, var(--gal-brand) 30%, var(--gal-line));
+      background: var(--gal-surface-2);
+    }
+    .pc-icon-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .pc-icon-identity { background: rgba(255,135,0,0.1); color: var(--gal-brand); }
+    .pc-icon-feedback { background: rgba(135,175,215,0.1); color: var(--gal-info); }
+    .pc-icon-restraint { background: rgba(187,154,247,0.1); color: #bb9af7; }
+    .pc-icon-growth { background: rgba(95,215,95,0.1); color: var(--gal-success); }
+    .pc-icon-compat { background: rgba(255,175,0,0.1); color: var(--gal-warning); }
+    .pc-icon-zero { background: rgba(215,95,95,0.1); color: var(--gal-error); }
+
+    .pc-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gal-ink);
+      margin-bottom: 6px;
+    }
+    .pc-desc {
+      font-size: 12px;
+      color: var(--gal-ink-2);
+      line-height: 1.6;
+    }
+
+    /* ===== MOOD TABLE ===== */
+    .mood-table-wrap {
+      background: var(--gal-surface);
+      border: 1px solid var(--gal-line);
+      border-radius: var(--gal-radius-sm);
+      overflow: hidden;
+    }
+    .mood-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--gal-mono);
+    }
+    .mood-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gal-ink-3);
+      background: var(--gal-surface-2);
+      border-bottom: 1px solid var(--gal-line);
+    }
+    .mood-table td {
+      padding: 10px 16px;
+      font-size: 12px;
+      border-bottom: 1px solid var(--gal-line);
+      vertical-align: middle;
+    }
+    .mood-table tr:last-child td { border-bottom: none; }
+    .mood-table tr:hover td { background: var(--gal-surface-2); }
+
+    .mood-name { font-weight: 700; color: var(--gal-ink); }
+
+    .mood-ref-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .mood-ref-glyph {
+      font-size: 12px;
+      vertical-align: middle;
+    }
+    .mood-dot-idle { background: var(--gal-ink-3); }
+    .mood-dot-thinking { background: var(--gal-info); animation: pulse-dot 1.4s infinite; }
+    .mood-dot-working { background: var(--gal-brand); animation: pulse-dot 1s infinite; }
+    .mood-dot-happy { background: var(--gal-success); }
+    .mood-dot-oops { background: var(--gal-warning); }
+    .mood-dot-sleeping { background: var(--gal-ink-3); opacity: 0.5; }
+    .mood-dot-celebrating { background: var(--gal-brand); animation: pulse-dot 0.8s infinite; }
+    .mood-dot-levelup { background: var(--gal-success); box-shadow: 0 0 8px var(--gal-success); }
+
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .mood-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .mood-tag-muted { background: var(--gal-surface-3); color: var(--gal-ink-3); }
+    .mood-tag-info { background: rgba(135,175,215,0.12); color: var(--gal-info); }
+    .mood-tag-accent { background: color-mix(in srgb, var(--gal-brand) 12%, transparent); color: var(--gal-brand); }
+    .mood-tag-success { background: rgba(95,215,95,0.12); color: var(--gal-success); }
+    .mood-tag-warning { background: rgba(255,175,0,0.12); color: var(--gal-warning); }
+
+    .mood-desc-cell { color: var(--gal-ink-2); font-family: var(--gal-sans); }
+    .mood-anim-cell { color: var(--gal-ink-3); font-size: 11px; }
+
+    /* ===== BOND REF ===== */
+    .bond-ref-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+    }
+    .bond-ref-card {
+      background: var(--gal-surface);
+      border: 1px solid var(--gal-line);
+      border-radius: var(--gal-radius-sm);
+      padding: 20px;
+    }
+    .brc-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gal-ink);
+      margin-bottom: 14px;
+    }
+    .brc-bonds { display: flex; flex-direction: column; gap: 8px; }
+    .brc-bond-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+    }
+    .brb-label {
+      font-family: var(--gal-mono);
+      color: var(--gal-ink-3);
+      width: 48px;
+      flex-shrink: 0;
+      font-size: 11px;
+    }
+    .brb-segs {
+      font-size: 13px;
+      letter-spacing: 2px;
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .seg-f { color: var(--gal-brand); }
+    .seg-e { color: var(--gal-ink-3); opacity: 0.3; }
+    .seg-max { color: var(--gal-success); }
+    .brb-desc { color: var(--gal-ink-2); font-size: 11px; }
+
+    .brc-badges { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .badge-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: var(--gal-surface-2);
+      border: 1px solid var(--gal-line);
+      border-radius: 999px;
+      font-family: var(--gal-mono);
+      font-size: 11px;
+      width: fit-content;
+    }
+    .bp-icon { font-size: 14px; }
+    .bp-bond { color: var(--gal-brand); }
+    .bp-bond-max { color: var(--gal-success); }
+    .brc-note { font-size: 11px; color: var(--gal-ink-3); line-height: 1.5; }
+
+    /* ===== FOOTER ===== */
+    .gal-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--gal-line);
+    }
+    .gal-footer-inner { display: flex; flex-direction: column; gap: 12px; }
+    .gf-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px 20px;
+      background: color-mix(in srgb, #f4a8d8 5%, var(--gal-surface));
+      border: 1px solid color-mix(in srgb, #f4a8d8 20%, var(--gal-line));
+      border-radius: var(--gal-radius-sm);
+    }
+    .gf-moon { font-size: 20px; flex-shrink: 0; }
+    .gf-text { font-size: 12px; color: var(--gal-ink-2); line-height: 1.6; }
+    .gf-text strong { color: var(--gal-ink); font-weight: 700; }
+    .gf-meta {
+      font-family: var(--gal-mono);
+      font-size: 10px;
+      color: var(--gal-ink-3);
+      text-align: center;
+    }
+  </style>
+
+  <!-- ============================================================
+       JS: build mascot cards + theme toggle
+       ============================================================ -->
+  <script>
+    (function() {
+      const mascots = [
+        { id:"foxy", name:"Foxy 小福", species:"Focus 小狐狸", catchphrase:"你的编程配备鼓励师，一直在。", icon:"🦊", shortName:"fox",
+          accentVar:"var(--mascot-foxy)",
+          levelNames:["幼尾小福","学徒狐","机灵狐","猎码狐","灵尾狐","幻尾狐","玄尾狐","天尾狐","九尾天福"],
+          voice:{ working:"一步一步来，不慌。", happy:"漂亮，这一步很稳！", oops:"没关系，报错也是线索。", levelup:"尾巴多了一束光，我们升级啦！" }
+        },
+        { id:"mochi", name:"Mochi", species:"云朵猫", catchphrase:"把 bug 揉成小团子！", icon:"🐱", shortName:"mochi",
+          accentVar:"var(--mascot-mochi)",
+          levelNames:["糯米小云","团子学徒","软糖调试员","云端巧手","绵绵架构师","月光守护猫","星云引路猫","天际愿望猫","云海大福神"],
+          voice:{ working:"正在轻轻地把 bug 推回窝里。", happy:"这一团代码顺滑多啦！", oops:"没关系，皱掉的团子还能再揉。", levelup:"云朵又蓬松了一层，升级啦！" }
+        },
+        { id:"byte", name:"Byte", species:"像素小狐", catchphrase:"尾巴一扫，测试全绿。", icon:"▣", shortName:"byte",
+          accentVar:"var(--mascot-byte)",
+          levelNames:["一位小狐","像素学徒","缓存巡游者","断点猎手","字节工匠","全绿守护者","光栅贤者","终端幻影","满级像素狐"],
+          voice:{ working:"逐帧推进，别跳过边界。", happy:"STATUS: GREEN，全绿漂亮！", oops:"发现坏像素，定位它就好。", levelup:"LEVEL UP！新像素已点亮。" }
+        },
+        { id:"nori", name:"Nori", species:"薄荷六角恐龙", catchphrase:"再难的栈，也能慢慢游过去。", icon:"🦕", shortName:"nori",
+          accentVar:"var(--mascot-nori)",
+          levelNames:["薄荷小芽","栈边学徒","浅水巡游者","递归潜行者","洋流工程师","深栈领航员","海图架构师","潮汐守护龙","星海六角龙"],
+          voice:{ working:"顺着洋流，一层一层游过去。", happy:"浮上来啦，这一步很清澈。", oops:"只是呛了一口水，换条路线。", levelup:"背鳍亮了一格，升级啦！" }
+        },
+        { id:"pico", name:"Pico", species:"布丁企鹅", catchphrase:"滑进代码，稳稳落地。", icon:"🐧", shortName:"pico",
+          accentVar:"var(--mascot-pico)",
+          levelNames:["小布丁","滑行学徒","稳落测试员","冰面调试员","极光工程师","雪原架构师","星光领航员","极夜守护者","银河布丁王"],
+          voice:{ working:"滑过去，稳稳接住这一段。", happy:"漂亮落地，连晃都没晃！", oops:"只是小打滑，站稳再来。", levelup:"围巾多了一颗星，升级啦！" }
+        },
+        { id:"bubu", name:"Bubu", species:"奶油小熊", catchphrase:"抱住需求，也抱住边界。", icon:"🧸", shortName:"bubu",
+          accentVar:"var(--mascot-bubu)",
+          levelNames:["奶油小团","拥抱学徒","边界看护员","需求整理师","奶油工程师","温柔架构师","暖炉守护熊","星夜抱抱熊","满怀心愿熊"],
+          voice:{ working:"抱紧范围，稳稳实现。", happy:"做好啦，值得一个大抱抱。", oops:"别担心，我还抱着上下文呢。", levelup:"怀里多了一颗星，升级啦！" }
+        },
+        { id:"kumo", name:"Kumo", species:"代码水豚", catchphrase:"不慌，先读代码。", icon:"☕", shortName:"kumo",
+          accentVar:"var(--mascot-kumo)",
+          levelNames:["小小水豚","慢读学徒","冷静调试员","栈边观察家","咖啡工程师","沉稳架构师","河岸领航员","云海守护豚","不慌大贤豚"],
+          voice:{ working:"保持节奏，一次只做好一步。", happy:"嗯，很稳。就按这个节奏。", oops:"先喝口水，再看错误现场。", levelup:"杯子添满了，默契也升级了。" }
+        }
+      ];
+
+      const CURRENT_LEVEL = 3;
+      function bondSegs(level) {
+        const filled = Math.min(4, Math.max(1, Math.round(level / 2.25)));
+        return { filled, str: '◆'.repeat(filled) + '◇'.repeat(4-filled) };
+      }
+
+      function buildMascotCards() {
+        const grid = document.getElementById('mascotsGrid');
+        grid.className = 'mascots-grid';
+
+        grid.innerHTML = mascots.map(m => {
+          const bond = bondSegs(CURRENT_LEVEL);
+          const levelsHtml = m.levelNames.map((name, i) => {
+            const lv = i + 1;
+            const active = lv === CURRENT_LEVEL;
+            return `<div class="mc-level-item${active ? ' active' : ''}">
+              <span class="mli-dot">${lv}</span>
+              <span class="mli-name">${name}</span>
+            </div>`;
+          }).join('');
+
+          return `
+            <div class="mascot-card" style="--mc-accent:${m.accentVar}">
+              <div class="mc-accent-bar"></div>
+              <div class="mc-header">
+                <div class="mc-icon-big">${m.icon}</div>
+                <div class="mc-info">
+                  <div class="mc-name">${m.name}</div>
+                  <div class="mc-species">${m.species}</div>
+                  <span class="mc-short-chip">${m.shortName}»</span>
+                </div>
+              </div>
+              <div class="mc-catchphrase">"${m.catchphrase}"</div>
+              <div class="mc-voices">
+                <div class="mc-voices-title">口吻示例</div>
+                <div class="mc-voice">
+                  <span class="mv-mood mv-working">working</span>
+                  <span class="mv-quote">"${m.voice.working}"</span>
+                </div>
+                <div class="mc-voice">
+                  <span class="mv-mood mv-happy">happy</span>
+                  <span class="mv-quote">"${m.voice.happy}"</span>
+                </div>
+                <div class="mc-voice">
+                  <span class="mv-mood mv-oops">oops</span>
+                  <span class="mv-quote">"${m.voice.oops}"</span>
+                </div>
+                <div class="mc-voice">
+                  <span class="mv-mood mv-levelup">levelup</span>
+                  <span class="mv-quote">"${m.voice.levelup}"</span>
+                </div>
+              </div>
+              <div class="mc-levels">
+                <div class="mc-levels-title">9 级成长路径</div>
+                <div class="mc-timeline">${levelsHtml}</div>
+              </div>
+              <div class="mc-footer">
+                <div class="mc-bond-display">
+                  <span class="mbd-segs">${bond.str}</span>
+                  <span class="mbd-label">Lv ${CURRENT_LEVEL}</span>
+                </div>
+                <button class="mc-select-btn">Select</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Theme toggle
+      document.querySelectorAll('.gtt-seg').forEach(seg => {
+        seg.addEventListener('click', () => {
+          document.querySelectorAll('.gtt-seg').forEach(s => s.classList.remove('active'));
+          seg.classList.add('active');
+          const theme = seg.dataset.gtheme;
+          if (theme === 'dreamy') {
+            document.documentElement.setAttribute('data-theme', 'dreamy');
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
+        });
+      });
+
+      buildMascotCards();
+      if (window.lucide) lucide.createIcons();
+    })();
+  </script>
+</body>
+</html>

@@ -17,13 +17,19 @@
   },
   "operatingMode": "free-explore",
   "renderBlockingErrorCount": 0,
-  "softWarningCount": 4,
+  "softWarningCount": 10,
   "renderBlockingErrors": [],
   "errorSignatures": [],
   "softWarnings": [
-    "[html-head-style] mascots.html: found 1 custom <style> block(s) in <head>. The <head> is owned by apply-html-head-contract.mjs; move custom styles before </body> or re-run apply-html-head-contract.mjs <css-path> <html-file> --replace-head to relocate them.",
     "[orchestration-summary] runtime-orchestration-summary.json is missing skillProvenance.name/version/version_source. Version provenance will be reported as observed_unknown by external evaluators.",
-    "[html-quality] colors_and_type.css: ordinary/static shadow tokens must keep every shadow alpha <= 0.05; deeper shadows are allowed only for floating-layer tokens such as modal/popover/dropdown/drawer/overlay (--shadow-1: 0 1px 2px rgba(0,0,0,.3)).",
+    "[html-quality] colors_and_type.css: free-explore brand CSS must use one primary hue only; forbidden secondary/accent brand variables found (--dreamy-accent, --dreamy-accent-ink). Use --state-success/warning/error/info only for semantic states.",
+    "[html-quality] colors_and_type.css: ordinary/static shadow tokens must keep every shadow alpha <= 0.05; deeper shadows are allowed only for floating-layer tokens such as modal/popover/dropdown/drawer/overlay (--shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3)).",
+    "[html-quality] app-personalized.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference.",
+    "[html-quality] app-personalized.html: free-explore pages must not use secondary/accent brand variables. Use the single primary hue, neutral tints, or --state-success/warning/error/info for real semantic states.",
+    "[html-quality] app.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference.",
+    "[html-quality] architecture.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference.",
+    "[html-quality] mascots-gallery.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference.",
+    "[html-quality] mascots-gallery.html: free-explore pages must not use secondary/accent brand variables. Use the single primary hue, neutral tints, or --state-success/warning/error/info for real semantic states.",
     "[html-quality] mascots.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference."
   ],
   "repairPlanHints": [
@@ -32,7 +38,61 @@
       "owner": "sub-agent",
       "repairScope": "targeted-token-replace",
       "strategy": "targeted_token_replace_once",
-      "affectedFiles": ["mascots.html"],
+      "affectedFiles": [
+        "app-personalized.html"
+      ],
+      "repairReportPath": null,
+      "repairAlreadyAttempted": false,
+      "allowSourceRead": "no-full-html-read",
+      "maxValidationRuns": 2
+    },
+    {
+      "errorClass": "hardcoded-color-in-body",
+      "owner": "sub-agent",
+      "repairScope": "targeted-token-replace",
+      "strategy": "targeted_token_replace_once",
+      "affectedFiles": [
+        "app.html"
+      ],
+      "repairReportPath": null,
+      "repairAlreadyAttempted": false,
+      "allowSourceRead": "no-full-html-read",
+      "maxValidationRuns": 2
+    },
+    {
+      "errorClass": "hardcoded-color-in-body",
+      "owner": "sub-agent",
+      "repairScope": "targeted-token-replace",
+      "strategy": "targeted_token_replace_once",
+      "affectedFiles": [
+        "architecture.html"
+      ],
+      "repairReportPath": null,
+      "repairAlreadyAttempted": false,
+      "allowSourceRead": "no-full-html-read",
+      "maxValidationRuns": 2
+    },
+    {
+      "errorClass": "hardcoded-color-in-body",
+      "owner": "sub-agent",
+      "repairScope": "targeted-token-replace",
+      "strategy": "targeted_token_replace_once",
+      "affectedFiles": [
+        "mascots-gallery.html"
+      ],
+      "repairReportPath": null,
+      "repairAlreadyAttempted": false,
+      "allowSourceRead": "no-full-html-read",
+      "maxValidationRuns": 2
+    },
+    {
+      "errorClass": "hardcoded-color-in-body",
+      "owner": "sub-agent",
+      "repairScope": "targeted-token-replace",
+      "strategy": "targeted_token_replace_once",
+      "affectedFiles": [
+        "mascots.html"
+      ],
       "repairReportPath": null,
       "repairAlreadyAttempted": false,
       "allowSourceRead": "no-full-html-read",
@@ -41,12 +101,18 @@
   ],
   "repairActionTable": [],
   "errorCount": 0,
-  "warningCount": 4,
+  "warningCount": 10,
   "errors": [],
   "warnings": [
-    "[html-head-style] mascots.html: found 1 custom <style> block(s) in <head>. The <head> is owned by apply-html-head-contract.mjs; move custom styles before </body> or re-run apply-html-head-contract.mjs <css-path> <html-file> --replace-head to relocate them.",
     "[orchestration-summary] runtime-orchestration-summary.json is missing skillProvenance.name/version/version_source. Version provenance will be reported as observed_unknown by external evaluators.",
-    "[html-quality] colors_and_type.css: ordinary/static shadow tokens must keep every shadow alpha <= 0.05; deeper shadows are allowed only for floating-layer tokens such as modal/popover/dropdown/drawer/overlay (--shadow-1: 0 1px 2px rgba(0,0,0,.3)).",
+    "[html-quality] colors_and_type.css: free-explore brand CSS must use one primary hue only; forbidden secondary/accent brand variables found (--dreamy-accent, --dreamy-accent-ink). Use --state-success/warning/error/info only for semantic states.",
+    "[html-quality] colors_and_type.css: ordinary/static shadow tokens must keep every shadow alpha <= 0.05; deeper shadows are allowed only for floating-layer tokens such as modal/popover/dropdown/drawer/overlay (--shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3)).",
+    "[html-quality] app-personalized.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference.",
+    "[html-quality] app-personalized.html: free-explore pages must not use secondary/accent brand variables. Use the single primary hue, neutral tints, or --state-success/warning/error/info for real semantic states.",
+    "[html-quality] app.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference.",
+    "[html-quality] architecture.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference.",
+    "[html-quality] mascots-gallery.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference.",
+    "[html-quality] mascots-gallery.html: free-explore pages must not use secondary/accent brand variables. Use the single primary hue, neutral tints, or --state-success/warning/error/info for real semantic states.",
     "[html-quality] mascots.html: hardcoded colors are forbidden outside <style id=\"theme-vars\">. Use brand CSS variables from the token reference."
   ],
   "validationRunDisciplineStatus": {
@@ -86,7 +152,7 @@
       "reason": "runtime-orchestration-summary.json missing skillProvenance; used skill-release-manifest.json"
     },
     "renderBlockingErrorCount": 0,
-    "softWarningCount": 4,
+    "softWarningCount": 10,
     "renderBlockingErrors": [],
     "repairActionTable": [],
     "nextCheck": {
@@ -103,13 +169,17 @@
     ]
   },
   "projectFileHashes": {
-    "focuscode-mascots.design": "138158b111368559bed705a71a9ad0fa9a0e8cb112f49069bd2ce7ce04337812",
-    "colors_and_type.css": "43fca1400b1e2e084468204a4bc7be5c2824ee63a312e50f39be694427c65fa9",
+    "focuscode-mascots.design": "3d8106cb4248c4f13b7faf3c1b170f2fb39e831b83f142cc58db0683d0ade5e8",
+    "colors_and_type.css": "e0ca2aceb8368db9a54d06c08279da39d420d672337cad8118dacd891a5fa87d",
     "runtime-orchestration-summary.json": "2fc526e26fd6c07baad797b3a894c2c4dbd897b28667403569a077f478f4a44b",
-    "pages/mascots.html": "5c5d57a2798bf0835b4c7faad9c8602ff9e0ff6ce6c07ba8b91a0fc95b05d8cb"
+    "pages/app-personalized.html": "7516026a5d65c65325ba4261487586a36ea50c833dfd5e6d9e0c89ccb10246f5",
+    "pages/app.html": "df33037ca6ac50ee41123f5091bda4f96195ef4a052ecaa534aca1dd1db8201d",
+    "pages/architecture.html": "ae307a946749d800732be65a76fd146ab88a52a95a6920a8dbbb47a3d82373c5",
+    "pages/mascots-gallery.html": "d910f2d08b81d22a8b29e06f11f77e080f81c571f1bc80a9287b852bc45f17f5",
+    "pages/mascots.html": "8c9ae695263e7dd6d67593741efb8037e77d1186da1acbe63d7d0f0d833f6296"
   },
   "designDir": "/Users/tohnee/Trae/Code/focuscode/focuscode-mascots.design",
-  "expectedPages": 1,
+  "expectedPages": null,
   "requireInteractions": null,
-  "checkedAt": "2026-07-27T15:33:10.792Z"
+  "checkedAt": "2026-07-29T14:44:39.024Z"
 }

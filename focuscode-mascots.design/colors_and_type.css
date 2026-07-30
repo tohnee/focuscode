@@ -1,8 +1,8 @@
-/* FocusCode Mascot Design - Foxglow Terminal Theme */
-/* Brand: Fox orange (#ff8700), dark terminal background */
+/* FocusCode Design System - Foxglow + Dreamy + Mascot Personalization */
+/* Brand: Fox orange (#ff8700), dark terminal background; Dreamy: night purple + cloud pink */
 
 :root {
-  /* Brand single hue - foxglow orange */
+  /* ===== Brand single hue - foxglow orange (default theme) ===== */
   --brand: #ff8700;
   --brand-50: #fff7ed;
   --brand-100: #ffedd5;
@@ -14,37 +14,90 @@
   --brand-700: #c25000;
   --brand-ink: #1a0a00;
 
-  /* Surfaces - dark terminal */
+  /* ===== Dreamy 星眠 theme (night purple + cloud pink + mint) ===== */
+  --dreamy-bg: #14101c;
+  --dreamy-surface: #1d1729;
+  --dreamy-surface-2: #271f38;
+  --dreamy-surface-3: #352a4d;
+  --dreamy-ink: #ece6f5;
+  --dreamy-ink-2: #a89bc4;
+  --dreamy-ink-3: #6b5f87;
+  --dreamy-line: #2f2644;
+  --dreamy-accent: #f4a8d8; /* cloud pink */
+  --dreamy-accent-ink: #2a1538;
+  --dreamy-success: #7ee0c8; /* mint */
+  --dreamy-warning: #e8c478;
+  --dreamy-danger: #e87a9a;
+  --dreamy-info: #9ab8f0;
+
+  /* Dreamy semantic aliases for head contract */
+  --dreamy-foreground: var(--dreamy-ink);
+  --dreamy-card: var(--dreamy-surface);
+  --dreamy-primary: var(--dreamy-accent);
+  --dreamy-border: var(--dreamy-line);
+  --dreamy-muted: var(--dreamy-surface-2);
+  --dreamy-radius-sm: var(--r-sm);
+  --dreamy-radius-md: var(--r-md);
+  --dreamy-radius-lg: var(--r-lg);
+
+  /* ===== Surfaces - dark terminal default (foxglow) ===== */
   --bg: #0d0d12;
   --surface: #151520;
   --surface-2: #1e1e2e;
   --surface-3: #2a2a3e;
 
-  /* Text */
+  /* ===== Text ===== */
   --ink: #e8e6e3;
   --ink-2: #a8a39b;
   --ink-3: #6b6560;
 
-  /* Borders & lines */
+  /* ===== Borders & lines ===== */
   --line: #2a2a3a;
 
-  /* Semantic state colors */
+  /* ===== Semantic state colors ===== */
   --state-success: #5fd75f;
   --state-warning: #ffaf00;
   --state-error: #d75f5f;
   --state-info: #87afd7;
 
-  /* Radius */
+  /* ===== Mascot personalization accent colors ===== */
+  --mascot-foxy: #ff8700;     /* fox orange */
+  --mascot-foxy-soft: #ffedd5;
+  --mascot-mochi: #f4a8d8;    /* cloud pink */
+  --mascot-mochi-soft: #fce7f4;
+  --mascot-byte: #7dd3fc;     /* pixel sky */
+  --mascot-byte-soft: #e0f2fe;
+  --mascot-nori: #86e5c1;     /* mint */
+  --mascot-nori-soft: #d1fae5;
+  --mascot-pico: #fcd34d;     /* penguin yellow */
+  --mascot-pico-soft: #fef9c3;
+  --mascot-bubu: #fca5a5;     /* cream bear pink */
+  --mascot-bubu-soft: #fee2e2;
+  --mascot-kumo: #c4a77d;     /* capybara coffee */
+  --mascot-kumo-soft: #f3e8d8;
+
+  /* ===== Mood state colors (idle/thinking/working/happy/oops/...) ===== */
+  --mood-idle: var(--ink-3);
+  --mood-thinking: var(--state-info);
+  --mood-working: var(--brand);
+  --mood-happy: var(--state-success);
+  --mood-oops: var(--state-warning);
+  --mood-sleeping: var(--ink-3);
+  --mood-celebrating: var(--brand);
+  --mood-levelup: var(--state-success);
+
+  /* ===== Radius ===== */
   --r-xs: 2px;
   --r-sm: 4px;
   --r-md: 8px;
   --r-lg: 12px;
 
-  /* Shadows */
+  /* ===== Shadows (alpha <=0.05 per quality gate for surface; deeper for overlays) ===== */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  --shadow-popover: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
 
-  /* Semantic aliases for head contract */
+  /* ===== Semantic aliases for head contract (default to foxglow) ===== */
   --focuscode-background: var(--bg);
   --focuscode-foreground: var(--ink);
   --focuscode-card: var(--surface);
@@ -58,9 +111,38 @@
   --focuscode-border: var(--line);
   --focuscode-input: var(--surface-3);
   --focuscode-ring: var(--brand);
+  --focuscode-success: var(--state-success);
+  --focuscode-warning: var(--state-warning);
+  --focuscode-danger: var(--state-error);
   --focuscode-radius-sm: var(--r-sm);
   --focuscode-radius-md: var(--r-md);
   --focuscode-radius-lg: var(--r-lg);
+}
+
+/* ===== Dreamy theme override (applied via <html data-theme="dreamy">) ===== */
+html[data-theme="dreamy"] {
+  --bg: var(--dreamy-bg);
+  --surface: var(--dreamy-surface);
+  --surface-2: var(--dreamy-surface-2);
+  --surface-3: var(--dreamy-surface-3);
+  --ink: var(--dreamy-ink);
+  --ink-2: var(--dreamy-ink-2);
+  --ink-3: var(--dreamy-ink-3);
+  --line: var(--dreamy-line);
+  --brand: var(--dreamy-accent);
+  --brand-ink: var(--dreamy-accent-ink);
+  --brand-50: #fce7f4;
+  --brand-100: #f9cfea;
+  --brand-200: #f4a8d8;
+  --brand-300: #ee7ec3;
+  --brand-400: #e55fb0;
+  --brand-500: #f4a8d8;
+  --brand-600: #d07fb0;
+  --brand-700: #a85e8b;
+  --state-success: var(--dreamy-success);
+  --state-warning: var(--dreamy-warning);
+  --state-error: var(--dreamy-danger);
+  --state-info: var(--dreamy-info);
 }
 
 @theme inline {
@@ -87,6 +169,14 @@
   --color-state-warning: var(--state-warning);
   --color-state-error: var(--state-error);
   --color-state-info: var(--state-info);
+
+  --color-mascot-foxy: var(--mascot-foxy);
+  --color-mascot-mochi: var(--mascot-mochi);
+  --color-mascot-byte: var(--mascot-byte);
+  --color-mascot-nori: var(--mascot-nori);
+  --color-mascot-pico: var(--mascot-pico);
+  --color-mascot-bubu: var(--mascot-bubu);
+  --color-mascot-kumo: var(--mascot-kumo);
 }
 
 /* Terminal font stack */
@@ -99,66 +189,109 @@
 .mascot-art {
   font-family:
     "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
-  font-size: 14px;
-  line-height: 1.3;
+  font-size: 13px;
+  line-height: 1.35;
   white-space: pre;
   letter-spacing: 0;
   tab-size: 4;
 }
 
+/* ===== Mascot accent text/border helpers ===== */
+.text-mascot-foxy { color: var(--mascot-foxy); }
+.bg-mascot-foxy { background-color: var(--mascot-foxy); }
+.border-mascot-foxy { border-color: var(--mascot-foxy); }
+.text-mascot-mochi { color: var(--mascot-mochi); }
+.bg-mascot-mochi { background-color: var(--mascot-mochi); }
+.border-mascot-mochi { border-color: var(--mascot-mochi); }
+.text-mascot-byte { color: var(--mascot-byte); }
+.bg-mascot-byte { background-color: var(--mascot-byte); }
+.border-mascot-byte { border-color: var(--mascot-byte); }
+.text-mascot-nori { color: var(--mascot-nori); }
+.bg-mascot-nori { background-color: var(--mascot-nori); }
+.border-mascot-nori { border-color: var(--mascot-nori); }
+.text-mascot-pico { color: var(--mascot-pico); }
+.bg-mascot-pico { background-color: var(--mascot-pico); }
+.border-mascot-pico { border-color: var(--mascot-pico); }
+.text-mascot-bubu { color: var(--mascot-bubu); }
+.bg-mascot-bubu { background-color: var(--mascot-bubu); }
+.border-mascot-bubu { border-color: var(--mascot-bubu); }
+.text-mascot-kumo { color: var(--mascot-kumo); }
+.bg-mascot-kumo { background-color: var(--mascot-kumo); }
+.border-mascot-kumo { border-color: var(--mascot-kumo); }
+
+/* ===== Bond segments (4-segment ◆/◇ progress) ===== */
+.bond-seg-filled { color: var(--brand); }
+.bond-seg-empty { color: var(--ink-3); opacity: 0.5; }
+.bond-seg-max { color: var(--state-success); }
+
+/* ===== Mood dot states ===== */
+.mood-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.mood-dot.idle { background: var(--mood-idle); }
+.mood-dot.thinking { background: var(--mood-thinking); animation: pulse-dot 1.4s infinite; }
+.mood-dot.working { background: var(--mood-working); animation: pulse-dot 1s infinite; }
+.mood-dot.happy { background: var(--mood-happy); }
+.mood-dot.oops { background: var(--mood-oops); }
+.mood-dot.sleeping { background: var(--mood-sleeping); opacity: 0.5; }
+.mood-dot.celebrating { background: var(--mood-celebrating); animation: pulse-dot 0.8s infinite; }
+.mood-dot.levelup { background: var(--mood-levelup); box-shadow: 0 0 8px var(--mood-levelup); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 /* Subtle glow for evolution stages */
 @keyframes tailGlow {
-  0%,
-  100% {
-    text-shadow: 0 0 4px currentColor;
-  }
-  50% {
-    text-shadow:
-      0 0 12px currentColor,
-      0 0 24px currentColor;
-  }
+  0%, 100% { text-shadow: 0 0 4px currentColor; }
+  50% { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
 }
 
 @keyframes blink {
-  0%,
-  90%,
-  100% {
-    opacity: 1;
-  }
-  95% {
-    opacity: 0;
-  }
+  0%, 90%, 100% { opacity: 1; }
+  95% { opacity: 0; }
 }
 
 @keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
-.glow-pulse {
-  animation: tailGlow 2s ease-in-out infinite;
+@keyframes bounce-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
 }
 
-.float-gentle {
-  animation: float 3s ease-in-out infinite;
+.glow-pulse { animation: tailGlow 2s ease-in-out infinite; }
+.float-gentle { animation: float 3s ease-in-out infinite; }
+.bounce-in { animation: bounce-in 0.4s ease-out; }
+
+/* Speech bubble tail */
+.speech-bubble {
+  position: relative;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.speech-bubble::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: -7px;
+  width: 10px;
+  height: 10px;
+  background: var(--surface-2);
+  border-left: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  transform: rotate(45deg);
 }
 
 /* Scrollbar for terminal feel */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--surface-3);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--brand);
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand); }
