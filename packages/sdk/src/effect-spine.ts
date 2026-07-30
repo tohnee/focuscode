@@ -1,4 +1,10 @@
-import { LocalActionRuntime, ToolRegistry, type ToolExecutor } from "@focuscode/action-backends";
+import {
+  FileReceiptJournal,
+  LocalActionRuntime,
+  ToolRegistry,
+  type ReceiptJournal,
+  type ToolExecutor,
+} from "@focuscode/action-backends";
 import {
   PolicyEngine,
   classifyShell,
@@ -44,6 +50,18 @@ export interface SessionEffectSpineOptions {
   /** Bridges PolicyEngine approvals to the session approval handler; omit to deny. */
   approve?: ApprovalHandler;
   workerId?: string;
+  /**
+   * Optional durable receipt journal. When provided, every effect receipt is
+   * appended before the result is returned to the caller (receipt-before-
+   * result), so a crash after the side effect but before the model observes
+   * the tool result still leaves the receipt on disk for audit. When
+   * omitted, receipts are kept in-memory only (the pre-fix behavior).
+   *
+   * P1-D: composition roots should pass a FileReceiptJournal at
+   * `~/.focuscode/receipts/<sessionId>.jsonl` so the audit chain survives
+   * process restarts.
+   */
+  receiptJournal?: ReceiptJournal;
 }
 
 /**
@@ -98,6 +116,8 @@ export function createSessionEffectSpine(options: SessionEffectSpineOptions): Se
     tools,
     policy,
     bridgeApproval(options.approve, definitions, () => approvalListener),
+    () => new Date(),
+    options.receiptJournal,
   );
   const effectPort: EffectPort = {
     submit(intents, context, signal) {

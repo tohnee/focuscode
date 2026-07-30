@@ -49,7 +49,10 @@ export class SeatbeltSandbox implements SandboxExecutor {
     this.workspaceRoot = resolve(options.workspaceRoot);
     this.platform = options.platform ?? process.platform;
     this.runner = options.processRunner ?? runHostProcess;
-    this.sandboxExec = options.sandboxExecBinary ?? "sandbox-exec";
+    // P1-G: default to the absolute path so a PATH-injected `sandbox-exec`
+    // cannot silently neutralize all containment. Callers can still override
+    // for non-standard layouts.
+    this.sandboxExec = options.sandboxExecBinary ?? "/usr/bin/sandbox-exec";
     this.limits = { ...DEFAULT_LIMITS, ...options.limits };
   }
 
@@ -80,9 +83,13 @@ export class SeatbeltSandbox implements SandboxExecutor {
       };
     }
     try {
+      // P1-G: real macOS `sandbox-exec` does NOT support `--version`. Probe
+      // with `-h` (help) which exits 0 on real installs and 1 when the
+      // binary is missing. This makes the auto-chain actually pick seatbelt
+      // on macOS instead of silently skipping it.
       const result = await this.runner({
         executable: this.sandboxExec,
-        arguments: ["--version"],
+        arguments: ["-h"],
         cwd: this.workspaceRoot,
         timeoutMs: 5_000,
         maxOutputChars: 1_000,
@@ -97,7 +104,7 @@ export class SeatbeltSandbox implements SandboxExecutor {
       return {
         available: true,
         backend: this.kind,
-        detail: result.stdout.trim() || "sandbox-exec available",
+        detail: "sandbox-exec available",
         isolation: "kernel",
       };
     } catch (error) {
@@ -117,11 +124,15 @@ export class SeatbeltSandbox implements SandboxExecutor {
    *  - allows reading system libraries (/usr/lib)
    *  - allows read/write only inside the workspace root
    *  - allows executing the node binary and the configured shell
+   *
+   * P1-G: all interpolated paths are escaped via `escapeSbplString` so a
+   * workspace/shell/node path containing `"` or `\` cannot inject SBPL
+   * rules and escape containment.
    */
   private buildProfile(): string {
-    const root = this.workspaceRoot;
-    const shell = process.env.SHELL ?? "/bin/sh";
-    const nodeBin = process.execPath;
+    const root = escapeSbplString(this.workspaceRoot);
+    const shell = escapeSbplString(process.env.SHELL ?? "/bin/sh");
+    const nodeBin = escapeSbplString(process.execPath);
     return [
       "(version 1)",
       "(deny default)",
@@ -148,4 +159,23 @@ function assertWorkspace(command: SandboxCommand, expectedRoot: string): void {
   if (rel === ".." || rel.startsWith(`..${sep}`) || resolve(root, rel) !== cwd) {
     throw new Error("Sandbox command cwd escapes workspace");
   }
+}
+
+/**
+ * P1-G: Escape a path for use inside an SBPL double-quoted string. SBPL
+ * strings use C-style escaping: `\` escapes the next character, and `"`
+ * closes the string. A path containing `"`, `\`, or control characters
+ * could otherwise inject `(allow ...)` rules and escape containment.
+ * We backslash-escape `\` and `"` and drop other control characters.
+ */
+function escapeSbplString(value: string): string {
+  let out = "";
+  for (const ch of value) {
+    if (ch === "\\") out += "\\\\";
+    else if (ch === '"') out += '\\"';
+    else if (ch.charCodeAt(0) < 0x20)
+      continue; // strip control chars
+    else out += ch;
+  }
+  return out;
 }

@@ -6,6 +6,13 @@
  * responses/notifications to stdout. All logging goes to stderr to keep
  * the stdout protocol stream clean.
  *
+ * P1-E: The agent assembly is converged with the CLI via
+ * `assembleCodingAgent` — the ACP server now gets the same spine, extension
+ * host, MCP wiring, enterprise audit journal, prefix rules, and tool
+ * filtering as the CLI. Prompt processing is non-blocking so
+ * `session/cancel` can be processed mid-turn. Event notifications carry
+ * the session's own id, not a global pointer.
+ *
  * Supported methods:
  * - initialize: capability negotiation
  * - session/new: create a new agent session
@@ -20,14 +27,10 @@ import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { createInterface } from "node:readline";
-import {
-  CodingAgent,
-  SessionStore,
-  renderResourcePrompt,
-  type AgentEvent,
-} from "@focuscode/agent-runtime";
+import { CodingAgent, SessionStore, type AgentEvent } from "@focuscode/agent-runtime";
 import type { AgentCliArgs } from "./agent-args.js";
 import { createAgentContext } from "./agent-context.js";
+import { assembleCodingAgent } from "./agent-assembly.js";
 import { dispatchAcpMethod, type AcpContext } from "./acp-handler.js";
 
 const ACP_PROTOCOL_VERSION = "1.0.0";
@@ -79,6 +82,8 @@ interface AcpSession {
   sessionId: string;
   busy: boolean;
   abortController?: AbortController | undefined;
+  /** Cleanup handles from assembleCodingAgent; closed on session disposal. */
+  dispose?: () => Promise<void>;
 }
 
 export async function runAcpServer(
@@ -95,57 +100,66 @@ export async function runAcpServer(
     configOverrides: configOverrides ?? {},
     onFallback: (event) => log(`Fallback: ${event.from} -> ${event.to} (${event.reason})`),
   });
-  const { sandbox, registry, resources, client, config } = ctx;
+  const { config } = ctx;
 
   const sessions_ = new Map<string, AcpSession>();
   let currentSessionId: string | undefined;
 
   async function createAgent(sessionId?: string): Promise<AcpSession> {
-    const agent = await CodingAgent.create({
+    // P1-E: each session gets its own event sink that captures its own
+    // sessionId, so notifications never cross-talk between sessions.
+    let pendingSessionId = sessionId;
+
+    const eventSink = (event: AgentEvent) => {
+      // Use the session's own id, falling back to pendingSessionId during
+      // creation (before the agent returns its id).
+      const sid = (pendingSessionId ?? currentSessionId)!;
+      handleAgentEvent(event, sid);
+    };
+
+    const assembled = await assembleCodingAgent({
       cwd,
-      model: config.model,
-      modelClient: client,
-      tools: registry.values(),
-      toolRegistry: registry,
-      permission: {
-        mode: config.approval,
-        projectTrusted: config.projectTrusted,
-        protectedPaths: config.protectedPaths,
-      },
-      sessionStore: sessions,
+      args,
+      ctx,
+      sessions,
       ...(sessionId ? { sessionId } : {}),
-      instructions: [renderResourcePrompt(resources)],
-      maxRounds: args.maxRounds ?? config.maxRounds,
-      eventSink: (event: AgentEvent) => {
-        // Map agent events to ACP notifications
-        handleAgentEvent(event);
-      },
+      eventSink,
     });
-    const sid = agent.sessionId;
-    const session: AcpSession = { agent, sessionId: sid, busy: false };
+    pendingSessionId = assembled.agent.sessionId;
+
+    const sid = assembled.agent.sessionId;
+    const session: AcpSession = {
+      agent: assembled.agent,
+      sessionId: sid,
+      busy: false,
+      dispose: async () => {
+        await assembled.extensions.dispose?.();
+        await assembled.mcpHandle.close();
+      },
+    };
     sessions_.set(sid, session);
     return session;
   }
 
-  function handleAgentEvent(event: AgentEvent): void {
+  function handleAgentEvent(event: AgentEvent, sid: string): void {
     switch (event.type) {
       case "text_delta":
         sendNotification("session/event", {
-          sessionId: currentSessionId,
+          sessionId: sid,
           event: "text",
           data: event.delta,
         });
         break;
       case "tool_start":
         sendNotification("session/event", {
-          sessionId: currentSessionId,
+          sessionId: sid,
           event: "tool_start",
           data: { name: event.call.name, arguments: event.call.arguments },
         });
         break;
       case "tool_end":
         sendNotification("session/event", {
-          sessionId: currentSessionId,
+          sessionId: sid,
           event: "tool_end",
           data: {
             name: event.call.name,
@@ -157,21 +171,21 @@ export async function runAcpServer(
         break;
       case "error":
         sendNotification("session/event", {
-          sessionId: currentSessionId,
+          sessionId: sid,
           event: "error",
           data: event.message,
         });
         break;
       case "agent_start":
         sendNotification("session/event", {
-          sessionId: currentSessionId,
+          sessionId: sid,
           event: "turn_start",
           data: { turn: event.turn },
         });
         break;
       case "agent_end":
         sendNotification("session/event", {
-          sessionId: currentSessionId,
+          sessionId: sid,
           event: "turn_end",
           data: {
             stopped: event.response.stopped,
@@ -189,12 +203,16 @@ export async function runAcpServer(
 
   // ─── JSON-RPC dispatch ───────────────────────────────────────────────
 
+  // P1-E: handleMessage must NOT await session/prompt's submit — that would
+  // block the stdin loop and prevent session/cancel from being processed
+  // mid-turn. The prompt is fired as a background promise; the response is
+  // sent immediately and the result/error arrives as a session/end
+  // notification.
   async function handleMessage(message: JsonRpcMessage): Promise<void> {
     if (!("method" in message)) return; // Response or notification, ignore
     const req = message as JsonRpcRequest;
     const id = req.id ?? 0;
 
-    // D12: checkpoint-related methods are dispatched via the testable handler.
     const acpCtx: AcpContext = {
       sessions: sessions_,
       currentSessionId,
@@ -279,29 +297,37 @@ export async function runAcpServer(
           }
           session.busy = true;
           session.abortController = new AbortController();
-          // Respond immediately - events stream as notifications
-          sendResponse(id, { sessionId: currentSessionId, streaming: true });
-          try {
-            const result = await session.agent.submit(prompt, session.abortController.signal);
-            sendNotification("session/end", {
-              sessionId: currentSessionId,
-              result: {
-                content: result.content,
-                stopped: result.stopped,
-                rounds: result.rounds,
-                toolCalls: result.toolCalls,
-                usage: result.usage,
-              },
+          const sid = session.sessionId;
+          // Respond immediately — events stream as notifications.
+          sendResponse(id, { sessionId: sid, streaming: true });
+
+          // P1-E: fire the submit as a background promise so the stdin loop
+          // continues reading. session/cancel can now be processed mid-turn.
+          // The session holds the agent directly — no global lookup needed.
+          void session.agent
+            .submit(prompt, session.abortController.signal)
+            .then((result) => {
+              sendNotification("session/end", {
+                sessionId: sid,
+                result: {
+                  content: result.content,
+                  stopped: result.stopped,
+                  rounds: result.rounds,
+                  toolCalls: result.toolCalls,
+                  usage: result.usage,
+                },
+              });
+            })
+            .catch((error) => {
+              sendNotification("session/end", {
+                sessionId: sid,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            })
+            .finally(() => {
+              session.busy = false;
+              session.abortController = undefined;
             });
-          } catch (error) {
-            sendNotification("session/end", {
-              sessionId: currentSessionId,
-              error: error instanceof Error ? error.message : String(error),
-            });
-          } finally {
-            session.busy = false;
-            session.abortController = undefined;
-          }
           break;
         }
 

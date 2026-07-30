@@ -22,7 +22,7 @@ function eventsPath(root: string, taskId: string): string {
 }
 
 describe("FileFactStore torn-tail recovery (P0-3)", () => {
-  it("TC-P0-3-01: loadEvents skips a torn final line without mutating the file; append repairs under lock", async () => {
+  it("TC-P0-3-01: loadEvents skips a torn final line without mutating the file; append repairs under lock (P1-F: lockless read)", async () => {
     const root = await createTestDirectory("p03-truncate");
     const store = new FileFactStore(root);
     await store.append({
@@ -65,6 +65,8 @@ describe("FileFactStore torn-tail recovery (P0-3)", () => {
     });
     await appendFile(eventsPath(root, "task-1"), '{"schemaVersion":"domain-ev', "utf8");
 
+    // loadEvents does not truncate (P1-F), but the subsequent append holds the
+    // lock and repairs the torn tail via loadEventsLocked before writing.
     await store.loadEvents("task-1");
 
     const ack = await store.append({

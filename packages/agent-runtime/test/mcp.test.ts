@@ -124,4 +124,51 @@ describe("MCP stdio client", () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain("MCP server missing unavailable");
   });
+
+  it("P1-K: exactPins fails closed when an undeclared tool is observed", async () => {
+    const probe = track(new McpStdioClient(spec));
+    await probe.connect();
+    const tools = await probe.listTools();
+    // Declare pins for only "echo" — "boom" is observed but undeclared.
+    const pins = [
+      computeToolPin(
+        probe,
+        tools.find((t) => t.name === "echo")!,
+      ),
+    ];
+    const registry = new AgentToolRegistry();
+    await expect(registerMcpServers(registry, [spec], { pins, exactPins: true })).rejects.toThrow(
+      McpPinMismatchError,
+    );
+  });
+
+  it("P1-K: exactPins passes when observed tools exactly match declared pins", async () => {
+    const probe = track(new McpStdioClient(spec));
+    await probe.connect();
+    const tools = await probe.listTools();
+    // Declare pins for ALL observed tools — exact match.
+    const pins = tools.map((tool) => computeToolPin(probe, tool));
+    const registry = new AgentToolRegistry();
+    const result = await registerMcpServers(registry, [spec], { pins, exactPins: true });
+    clients.push(...result.clients);
+    expect(result.registered).toHaveLength(2);
+  });
+
+  it("P1-K: without exactPins, undeclared tools are still registered (legacy behavior)", async () => {
+    const probe = track(new McpStdioClient(spec));
+    await probe.connect();
+    const tools = await probe.listTools();
+    // Declare a pin for only "echo" — "boom" is undeclared but should
+    // still register because exactPins is not set (subset check only).
+    const pins = [
+      computeToolPin(
+        probe,
+        tools.find((t) => t.name === "echo")!,
+      ),
+    ];
+    const registry = new AgentToolRegistry();
+    const result = await registerMcpServers(registry, [spec], { pins });
+    clients.push(...result.clients);
+    expect(result.registered).toHaveLength(2);
+  });
 });

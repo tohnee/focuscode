@@ -3,9 +3,7 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import {
   CodingAgent,
-  CircuitBreakingModelClient,
   ExtensionHost,
-  FallbackModelClient,
   FileAuditJournal,
   ProcessExtensionHost,
   SessionStore,
@@ -19,14 +17,13 @@ import {
   type AgentResources,
   type ApprovalHandler,
   type ApprovalMode,
-  type ModelClient,
-  type ModelProfile,
   type ExtensionHostLike,
   type ResolvedAgentConfig,
   type ShellExecutor,
 } from "@focuscode/agent-runtime";
 import { ExtensionPackageManager } from "@focuscode/ecosystem";
 import { createSandbox } from "@focuscode/sandbox";
+import { buildModelClientChain } from "./model-client-chain.js";
 import { createSessionEffectSpine } from "./effect-spine.js";
 import {
   composeEventSink,
@@ -101,6 +98,9 @@ export interface CreateCodingAgentOptions extends AgentConfigOverrides {
 export interface CreatedCodingAgent {
   agent: CodingAgent;
   sessions: SessionStore;
+  // P1-A: widen from `ExtensionHost` to `ExtensionHostLike` so SDK consumers
+  // see the same interface regardless of whether the in-process or
+  // process-isolated host was selected by configuration.
   extensions: ExtensionHostLike;
   resources: AgentResources;
   config: ResolvedAgentConfig;
@@ -149,8 +149,19 @@ export async function createCodingAgent(
   for (const tool of registry.definitions()) {
     if (!enabled.has(tool.name) || disabled.has(tool.name)) registry.unregister(tool.name);
   }
-  const extensions: ExtensionHost | ProcessExtensionHost =
-    options.extensionHostKind === "process"
+  // P1-A: respect `config.extensions.host` — enterprise mode forces "process"
+  // (validated in resolveAgentConfig), and non-enterprise users can opt into
+  // process isolation for crash containment. Previously the SDK always used
+  // the in-process host, silently violating enterprise policy.
+  // Legacy `options.extensionHostKind` is still honored as an explicit override
+  // so existing SDK consumers don't break; `config.extensions.host` (which
+  // reflects resolved enterprise policy) wins when both are set to "process".
+  const effectiveHostKind: "in-process" | "process" =
+    options.extensionHostKind === "process" || config.extensions.host === "process"
+      ? "process"
+      : "in-process";
+  const extensions: ExtensionHostLike =
+    effectiveHostKind === "process"
       ? new ProcessExtensionHost(registry)
       : new ExtensionHost(registry);
   const extensionPackages = new ExtensionPackageManager({
@@ -262,7 +273,20 @@ export async function createCodingAgent(
   const eventSink = options.eventSinkWrapper
     ? options.eventSinkWrapper(composedSink)
     : composedSink;
-  const modelClient = buildModelClient(config.model, config.fallbackModels, options);
+  // P1-A: use the shared fallback-chain builder so the SDK respects
+  // `config.fallbackModels`. Previously the SDK called `createModelClient`
+  // directly, silently dropping the fallback chain that CLI/ACP honored.
+  // When no fallbacks are declared, `buildModelClientChain` returns the
+  // primary `CircuitBreakingModelClient` — identical to the old behavior.
+  const modelClient = buildModelClientChain(config.model, config.fallbackModels, {
+    factory: (profile) =>
+      createModelClient({
+        ...profile,
+        ...(options.accessTokenProvider
+          ? { accessTokenProvider: options.accessTokenProvider }
+          : {}),
+      }),
+  });
   const agent = await CodingAgent.create({
     cwd,
     model: config.model,
@@ -312,48 +336,9 @@ function createEnterpriseAudit(config: ResolvedAgentConfig): FileAuditJournal {
   });
 }
 
-/**
- * Build the model client chain for a resolved agent config. When fallback
- * models are declared, the primary client is wrapped in a
- * `FallbackModelClient` with one `CircuitBreakingModelClient` per fallback.
- * When no fallbacks are declared, the primary client is returned directly,
- * preserving the exact pre-fallback runtime path.
- */
-function buildModelClient(
-  primary: ModelProfile,
-  fallbacks: ModelProfile[],
-  options: CreateCodingAgentOptions,
-): ModelClient {
-  const primaryClient = circuitBreakingClient(primary, options);
-  if (fallbacks.length === 0) return primaryClient;
-  const fallbackClients = fallbacks.map((profile) => circuitBreakingClient(profile, options));
-  return new FallbackModelClient(primaryClient, fallbackClients, {
-    primaryModel: primary.model,
-    fallbackModels: fallbacks.map((profile) => profile.model),
-  });
-}
-
-function circuitBreakingClient(
-  profile: ModelProfile,
-  options: CreateCodingAgentOptions,
-): CircuitBreakingModelClient {
-  const inner = createModelClient({
-    ...profile,
-    ...(options.accessTokenProvider ? { accessTokenProvider: options.accessTokenProvider } : {}),
-  });
-  return new CircuitBreakingModelClient(inner, {
-    provider: profile.provider,
-    ...(profile.reliability.circuitThreshold !== undefined
-      ? { circuitThreshold: profile.reliability.circuitThreshold }
-      : {}),
-    ...(profile.reliability.circuitCooldownMs !== undefined
-      ? { circuitCooldownMs: profile.reliability.circuitCooldownMs }
-      : {}),
-    ...(profile.reliability.maxConcurrency !== undefined
-      ? { maxConcurrency: profile.reliability.maxConcurrency }
-      : {}),
-  });
-}
+// P1-A: buildModelClient/circuitBreakingClient removed — the SDK now uses
+// the shared buildModelClientChain from model-client-chain.ts, which is the
+// same builder the CLI and ACP server use.
 
 function defaultSessionDirectory(cwd: string): string {
   const digest = createHash("sha256").update(cwd).digest("hex").slice(0, 16);

@@ -40,8 +40,8 @@ describe("SeatbeltSandbox — unit (cross-platform)", () => {
     expect(health.detail).toContain("macOS-only");
   });
 
-  it("health() returns available on darwin when sandbox-exec --version succeeds", async () => {
-    const { runner } = capture([{ stdout: "sandbox-exec 4\n" }]);
+  it("health() returns available on darwin when sandbox-exec -h succeeds", async () => {
+    const { runner } = capture([{ exitCode: 0 }]);
     const sb = new SeatbeltSandbox({
       workspaceRoot: "/repo",
       platform: "darwin",
@@ -80,7 +80,8 @@ describe("SeatbeltSandbox — unit (cross-platform)", () => {
     });
     expect(result.backend).toBe("seatbelt");
     const invocation = captured.invocations[0];
-    expect(invocation?.executable).toBe("sandbox-exec");
+    // P1-G: default is now the absolute path to prevent PATH injection.
+    expect(invocation?.executable).toBe("/usr/bin/sandbox-exec");
     expect(invocation?.arguments[0]).toBe("-p");
     // Profile is the second argument; the command follows after "--"
     const profileIndex = 1;
@@ -154,7 +155,7 @@ describe("SeatbeltSandbox — unit (cross-platform)", () => {
   });
 
   it("health() uses sandbox-exec binary from options", async () => {
-    const captured = capture([{ stdout: "sandbox-exec 4\n" }]);
+    const captured = capture([{ exitCode: 0 }]);
     const sb = new SeatbeltSandbox({
       workspaceRoot: "/repo",
       platform: "darwin",
@@ -163,7 +164,35 @@ describe("SeatbeltSandbox — unit (cross-platform)", () => {
     });
     await sb.health();
     expect(captured.invocations[0]?.executable).toBe("/usr/bin/sandbox-exec");
-    expect(captured.invocations[0]?.arguments).toContain("--version");
+    // P1-G: health() probes with -h (not --version) because real macOS
+    // sandbox-exec does not support --version.
+    expect(captured.invocations[0]?.arguments).toContain("-h");
+  });
+
+  it("P1-G: escapes paths in the SBPL profile to prevent injection", async () => {
+    const captured = capture();
+    // A workspace path containing a double-quote could inject SBPL rules.
+    // The escape function must backslash-escape it.
+    const sb = new SeatbeltSandbox({
+      workspaceRoot: '/repo/with"quote',
+      platform: "darwin",
+      processRunner: captured.runner,
+    });
+    await sb.execute({
+      command: "true",
+      cwd: '/repo/with"quote',
+      workspaceRoot: '/repo/with"quote',
+      timeoutMs: 1_000,
+    });
+    const profile = captured.invocations[0]?.arguments[1] ?? "";
+    // The double-quote must be escaped, not raw.
+    expect(profile).not.toContain('with"quote');
+    expect(profile).toContain('with\\"quote');
+    // No unescaped `(allow` injection from the path. Baseline profile has
+    // exactly 9 allow rules (5 system paths + 2 workspace + 2 binary exec);
+    // a successful injection would add a 10th.
+    const allowCount = (profile.match(/\(allow /g) ?? []).length;
+    expect(allowCount).toBeLessThanOrEqual(9);
   });
 
   it("execute() uses the node binary path in the profile allow list", async () => {

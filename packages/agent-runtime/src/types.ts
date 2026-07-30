@@ -223,7 +223,26 @@ export type AgentEvent =
   | { type: "compaction"; summary: string; droppedMessages: number }
   | { type: "usage"; turn: TokenUsage; session: TokenUsage }
   | { type: "agent_end"; response: AgentRunResult }
-  | { type: "error"; message: string }
+  | {
+      type: "error";
+      message: string;
+      /**
+       * P1-C: error severity.
+       *   - `"fatal"` (default): the agent run is terminating; the error
+       *     is followed by a throw or `agent_end` with `stopped:"error"`.
+       *     Stream consumers should close the stream.
+       *   - `"recoverable"`: the agent emitted a non-fatal error (e.g.
+       *     output truncation, doom-loop guard) but continues the run.
+       *     Stream consumers MUST keep the stream open — the agent will
+       *     still emit `agent_end` normally.
+       *
+       * Backward compatibility: events emitted without `severity` are
+       * treated as `"fatal"` by stream helpers (preserves existing
+       * behavior). Code that only inspects `event.type === "error"` keeps
+       * working; only terminators need to check `severity`.
+       */
+      severity?: "fatal" | "recoverable";
+    }
   | { type: "spec_start"; input: string; trigger: "auto" | "explicit" }
   | { type: "spec_stage"; stage: string; model: string; durationMs: number; fellBack: boolean }
   | {

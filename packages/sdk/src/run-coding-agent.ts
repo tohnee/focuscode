@@ -86,7 +86,15 @@ export function runCodingAgent(options: RunCodingAgentOptions): RunCodingAgentRe
       while (queue.length > 0) {
         const event = queue.shift()!;
         yield event;
-        if (event.type === "agent_end" || event.type === "error") {
+        // P1-C: only terminal events close the stream. `agent_end` is always
+        // terminal. `error` is terminal ONLY when severity !== "recoverable"
+        // (undefined defaults to "fatal" for backward compatibility).
+        // Recoverable errors (truncation, doom-loop guard) are yielded but
+        // the stream stays open — the agent will still emit `agent_end`.
+        if (event.type === "agent_end") {
+          return;
+        }
+        if (event.type === "error" && event.severity !== "recoverable") {
           return;
         }
       }

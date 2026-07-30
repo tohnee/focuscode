@@ -129,6 +129,69 @@ describe("streamSubmit()", () => {
 
     expect(fakeAgent.currentSink).toBe(previousSink);
   });
+
+  it("P1-C: recoverable error does not close the stream; agent_end still arrives", async () => {
+    const fakeAgent = createFakeAgent({
+      events: [
+        { type: "agent_start", sessionId: "s6", turn: 1 },
+        { type: "error", message: "truncated output", severity: "recoverable" },
+        { type: "text_delta", delta: "retry" },
+        { type: "agent_end", response: fakeResult("s6") },
+      ],
+      result: fakeResult("s6"),
+    });
+
+    const stream = streamSubmit(fakeAgent, "hi");
+    const seen: AgentEvent[] = [];
+    for await (const event of stream) {
+      seen.push(event);
+    }
+    await stream.result;
+
+    // Stream MUST drain all events including post-error ones.
+    expect(seen.map((e) => e.type)).toEqual(["agent_start", "error", "text_delta", "agent_end"]);
+  });
+
+  it("P1-C: fatal error (explicit severity) closes the stream immediately", async () => {
+    const fakeAgent = createFakeAgent({
+      events: [
+        { type: "agent_start", sessionId: "s7", turn: 1 },
+        { type: "error", message: "boom", severity: "fatal" },
+        // These events come after the fatal error in the queue; the
+        // generator should have returned already.
+        { type: "text_delta", delta: "should-not-see" },
+      ],
+      result: fakeResult("s7"),
+    });
+
+    const stream = streamSubmit(fakeAgent, "hi");
+    const seen: AgentEvent[] = [];
+    for await (const event of stream) {
+      seen.push(event);
+    }
+    await stream.result.catch(() => undefined);
+
+    expect(seen.map((e) => e.type)).toEqual(["agent_start", "error"]);
+  });
+
+  it("P1-C: error without severity defaults to fatal (backward compat)", async () => {
+    const fakeAgent = createFakeAgent({
+      events: [
+        { type: "error", message: "legacy fatal" },
+        { type: "text_delta", delta: "should-not-see" },
+      ],
+      result: fakeResult("s8"),
+    });
+
+    const stream = streamSubmit(fakeAgent, "hi");
+    const seen: AgentEvent[] = [];
+    for await (const event of stream) {
+      seen.push(event);
+    }
+    await stream.result.catch(() => undefined);
+
+    expect(seen.map((e) => e.type)).toEqual(["error"]);
+  });
 });
 
 function fakeResult(sessionId: string): AgentRunResult {

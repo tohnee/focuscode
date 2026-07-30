@@ -192,33 +192,52 @@ export class OAuthClient {
     parameters: Record<string, string>,
     additionalHeaders: Record<string, string> = {},
   ): Promise<Record<string, unknown>> {
-    const response = await this.fetchImplementation(url, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/x-www-form-urlencoded",
-        ...additionalHeaders,
-      },
-      body: new URLSearchParams(parameters),
-    });
-    const body = await response.text();
-    let value: Record<string, unknown>;
+    // P1-I: bound every token/device/revoke request with a 15s timeout and
+    // a 1MB response ceiling, matching discovery.ts. Without this, a stalled
+    // IdP can hang the device-code polling loop indefinitely and an
+    // unbounded response.text() can OOM the CLI.
+    const controller = new AbortController();
+    const timer = setTimeout(
+      () => controller.abort(new Error("OAuth token endpoint timed out")),
+      15_000,
+    );
+    timer.unref();
     try {
-      value = JSON.parse(body) as Record<string, unknown>;
-    } catch {
-      value = Object.fromEntries(new URLSearchParams(body));
+      const response = await this.fetchImplementation(url, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/x-www-form-urlencoded",
+          ...additionalHeaders,
+        },
+        body: new URLSearchParams(parameters),
+        signal: controller.signal,
+      });
+      // P1-I: bound the response body to 1MB to prevent a malicious or
+      // buggy IdP from exhausting memory.
+      const body = await readBoundedText(response, 1_000_000);
+      let value: Record<string, unknown>;
+      try {
+        value = JSON.parse(body) as Record<string, unknown>;
+      } catch {
+        value = Object.fromEntries(new URLSearchParams(body));
+      }
+      const code = typeof value.error === "string" ? value.error : undefined;
+      if (!response.ok || code) {
+        const description =
+          typeof value.error_description === "string"
+            ? value.error_description
+            : body.slice(0, 500);
+        throw new OAuthProtocolError(
+          description || `OAuth HTTP ${response.status}`,
+          code ?? "http_error",
+          response.status,
+        );
+      }
+      return value;
+    } finally {
+      clearTimeout(timer);
     }
-    const code = typeof value.error === "string" ? value.error : undefined;
-    if (!response.ok || code) {
-      const description =
-        typeof value.error_description === "string" ? value.error_description : body.slice(0, 500);
-      throw new OAuthProtocolError(
-        description || `OAuth HTTP ${response.status}`,
-        code ?? "http_error",
-        response.status,
-      );
-    }
-    return value;
   }
 
   private clientAuthentication(): {
@@ -270,11 +289,7 @@ function validateProfile(profile: OAuthProfile): void {
     profile.tokenEndpoint,
     profile.revocationEndpoint,
   ]) {
-    if (
-      endpoint &&
-      new URL(endpoint).protocol !== "https:" &&
-      !endpoint.startsWith("http://127.0.0.1")
-    ) {
+    if (endpoint && !isAllowedEndpoint(endpoint)) {
       throw new Error(`OAuth endpoint must use HTTPS: ${endpoint}`);
     }
   }
@@ -285,6 +300,31 @@ function validateProfile(profile: OAuthProfile): void {
   ) {
     throw new Error("Unsupported OAuth token endpoint auth method");
   }
+}
+
+/**
+ * P1-I: An endpoint is allowed if it uses HTTPS, or if it is a loopback
+ * HTTP URL with NO userinfo (the old `startsWith("http://127.0.0.1")` check
+ * could be bypassed by `http://127.0.0.1@evil.com` — the userinfo section
+ * makes the host `evil.com`, not `127.0.0.1`). We also reject non-loopback
+ * hosts and ports other than the loopback address.
+ */
+function isAllowedEndpoint(endpoint: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  if (url.protocol === "https:") return true;
+  if (url.protocol !== "http:") return false;
+  // Reject userinfo — `http://127.0.0.1@evil.com` must not pass.
+  if (url.username || url.password) return false;
+  // Only allow loopback addresses (127.0.0.1 and ::1). localhost is also
+  // accepted for developer convenience, matching the loopback redirect
+  // spec (RFC 8252 §7.3).
+  const host = url.hostname;
+  return host === "127.0.0.1" || host === "::1" || host === "[::1]" || host === "localhost";
 }
 
 function randomUrlSafe(bytes: number): string {
@@ -299,6 +339,44 @@ function requiredString(value: unknown, label: string): string {
 function positiveNumber(value: unknown, fallback: number): number {
   const number = typeof value === "number" ? value : Number(value);
   return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+/**
+ * P1-I: Read the response body as text with a hard byte ceiling. A malicious
+ * or buggy IdP could stream an unbounded body; `response.text()` would
+ * buffer it entirely and OOM the CLI. This helper reads in chunks and
+ * aborts once the ceiling is exceeded.
+ */
+async function readBoundedText(response: Response, maxBytes: number): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    // No streaming body (e.g. test stubs) — fall back to text(). The
+    // maxBytes ceiling is enforced on the resulting string length.
+    const text = await response.text();
+    if (Buffer.byteLength(text) > maxBytes) {
+      throw new Error("OAuth response body exceeds the size ceiling");
+    }
+    return text;
+  }
+  const chunks: Buffer[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      total += value.byteLength;
+      if (total > maxBytes) {
+        try {
+          await reader.cancel();
+        } catch {
+          // Ignore — the reader may already be closed.
+        }
+        throw new Error("OAuth response body exceeds the size ceiling");
+      }
+      chunks.push(Buffer.from(value));
+    }
+  }
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 async function openExternal(url: string): Promise<void> {

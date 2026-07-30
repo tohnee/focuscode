@@ -672,6 +672,13 @@ export interface RegisterMcpOptions {
   pins?: readonly McpToolPinV1[];
   connectTimeoutMs?: number;
   onWarning?: (message: string) => void;
+  /**
+   * P1-K: when true, the observed tool set must EXACTLY match the declared
+   * pins — any extra tool the server advertises (e.g. after an upgrade or
+   * compromise) causes a fail-closed error instead of being silently
+   * registered. Enterprise deployments should set this to true.
+   */
+  exactPins?: boolean;
 }
 
 export interface RegisterMcpResult {
@@ -709,6 +716,26 @@ export async function registerMcpServers(
   if (options.pins) {
     try {
       verifyPins(options.pins, observedPins);
+      // P1-K: exact allowlist — when exactPins is set, every observed tool
+      // must be declared in the pins. A server that advertises an extra
+      // tool (after upgrade or compromise) fails closed instead of being
+      // silently registered. This closes the gap where pins were a subset
+      // check: declared pins had to exist, but undeclared tools were free
+      // to enter the registry.
+      if (options.exactPins) {
+        for (const observed of observedPins) {
+          const declared = options.pins.some(
+            (pin) => pin.serverId === observed.serverId && pin.toolName === observed.toolName,
+          );
+          if (!declared) {
+            throw new McpPinMismatchError(
+              observed.serverId,
+              observed.toolName,
+              "tool is observed but not declared in the exact allowlist (fail closed)",
+            );
+          }
+        }
+      }
     } catch (error) {
       await closeAll(clients);
       throw error;

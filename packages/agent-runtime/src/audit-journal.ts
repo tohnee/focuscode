@@ -288,7 +288,11 @@ function sanitizeEvent(event: AgentEvent): Record<string, unknown> {
     return { type: event.type, response: { ...response, content: digestText(content) } };
   }
   if (event.type === "error") {
-    return { type: event.type, message: digestText(event.message) };
+    // P1-C: preserve severity so audit consumers can distinguish
+    // recoverable from fatal errors after digest.
+    const entry: Record<string, unknown> = { type: event.type, message: digestText(event.message) };
+    if (event.severity) entry.severity = event.severity;
+    return entry;
   }
   return structuredClone(event) as unknown as Record<string, unknown>;
 }

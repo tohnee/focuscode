@@ -1,15 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   CircuitBreakingModelClient,
   FallbackModelClient,
-  type ModelProfile,
   type ModelClient,
-  type ModelResponse,
+  type ModelProfile,
   type ModelRequest,
+  type ModelResponse,
 } from "@focuscode/agent-runtime";
-// P1-A: the CLI re-exports buildModelClientChain from @focuscode/sdk.
-// This test verifies the re-export is wired correctly.
-import { buildModelClientChain } from "../src/model-client-wiring.js";
+import { buildModelClientChain } from "../src/model-client-chain.js";
 
 class StubClient implements ModelClient {
   readonly protocol: string;
@@ -70,7 +68,7 @@ function fallbackProfile(provider = "openrouter", model = "secondary"): ModelPro
   return { ...primaryProfile(provider), model, baseUrl: "https://openrouter.ai/api/v1" };
 }
 
-describe("buildModelClientChain (CLI re-export from SDK)", () => {
+describe("buildModelClientChain (SDK)", () => {
   it("returns a CircuitBreakingModelClient when no fallbacks are declared", () => {
     const client = buildModelClientChain(primaryProfile(), [], {
       factory: () => new StubClient("openai-chat"),

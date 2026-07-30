@@ -73,7 +73,7 @@ describe("beforeTool 统一到 SDK hooks", () => {
     ).rejects.toThrow("hook failed");
   });
 
-  it("dispatchAgentEvent routes tool_start to preToolUse", async () => {
+  it("P1-B: dispatchAgentEvent does NOT route tool_start to preToolUse (veto pipeline owns it)", async () => {
     let called = false;
     const hooks: AgentHooks = {
       preToolUse: async (context) => {
@@ -86,11 +86,11 @@ describe("beforeTool 统一到 SDK hooks", () => {
       type: "tool_start",
       call: { id: "call-1", name: "bash", arguments: { command: "ls" } },
     };
-    // Note: dispatchAgentEvent currently does NOT route tool_start to preToolUse
-    // This test documents the expected behavior after the fix
+    // P1-B: preToolUse is bridged into the ExtensionHost beforeTool veto
+    // pipeline by createCodingAgent, which fires it once per tool call.
+    // dispatchAgentEvent must NOT also fire it on tool_start, otherwise
+    // side-effectful hooks (billing, telemetry) would double-execute.
     await dispatchAgentEvent(hooks, event, { cwd: "/test" });
-    // Currently this will fail because dispatchAgentEvent doesn't handle tool_start
-    // After the fix, called should be true
-    expect(called).toBe(true);
+    expect(called).toBe(false);
   });
 });

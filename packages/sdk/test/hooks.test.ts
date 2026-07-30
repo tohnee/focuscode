@@ -171,6 +171,44 @@ describe("dispatchAgentEvent()", () => {
     expect(starts).toEqual([ctx]);
     expect(ends).toEqual([ctx]);
   });
+
+  it("P1-B: does NOT invoke preToolUse on tool_start events (veto pipeline owns it)", async () => {
+    const preToolCalls: { toolName: string; args: unknown }[] = [];
+    const hooks = createHooks({
+      preToolUse: async (ctx) => {
+        preToolCalls.push({ toolName: ctx.toolName, args: ctx.arguments });
+        return { allow: true };
+      },
+    });
+    const event: AgentEvent = {
+      type: "tool_start",
+      call: { id: "c1", name: "bash", arguments: { command: "ls" } },
+    };
+    await dispatchAgentEvent(hooks, event, { cwd: "/tmp/repo" });
+    // preToolUse must NOT fire from tool_start — it is bridged into the
+    // ExtensionHost beforeTool veto pipeline by createCodingAgent, which
+    // already fires it exactly once per tool call. Firing it here would
+    // double-execute side-effectful hooks (billing/telemetry).
+    expect(preToolCalls).toEqual([]);
+  });
+
+  it("P1-B: preToolUse remains callable directly (integrator-invoked)", async () => {
+    const calls: string[] = [];
+    const hooks = createHooks({
+      preToolUse: async (ctx) => {
+        calls.push(ctx.toolName);
+        return { allow: true };
+      },
+    });
+    // Integrators (or the SDK veto bridge) can still call preToolUse
+    // directly — only dispatchAgentEvent skips it on tool_start.
+    await hooks.preToolUse?.({
+      toolName: "bash",
+      arguments: { command: "ls" },
+      cwd: "/repo",
+    });
+    expect(calls).toEqual(["bash"]);
+  });
 });
 
 /**

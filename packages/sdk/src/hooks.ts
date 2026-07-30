@@ -201,7 +201,7 @@ export interface DispatchContext {
  * can register lifecycle hooks without manually parsing `AgentEvent` variants.
  *
  * Behavior:
- *   - `tool_start` → `preToolUse` (with toolName, arguments, cwd)
+ *   - `tool_start` → no-op (see note below)
  *   - `tool_end` → `postToolUse` (with toolName, arguments, durationMs, result)
  *   - `agent_end` → `stop` (with `AgentRunResult.stopped` as StopReason)
  *   - `compaction` → `preCompact` (with summary, droppedMessages, cwd)
@@ -211,6 +211,15 @@ export interface DispatchContext {
  *     NOT dispatched from events; integrators call them directly because
  *     session/prompt/subagent lifecycle doesn't emit a unique event.
  *
+ * P1-B: `preToolUse` is intentionally NOT dispatched from `tool_start`. The
+ * SDK bridges `preToolUse` into the ExtensionHost `beforeTool` veto pipeline
+ * (see `createCodingAgent`), which fires once per tool call from the agent
+ * runtime's veto path. Dispatching it again from `tool_start` would execute
+ * side-effectful hooks (billing, telemetry, notifications) twice and would
+ * also fire after a veto (asymmetric — `tool_start` is emitted regardless of
+ * the veto result). `preToolUse` owners should rely on the veto pipeline
+ * alone; `postToolUse` still fires from `tool_end` for observations.
+ *
  * @throws Rethrows any hook error so the agent loop can observe failures.
  */
 export async function dispatchAgentEvent(
@@ -218,14 +227,13 @@ export async function dispatchAgentEvent(
   event: AgentEvent,
   context: DispatchContext,
 ): Promise<void> {
+  // P1-B: preToolUse is NOT dispatched from tool_start. It is bridged into
+  // the ExtensionHost beforeTool veto pipeline by createCodingAgent, which
+  // already fires it once per tool call. Dispatching here would double-fire
+  // side-effectful hooks (billing/telemetry) and would also fire even when
+  // the veto pipeline rejected the call (asymmetric). tool_start is now a
+  // no-op for hook routing.
   if (event.type === "tool_start") {
-    if (hooks.preToolUse) {
-      await hooks.preToolUse({
-        toolName: event.call.name,
-        arguments: event.call.arguments,
-        cwd: context.cwd,
-      });
-    }
     return;
   }
   if (event.type === "tool_end") {

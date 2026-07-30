@@ -533,6 +533,10 @@ export class CodingAgent {
           await this.emit({
             type: "error",
             message: `Output truncated (stopReason=length) — ${calls.length} tool call(s) rejected to avoid partial execution.`,
+            // P1-C: recoverable — the agent loop continues, appends tool
+            // results, and lets the model retry with shorter output. Stream
+            // consumers must NOT close the stream on this event.
+            severity: "recoverable",
           });
           for (const call of calls) {
             const entry = await this.options.sessionStore.appendMessage(this.sessionId, {
@@ -582,6 +586,12 @@ export class CodingAgent {
             await this.emit({
               type: "error",
               message: `Doom-loop detected: same tool call(s) failed ${this.doomLoopCount} consecutive times. Stopping.`,
+              // P1-C: recoverable in the streaming sense — the agent breaks
+              // out of the tool loop, sets stopped="error", and still emits
+              // a normal agent_end right after. The catch-block throw path
+              // (which is genuinely fatal) emits without severity, which
+              // defaults to "fatal" for stream helpers.
+              severity: "recoverable",
             });
             stopped = "error";
             lastContent = `Stopped: doom-loop detected - the same tool call(s) failed ${this.doomLoopCount} consecutive times. Try a different approach.`;

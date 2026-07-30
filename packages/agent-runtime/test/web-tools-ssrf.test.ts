@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { isPrivateAddress, parseFetchUrl } from "../src/index.js";
+import {
+  createWebFetchTool,
+  defaultDnsResolver,
+  isPrivateAddress,
+  parseFetchUrl,
+  type DnsResolver,
+} from "../src/index.js";
 
 function isFailure(value: unknown): value is { content: string; isError: true } {
   return (
@@ -162,5 +168,90 @@ describe("parseFetchUrl SSRF protection", () => {
     const result = parseFetchUrl("https://example.com/path");
     expect(typeof result).toBe("string");
     expect(result).toBe("https://example.com/path");
+  });
+});
+
+describe("P1-L: DNS rebinding protection (defaultDnsResolver + fetchWithTimeout)", () => {
+  it("TC-P1-L-01: defaultDnsResolver returns IP literals unchanged (IPv4)", async () => {
+    const addresses = await defaultDnsResolver("8.8.8.8");
+    expect(addresses).toEqual(["8.8.8.8"]);
+  });
+
+  it("TC-P1-L-02: defaultDnsResolver returns IP literals unchanged (IPv6)", async () => {
+    const addresses = await defaultDnsResolver("::1");
+    expect(addresses).toEqual(["::1"]);
+  });
+
+  it("TC-P1-L-03: custom dnsResolver returning private IP triggers DNS-rebinding block", async () => {
+    // Simulate DNS rebinding: public hostname resolves to a private IP.
+    const rebindingResolver: DnsResolver = async () => ["127.0.0.1"];
+    const tool = createWebFetchTool({
+      dnsResolver: rebindingResolver,
+      timeoutMs: 100,
+    });
+    const result = await tool.execute(
+      { url: "http://example.com/" },
+      { cwd: "/tmp", signal: undefined as never },
+    );
+    expect(isFailure(result)).toBe(true);
+    if (isFailure(result)) {
+      expect(result.content).toMatch(/DNS rebinding|private address/i);
+    }
+  });
+
+  it("TC-P1-L-04: custom dnsResolver returning public IP proceeds to fetch", async () => {
+    // Public IP — should not be blocked by the DNS check. The fetch itself
+    // may fail (no network in CI), but the failure must NOT mention DNS
+    // rebinding.
+    const publicResolver: DnsResolver = async () => ["93.184.216.34"];
+    const tool = createWebFetchTool({
+      dnsResolver: publicResolver,
+      timeoutMs: 100,
+    });
+    const result = await tool.execute(
+      { url: "http://example.com/" },
+      { cwd: "/tmp", signal: undefined as never },
+    );
+    // Either success (network available) or fetch failure — but NOT a DNS
+    // rebinding block.
+    if (isFailure(result)) {
+      expect(result.content).not.toMatch(/DNS rebinding/i);
+    }
+  });
+
+  it("TC-P1-L-05: dnsResolver returning mixed public+private IPs is blocked", async () => {
+    // A hostname that resolves to both public and private IPs must be
+    // blocked — any private resolution is suspicious.
+    const mixedResolver: DnsResolver = async () => ["93.184.216.34", "10.0.0.1"];
+    const tool = createWebFetchTool({
+      dnsResolver: mixedResolver,
+      timeoutMs: 100,
+    });
+    const result = await tool.execute(
+      { url: "http://example.com/" },
+      { cwd: "/tmp", signal: undefined as never },
+    );
+    expect(isFailure(result)).toBe(true);
+    if (isFailure(result)) {
+      expect(result.content).toMatch(/DNS rebinding|private address/i);
+    }
+  });
+
+  it("TC-P1-L-06: allowPrivateAddresses=true skips DNS rebinding check", async () => {
+    const rebindingResolver: DnsResolver = async () => ["127.0.0.1"];
+    const tool = createWebFetchTool({
+      dnsResolver: rebindingResolver,
+      allowPrivateAddresses: true,
+      timeoutMs: 100,
+    });
+    const result = await tool.execute(
+      { url: "http://example.com/" },
+      { cwd: "/tmp", signal: undefined as never },
+    );
+    // allowPrivate=true means the DNS check is skipped; fetch may succeed or
+    // fail but not with a DNS-rebinding message.
+    if (isFailure(result)) {
+      expect(result.content).not.toMatch(/DNS rebinding/i);
+    }
   });
 });

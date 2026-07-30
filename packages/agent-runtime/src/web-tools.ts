@@ -1,3 +1,4 @@
+import { lookup as dnsLookup } from "node:dns/promises";
 import type { AgentTool, ToolExecutionResult } from "./types.js";
 
 const DEFAULT_MAX_CHARS = 20_000;
@@ -6,6 +7,13 @@ const MAX_BODY_BYTES = 2_000_000;
 const DEFAULT_TIMEOUT_MS = 20_000;
 const USER_AGENT = "focuscode-agent/0.4 (+https://github.com/focuscode)";
 const DUCKDUCKGO_LITE = "https://lite.duckduckgo.com/lite/";
+
+/**
+ * DNS resolver contract: returns all A/AAAA addresses for a hostname.
+ * Injectable for tests so DNS rebinding protection can be verified without
+ * real network I/O.
+ */
+export type DnsResolver = (hostname: string) => Promise<string[]>;
 
 export interface WebFetchToolOptions {
   /** Request timeout; injectable for tests. Defaults to 20s. */
@@ -16,6 +24,14 @@ export interface WebFetchToolOptions {
    * 192.168.0.0/16, 169.254.0.0/16, 0.0.0.0, ::1, fc00::/7, and fe80::/10.
    */
   allowPrivateAddresses?: boolean;
+  /**
+   * P1-L: custom DNS resolver for SSRF / DNS-rebinding protection. When
+   * provided, the hostname is resolved before the fetch and every resolved
+   * IP is checked against `isPrivateAddress`. This catches public domains
+   * that resolve to private/internal IPs (DNS rebinding). Defaults to
+   * `dns.promises.lookup` with `all: true`.
+   */
+  dnsResolver?: DnsResolver;
 }
 
 export interface WebSearchToolOptions {
@@ -34,9 +50,26 @@ export interface WebSearchResult {
   snippet?: string;
 }
 
+/**
+ * Default DNS resolver: wraps `dns.promises.lookup` with `all: true` so SSRF
+ * protection sees every A/AAAA record. Returns the input unchanged for
+ * IP-literal hostnames (no DNS query needed). On DNS failure, throws — the
+ * caller surfaces the error via web_fetch's try/catch.
+ */
+export const defaultDnsResolver: DnsResolver = async (hostname: string): Promise<string[]> => {
+  // IP literals don't need a DNS lookup; return as-is so isPrivateAddress
+  // can evaluate them directly.
+  if (parseIPv4Octets(hostname) || parseIPv6Groups(hostname)) return [hostname];
+  const records = await dnsLookup(hostname, { all: true });
+  // dedupe + sort for deterministic test output
+  const addresses = Array.from(new Set(records.map((r) => r.address))).sort();
+  return addresses;
+};
+
 export function createWebFetchTool(options: WebFetchToolOptions = {}): AgentTool {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const allowPrivate = options.allowPrivateAddresses ?? false;
+  const dnsResolver = options.dnsResolver ?? defaultDnsResolver;
   return {
     definition: {
       name: "web_fetch",
@@ -59,7 +92,13 @@ export function createWebFetchTool(options: WebFetchToolOptions = {}): AgentTool
         const url = parseFetchUrl(input.url, allowPrivate);
         if (typeof url === "object") return url;
         const maxChars = boundedInteger(input.maxChars, DEFAULT_MAX_CHARS, 100, MAX_CHARS_LIMIT);
-        const response = await fetchWithTimeout(url, timeoutMs, context.signal, allowPrivate);
+        const response = await fetchWithTimeout(
+          url,
+          timeoutMs,
+          context.signal,
+          allowPrivate,
+          dnsResolver,
+        );
         const declared = Number(response.headers.get("content-length") ?? 0);
         if (declared > MAX_BODY_BYTES) {
           return failure(`Response declares ${declared} bytes, over the 2 MB limit`);
@@ -352,6 +391,7 @@ async function fetchWithTimeout(
   timeoutMs: number,
   parentSignal: AbortSignal | undefined,
   allowPrivate = false,
+  dnsResolver: DnsResolver | undefined = undefined,
 ): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(
@@ -369,6 +409,22 @@ async function fetchWithTimeout(
     const MAX_REDIRECTS = 5;
     let currentUrl = url;
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      // P1-L: DNS rebinding protection. Resolve the hostname and verify every
+      // A/AAAA record is public before connecting. Without this, a public
+      // domain could resolve to a private/internal IP (DNS rebinding) and
+      // bypass isPrivateAddress's literal-hostname check. When dnsResolver is
+      // undefined (search callsites), only literal-hostname checks apply.
+      if (!allowPrivate && dnsResolver) {
+        const parsed = new URL(currentUrl);
+        const addresses = await dnsResolver(parsed.hostname);
+        for (const ip of addresses) {
+          if (isPrivateAddress(ip)) {
+            throw new Error(
+              `Hostname ${parsed.hostname} resolves to private address ${ip} (DNS rebinding blocked)`,
+            );
+          }
+        }
+      }
       const response = await fetch(currentUrl, {
         signal: controller.signal,
         redirect: "manual",

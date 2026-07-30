@@ -35,7 +35,7 @@ import {
 } from "@focuscode/agent-runtime";
 import { ExtensionPackageManager } from "@focuscode/ecosystem";
 import { createSandbox } from "@focuscode/sandbox";
-import { createSessionEffectSpine } from "@focuscode/sdk";
+import { FileReceiptJournal, createSessionEffectSpine } from "@focuscode/sdk";
 import type { CommandPrefixRule } from "@focuscode/action-domain";
 import { parseAgentArgs, type AgentCliArgs } from "./agent-args.js";
 import { oauthAccessTokenProvider } from "./auth-command.js";
@@ -304,6 +304,10 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
           ...(prefixRules ? { prefixRules } : {}),
         },
         ...(approve ? { approve } : {}),
+        // P1-D: persist receipts so the audit chain survives process restarts.
+        receiptJournal: new FileReceiptJournal(
+          join(homedir(), ".focuscode", "receipts", `${sessionId}.jsonl`),
+        ),
       })
     : undefined;
 
