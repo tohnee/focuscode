@@ -118,6 +118,26 @@ export interface CodingAgentOptions extends AgentRuntimeOptions {
    * of direct node:fs imports). Required when specEngine is set.
    */
   specEngineDeps?: SpecEngineDeps;
+  /**
+   * Confirmation handler invoked when SpecEngine emits
+   * `spec_confirmation_required`. The handler returns the user's choices
+   * (record of decisionId → optionLabel) to resolve, or `undefined` to
+   * decline. When omitted, the event flows through eventSink unchanged
+   * and the caller is responsible for resolving or declining via
+   * `agent.specEngineInstance` (legacy behavior).
+   *
+   * Moving this into the agent (C5 fix) eliminates the CLI eventSink
+   * wrapper that previously intercepted the event via a time-coupled
+   * `let agent` closure.
+   */
+  specConfirmationHandler?: (event: {
+    specId: string;
+    decisions: Array<{
+      id: string;
+      point: string;
+      options: Array<{ label: string }>;
+    }>;
+  }) => Promise<Record<string, string> | undefined>;
 }
 
 export class CodingAgent {
@@ -265,6 +285,24 @@ export class CodingAgent {
 
   get specEngineInstance(): SpecEngine | undefined {
     return this.specEngine;
+  }
+
+  /**
+   * The confirmation handler installed via CodingAgentOptions, or undefined.
+   * Exposed so SDK/CLI composition roots can verify the handler was wired
+   * (and so tests can assert installation without triggering a full pipeline).
+   */
+  get specConfirmationHandler():
+    | ((event: {
+        specId: string;
+        decisions: Array<{
+          id: string;
+          point: string;
+          options: Array<{ label: string }>;
+        }>;
+      }) => Promise<Record<string, string> | undefined>)
+    | undefined {
+    return this.options.specConfirmationHandler;
   }
 
   async submit(

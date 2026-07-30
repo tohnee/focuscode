@@ -469,3 +469,84 @@ FocusCode 在架构野心上明显超越 Claude Code 和 OpenCode：双路径（
 但实现成熟度有落差：CLI 和 SDK 的组合逻辑分裂（P0）、多个 God Function（C2/T2）、命令三处重复（C4）、类型碰撞（S2）。这些不是设计问题，而是收敛不足 — 架构已定义清晰边界（AGENTS.md + check-boundaries），但 CLI 层未充分复用 SDK 层。
 
 **核心建议**：优先解决 P0（CLI 复用 SDK），其余问题会随之简化。FocusCode 的差异化优势（审计 Kernel + 模型可移植 + 沙箱 + steering + Foxy）足以支撑其作为企业级 Agent Harness 的定位，但需要收敛实现才能兑现架构承诺。
+
+---
+
+## 九、修复进度（2026-07-30 更新）
+
+### 9.1 已完成（TDD）
+
+| 编号 | 状态        | 测试数 | 说明                                                                                               |
+| ---- | ----------- | ------ | -------------------------------------------------------------------------------------------------- |
+| S2   | ✅ 完成     | 4      | 移除 SDK `ApprovalMode` alias，统一 `HarnessApprovalMode`                                          |
+| C4   | ✅ 核心抽象 | 9      | `SlashCommandRegistry` — 单一命令注册表，三模式共享                                                |
+| P0-1 | ✅ SDK 扩展 | 5      | `createCodingAgent` 接受 `searchEndpoint/extensionHostKind/fallbackModels/eventSinkWrapper`        |
+| C1   | ✅ 完成     | 5      | `SUBCOMMANDS` 常量 + ReadonlySet 替代 deny-list                                                    |
+| T2-1 | ✅ 8 命令   | 10     | status/tools/approval/model/new/resume/fork/sessions 提取到 registry                               |
+| C5   | ✅ 完成     | 4      | `specConfirmationHandler` 选项，agent 内部处理，移除 eventSink 拦截                                |
+| T2-2 | ✅ 14 命令  | 17     | export/reload/skills/undo/cost/diagnostics/vim/palette/search/layout/todopanel/character/skin/init |
+
+累计新增测试 54 个，全部通过，零回归。
+
+### 9.2 C5 详细说明（SpecEngine 确认移入 agent）
+
+**原问题**：CLI 在 eventSink 包装层拦截 `spec_confirmation_required`，通过 `agent?.specEngineInstance` 调用 `resolveDecisions`/`declineSpec`。`agent` 是 `let`（可空），存在时序耦合 — 若事件在 agent 构造前到达，拦截器静默失败。
+
+**修复**：
+
+- `CodingAgentOptions` 新增 `specConfirmationHandler` 选项
+- handler 签名：`(event) => Promise<Record<string,string> | undefined>`（返回 choices=resolve，undefined=decline）
+- agent 通过 `specConfirmationHandler` getter 暴露已安装的 handler
+- CLI 构造 handler 函数并作为选项传入，不再包装 eventSink
+- TUI 模式不安装 handler（确认 UI 由 TUI bridge 驱动）
+
+**收益**：消除 `let agent` 闭包，确认逻辑与 agent 生命周期绑定，handler 可独立测试。
+
+### 9.3 T1/T3 长期技术债评估
+
+#### T1：TUI 渲染层 Ink 迁移评估
+
+**现状**：`packages/tui` 是自研全屏终端状态机（`FullScreenTui` 类），直接操作 ANSI escape codes、管理滚动缓冲区、输入处理、布局计算。1228 行的 `tui.ts` 中 `runFullScreenAgent` 是 God Function，但底层 TUI 引擎本身是稳定的。
+
+**Ink 迁移收益**：
+
+- 声明式 UI（JSX）替代命令式 ANSI 操作
+- 自动处理终端 resize、滚动、交替屏幕缓冲区
+- 丰富的组件生态（flexbox 布局、focus 管理、列表虚拟化）
+- 与 React 生态对齐，降低贡献门槛
+
+**Ink 迁移风险**：
+
+- **性能**：Ink 的 reconciliation 在高频更新（流式 token、spinners）下可能引入 jank；当前自研引擎直接 write ANSI，零开销
+- **颜色/主题**：FocusCode 有 5 套主题 + mascot + skin 系统，Ink 的 styled-components 需重新映射
+- **vim 模式**：当前 vim 状态机深度集成在输入处理层，Ink 的 input handling 需重新设计
+- **companion/speech overlay**：Foxy 鼓励师的动画层依赖时序控制，Ink 的 render 模型不同
+- **架构边界**：`packages/tui` 是叶子 adapter（不依赖任何 `@focuscode/*`），Ink 引入 React 依赖不违反边界，但增加了叶子包的复杂度
+
+**建议**：**不迁移**。当前自研 TUI 已稳定，迁移收益（声明式）不抵风险（性能/主题/vim/动画重写）。应优先继续 T2 的命令提取（已完成 22/35 命令），降低 `runFullScreenAgent` 复杂度。若未来贡献者反馈 TUI 维护困难，再评估 Ink 迁移。
+
+#### T3：Foxy 鼓励师内聚
+
+**现状**：Foxy 逻辑分散在三处：
+
+1. `apps/cli/src/tui.ts` — `cheerEnabled` 状态、`pickCheer("idle")` 调用、`/cheer` 命令
+2. `apps/cli/src/mascots.ts`（推测）— mascot 加载、cheer 文案
+3. `packages/tui` — companion 渲染、speech overlay
+
+**问题**：`/cheer on|off` 命令、`cheerEnabled` 状态、`pickCheer` 调用都在 `tui.ts`，但 mascot 数据和渲染在别处。修改 cheer 行为需跨文件协调。
+
+**建议**：**低优先级，随 T2 step 3 一起处理**。当 `image/cheer/todo/mcp/skill/tree` 命令迁移到 registry 时，将 `cheerEnabled` 状态和 `/cheer` 命令一并提取到 `tui-commands.ts` 的 `TuiCommandState`，与 mascot 数据结构对齐。不建议单独重构 Foxy — 它是体验层装饰，当前分散程度可接受。
+
+### 9.4 P0 step 2 剩余工作
+
+**为何未完成**：CLI `runAgentCommand` 有 350 行、13 步组合逻辑（sandbox、tool registry filter、extensions、MCP、spine、renderer、prompter、event sink、approve、session selection）。完全切换到 `createCodingAgent` 需要 SDK 扩展支持：sandbox options、enabledTools/disabledTools filter、mcpServers 列表、renderer 模式选择、prompter 注入。
+
+每个 SDK 扩展都需 TDD（RED→GREEN→REFACTOR），且需先写 CLI 特征化测试锁定现有行为（13 步组合的边界条件）。这是安全的单次会话工作量的上限。
+
+**已完成的前提**：SDK 已支持 `searchEndpoint/extensionHostKind/fallbackModels/eventSinkWrapper/specConfirmationHandler`。C5 已移除 eventSink 拦截。这些为 step 2 铺平了道路。
+
+**下一步计划**：分 3 个垂直切片推进——
+
+1. SDK 添加 `sandbox` 选项（TDD：测试 sandbox 配置传入）
+2. SDK 添加 `enabledTools/disabledTools` 选项（TDD：测试 tool filter）
+3. CLI `runAgentCommand` 用 `createCodingAgent` 替换组合逻辑，feature flag 控制（`--use-sdk-composition`），特征化测试验证行为一致后默认开启

@@ -105,4 +105,55 @@ describe("createCodingAgent extended options (P0: CLI reuse SDK)", () => {
     });
     expect(created.extensions.constructor.name).toBe("ExtensionHost");
   });
+
+  it("accepts enabledTools to whitelist tools (P0 step 2 slice 2)", async () => {
+    const cwd = await createTestDirectory("sdk-ext-enabled-tools");
+    const created = await createCodingAgent({
+      cwd,
+      provider: "custom",
+      model: "fixture",
+      baseUrl: "http://127.0.0.1:1/v1",
+      approval: "deny",
+      sandbox: { kind: "host" },
+      persistentSession: false,
+      projectTrusted: false,
+      enabledTools: ["read", "edit"],
+    });
+    expect(created.config.enabledTools).toEqual(["read", "edit"]);
+    expect(await created.agent.status()).toMatchObject({ model: "fixture" });
+  });
+
+  it("accepts disabledTools to blacklist tools (P0 step 2 slice 2)", async () => {
+    const cwd = await createTestDirectory("sdk-ext-disabled-tools");
+    const created = await createCodingAgent({
+      cwd,
+      provider: "custom",
+      model: "fixture",
+      baseUrl: "http://127.0.0.1:1/v1",
+      approval: "deny",
+      sandbox: { kind: "host" },
+      persistentSession: false,
+      projectTrusted: false,
+      disabledTools: ["bash"],
+    });
+    expect(created.config.disabledTools).toEqual(["bash"]);
+    expect(await created.agent.status()).toMatchObject({ model: "fixture" });
+  });
+
+  it("accepts specConfirmationHandler (C5: agent-owned confirmation)", async () => {
+    const cwd = await createTestDirectory("sdk-ext-spec-handler");
+    const handler = async () => ({}) as Record<string, string>;
+    const created = await createCodingAgent({
+      cwd,
+      provider: "custom",
+      model: "fixture",
+      baseUrl: "http://127.0.0.1:1/v1",
+      approval: "deny",
+      sandbox: { kind: "host" },
+      persistentSession: false,
+      projectTrusted: false,
+      specConfirmationHandler: handler,
+    });
+    expect(created.agent.specConfirmationHandler).toBe(handler);
+  });
 });

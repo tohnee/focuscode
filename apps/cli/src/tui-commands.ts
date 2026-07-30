@@ -7,11 +7,11 @@
  * SlashCommandRegistry so the TUI's onCommand can dispatch through a single
  * `registry.dispatch(input, ctx)` call instead of a 120-line switch.
  *
- * Migration status: the commands below are the high-value, low-coupling
- * subset (status/tools/approval/model/session management). Commands that
- * touch mutable attachment state, spec engine callbacks, or mascot cheer
- * toggles will be migrated incrementally — they need richer context objects
- * and are left in tui.ts for now to avoid destabilising the TUI loop.
+ * Step 1: status, tools, approval, model, new, resume, fork, sessions.
+ * Step 2: export, reload, skills, undo, cost, diagnostics, vim, palette,
+ *         search, layout, todopanel, character, skin, init.
+ * Remaining (need richer mutable context): image, cheer, todo, mcp, skill,
+ * tree. These will be migrated once their context shape is finalised.
  */
 import type { ApprovalMode } from "@focuscode/action-domain";
 import type { SlashCommandRegistry } from "./slash-command-registry.js";
@@ -24,6 +24,12 @@ export interface TuiCommandAgent {
   newSession(name?: string): Promise<string>;
   switchSession(idOrPrefix: string): Promise<string>;
   forkSession(name?: string): Promise<string>;
+  snapshot(): {
+    sessionId: string;
+    activeLeafId: string;
+    entries: Array<{ entryId: string; message: { role: string; content: string } }>;
+  };
+  undoCheckpoint(): Promise<string>;
 }
 
 /** Minimal sessions surface needed by the extracted commands. */
@@ -37,21 +43,55 @@ export interface TuiCommandTui {
   setModel(label: string): void;
   setSession(sessionId: string): void;
   showToast(message: string, kind?: "info" | "warning" | "error"): void;
+  setVimEnabled(enabled: boolean): void;
+  getVimState(): unknown;
+  openPalette(): void;
+  openSearch(): void;
+  updateSearchQuery(query: string): void;
+}
+
+/** Minimal extensions surface needed by the extracted commands. */
+export interface TuiCommandExtensions {
+  reload(): Promise<unknown[]>;
+}
+
+/** Minimal resources surface needed by the extracted commands. */
+export interface TuiCommandResources {
+  skills: Array<{ name: string; description: string; content: string }>;
 }
 
 /**
- * The mutable state the extracted commands read from and write to. This is
- * a subset of the closure state from runFullScreenAgent; commands that need
- * more state (attachments, cheer toggle, etc.) stay in tui.ts until they
- * are migrated.
+ * The state the extracted commands read from and write to. Fields beyond
+ * step 1 (extensions, resources, formatSessionCost, etc.) are required by
+ * step 2 commands; commands needing mutable attachment/cheer state still
+ * live in tui.ts.
  */
 export interface TuiCommandState {
   agent: TuiCommandAgent;
   sessions: TuiCommandSessions;
   tui: TuiCommandTui;
+  extensions: TuiCommandExtensions;
+  resources: TuiCommandResources;
   activeModel: { provider: string; model: string };
   changeModel: (spec: string) => Promise<{ provider: string; model: string }>;
   cwd: string;
+  // step 2 fields
+  sessionCost: number;
+  sessionBudget: number | undefined;
+  companion: unknown;
+  diagnosticsEnabled: boolean;
+  formatSessionCost: (cost: number, budget: number | undefined, companion: unknown) => string;
+  scaffoldFocuscodeProject: (cwd: string) => Promise<string>;
+  describeMascots: () => string;
+  describeSkins: (args: string) => string;
+  runLayoutSubcommand: (tui: TuiCommandTui, args: string) => string;
+  runTodoPanelSubcommand: (tui: TuiCommandTui, args: string) => string;
+  runTodoSubcommand: (agent: TuiCommandAgent, args: string) => Promise<string>;
+  exportSessionHtml: (
+    snapshot: ReturnType<TuiCommandAgent["snapshot"]>,
+    cwd: string,
+    args: string,
+  ) => Promise<string>;
 }
 
 const APPROVAL_MODES: readonly ApprovalMode[] = ["ask", "auto-edit", "full-auto", "deny"];
@@ -69,6 +109,8 @@ export function buildTuiCommandRegistry(
   registry: SlashCommandRegistry,
   state: TuiCommandState,
 ): void {
+  // ─── Step 1 commands ────────────────────────────────────────────────
+
   registry.register({
     name: "status",
     description: "Show agent status as JSON",
@@ -163,5 +205,134 @@ export function buildTuiCommandRegistry(
         )
         .join("\n");
     },
+  });
+
+  // ─── Step 2 commands ────────────────────────────────────────────────
+
+  registry.register({
+    name: "export",
+    description: "Export the current session as HTML",
+    modes: ["tui", "interactive"],
+    execute: async (ctx) => {
+      const path = await state.exportSessionHtml(state.agent.snapshot(), ctx.cwd, ctx.args);
+      return "Exported " + path;
+    },
+  });
+
+  registry.register({
+    name: "reload",
+    description: "Reload extensions",
+    modes: ["tui", "interactive"],
+    execute: async () => {
+      const reloaded = await state.extensions.reload();
+      return "Reloaded " + reloaded.length + " extension(s).";
+    },
+  });
+
+  registry.register({
+    name: "skills",
+    description: "List discovered skills",
+    modes: ["tui", "interactive"],
+    execute: async () =>
+      state.resources.skills.length
+        ? state.resources.skills
+            .map((skill) => "/" + skill.name + " — " + skill.description)
+            .join("\n")
+        : "No skills discovered.",
+  });
+
+  registry.register({
+    name: "undo",
+    description: "Restore the last checkpoint",
+    modes: ["tui", "interactive"],
+    execute: async () => state.agent.undoCheckpoint(),
+  });
+
+  registry.register({
+    name: "cost",
+    description: "Show session cost",
+    modes: ["tui", "interactive"],
+    execute: async () =>
+      state.formatSessionCost(state.sessionCost, state.sessionBudget, state.companion),
+  });
+
+  registry.register({
+    name: "diagnostics",
+    description: "Toggle diagnostics on/off",
+    modes: ["tui", "interactive"],
+    execute: async (ctx) => {
+      const arg = ctx.args.trim();
+      if (arg === "on") state.diagnosticsEnabled = true;
+      else if (arg === "off") state.diagnosticsEnabled = false;
+      else state.diagnosticsEnabled = !state.diagnosticsEnabled;
+      return "Diagnostics " + (state.diagnosticsEnabled ? "on" : "off") + ".";
+    },
+  });
+
+  registry.register({
+    name: "vim",
+    description: "Toggle vim mode",
+    modes: ["tui", "interactive"],
+    execute: async () => {
+      const enabled = state.tui.getVimState() !== undefined;
+      state.tui.setVimEnabled(!enabled);
+      return enabled ? "Vim mode off." : "Vim mode on (NORMAL).";
+    },
+  });
+
+  registry.register({
+    name: "palette",
+    description: "Open the command palette",
+    modes: ["tui", "interactive"],
+    execute: async () => {
+      state.tui.openPalette();
+      return undefined;
+    },
+  });
+
+  registry.register({
+    name: "search",
+    description: "Open search (optionally with a query)",
+    modes: ["tui", "interactive"],
+    execute: async (ctx) => {
+      state.tui.openSearch();
+      if (ctx.args) state.tui.updateSearchQuery(ctx.args);
+      return undefined;
+    },
+  });
+
+  registry.register({
+    name: "layout",
+    description: "Change the TUI layout",
+    modes: ["tui", "interactive"],
+    execute: async (ctx) => state.runLayoutSubcommand(state.tui, ctx.args),
+  });
+
+  registry.register({
+    name: "todopanel",
+    description: "Toggle or control the todo panel",
+    modes: ["tui", "interactive"],
+    execute: async (ctx) => state.runTodoPanelSubcommand(state.tui, ctx.args),
+  });
+
+  registry.register({
+    name: "character",
+    description: "Describe available mascots",
+    modes: ["tui", "interactive"],
+    execute: async () => state.describeMascots(),
+  });
+
+  registry.register({
+    name: "skin",
+    description: "Describe or select a skin",
+    modes: ["tui", "interactive"],
+    execute: async (ctx) => state.describeSkins(ctx.args),
+  });
+
+  registry.register({
+    name: "init",
+    description: "Scaffold a focuscode project in the cwd",
+    modes: ["tui", "interactive"],
+    execute: async (ctx) => state.scaffoldFocuscodeProject(ctx.cwd),
   });
 }

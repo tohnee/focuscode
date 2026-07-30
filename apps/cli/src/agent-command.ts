@@ -222,41 +222,46 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
   const renderer = new HumanEventRenderer({
     quietTools: mode === "print" && !process.stderr.isTTY,
   });
-  const baseEventSink =
+  const eventSink =
     mode === "json"
       ? jsonEventWriter()
       : mode === "rpc"
         ? rpcEventSink
         : (event: Parameters<HumanEventRenderer["handle"]>[0]) => renderer.handle(event);
-  // Wrap the event sink to intercept spec_confirmation_required events in
-  // non-TUI modes. In TUI mode the confirmation UI is handled by the TUI
-  // bridge. In interactive mode, prompt the user. In print/json mode,
-  // auto-decline to avoid hanging the pipeline indefinitely.
-  const eventSink: typeof baseEventSink = (event) => {
-    if (event.type === "spec_confirmation_required" && mode !== "tui") {
-      const specEngine = agent?.specEngineInstance;
-      if (specEngine) {
-        if (prompter && mode === "interactive") {
-          void (async () => {
-            const choices: Record<string, string> = {};
-            for (const decision of event.decisions as unknown[]) {
-              const d = decision as { id: string; point: string; options: { label: string }[] };
-              const labels = d.options.map((o) => o.label).join(", ");
-              const answer = await prompter.ask(`${d.point} [${labels}]: `);
-              choices[d.id] = answer || d.options[0]!.label;
-            }
-            specEngine.resolveDecisions(event.specId, choices);
-          })();
-        } else {
+  // SpecEngine confirmation is now handled inside the agent via
+  // `specConfirmationHandler` (C5 fix). The handler is built here and
+  // passed as a CodingAgent.create option, eliminating the time-coupled
+  // `let agent` closure that previously intercepted events in the sink.
+  // In TUI mode the confirmation UI is driven by the TUI bridge via
+  // onSpecConfirm/onSpecDecline callbacks, so no handler is installed here.
+  const specConfirmationHandler =
+    mode === "tui"
+      ? undefined
+      : (event: {
+          specId: string;
+          decisions: Array<{
+            id: string;
+            point: string;
+            options: Array<{ label: string }>;
+          }>;
+        }) => {
+          if (prompter && mode === "interactive") {
+            return (async () => {
+              const choices: Record<string, string> = {};
+              for (const decision of event.decisions) {
+                const labels = decision.options.map((o) => o.label).join(", ");
+                const answer = await prompter.ask(`${decision.point} [${labels}]: `);
+                choices[decision.id] = answer || decision.options[0]!.label;
+              }
+              return choices;
+            })();
+          }
+          // print/json/rpc non-interactive: auto-decline to avoid hanging.
           process.stderr.write(
             `[spec] Auto-declining spec confirmation (non-interactive mode): ${event.specId}\n`,
           );
-          specEngine.declineSpec(event.specId);
-        }
-      }
-    }
-    return baseEventSink(event);
-  };
+          return Promise.resolve(undefined);
+        };
   let tuiApproval: ((question: string) => Promise<boolean>) | undefined;
   const approve: ApprovalHandler | undefined =
     mode === "tui"
@@ -352,6 +357,8 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
     ...(specEngineOptions && specEngineDeps
       ? { specEngine: specEngineOptions, specEngineDeps }
       : {}),
+    // C5: confirmation handler installed on the agent itself, not the sink.
+    ...(specConfirmationHandler ? { specConfirmationHandler } : {}),
   });
   // Explicit post-construction wiring: spine approvals emit the same
   // approval_required event (with audit fan-out) as the legacy path.

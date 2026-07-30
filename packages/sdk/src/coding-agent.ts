@@ -81,6 +81,21 @@ export interface CreateCodingAgentOptions extends AgentConfigOverrides {
   eventSinkWrapper?: (
     sink: ((event: AgentEvent) => Promise<void> | void) | undefined,
   ) => ((event: AgentEvent) => Promise<void> | void) | undefined;
+  /**
+   * SpecEngine confirmation handler. When set, the agent invokes this
+   * handler directly on `spec_confirmation_required` events instead of
+   * forcing the caller to intercept the event via eventSink wrapping.
+   * Returns the user's choices (resolve) or undefined (decline).
+   * See C5 fix in docs/reviews/focuscode-cli-tui-sdk-review-2026-07-30.md.
+   */
+  specConfirmationHandler?: (event: {
+    specId: string;
+    decisions: Array<{
+      id: string;
+      point: string;
+      options: Array<{ label: string }>;
+    }>;
+  }) => Promise<Record<string, string> | undefined>;
 }
 
 export interface CreatedCodingAgent {
@@ -276,6 +291,9 @@ export async function createCodingAgent(
           effectContext: spine.effectContext,
           onApprovalModeChange: (mode: ApprovalMode) => spine.setApprovalMode(mode),
         }
+      : {}),
+    ...(options.specConfirmationHandler
+      ? { specConfirmationHandler: options.specConfirmationHandler }
       : {}),
   });
   // Explicit post-construction wiring: spine approvals emit the same
