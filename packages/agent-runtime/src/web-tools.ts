@@ -188,11 +188,47 @@ export function htmlToText(html: string): string {
 export function isPrivateAddress(hostname: string): boolean {
   const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
   if (host === "localhost" || host.endsWith(".localhost")) return true;
+  // Detect IPv4-mapped/compatible IPv6 in mixed notation (::ffff:w.x.y.z or
+  // ::w.x.y.z) — the WHATWG URL serializer emits this form for mapped
+  // addresses, and parseIPv6Groups rejects the dotted-quad tail, so without
+  // this check ::ffff:169.254.169.254 would bypass SSRF protection.
+  const mappedMatch = /^::(?:ffff:)?(\d+\.\d+\.\d+\.\d+)$/.exec(host);
+  if (mappedMatch) {
+    const ipv4 = parseIPv4Octets(mappedMatch[1]!);
+    if (ipv4) return isPrivateIPv4(ipv4);
+  }
   const ipv4 = parseIPv4Octets(host);
   if (ipv4) return isPrivateIPv4(ipv4);
   const ipv6 = parseIPv6Groups(host);
-  if (ipv6) return isPrivateIPv6(ipv6);
+  if (ipv6) {
+    // Also handle full-hex IPv4-mapped IPv6 (::ffff:aabb:ccdd) which
+    // parseIPv6Groups accepts but isPrivateIPv6 does not flag.
+    if (isIPv4MappedIPv6(ipv6)) {
+      const mapped = ipv4MappedToIPv4(ipv6);
+      if (mapped && isPrivateIPv4(mapped)) return true;
+    }
+    return isPrivateIPv6(ipv6);
+  }
   return false;
+}
+
+function isIPv4MappedIPv6(groups: number[]): boolean {
+  // ::ffff:0:0/96 — groups 0-4 are 0, group 5 is 0xffff
+  return (
+    groups[0] === 0 &&
+    groups[1] === 0 &&
+    groups[2] === 0 &&
+    groups[3] === 0 &&
+    groups[4] === 0 &&
+    groups[5] === 0xffff
+  );
+}
+
+function ipv4MappedToIPv4(groups: number[]): [number, number, number, number] | null {
+  if (groups.length < 8) return null;
+  const g6 = groups[6]!;
+  const g7 = groups[7]!;
+  return [(g6 >> 8) & 0xff, g6 & 0xff, (g7 >> 8) & 0xff, g7 & 0xff];
 }
 
 function parseIPv4Octets(host: string): [number, number, number, number] | null {

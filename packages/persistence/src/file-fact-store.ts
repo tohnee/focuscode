@@ -146,6 +146,7 @@ export class FileFactStore implements FactPort {
       return { firstSeq: request.expectedVersion, lastSeq: request.expectedVersion, events: [] };
     }
     return this.withTaskLock(request.taskId, async () => {
+      await this.repairTornTail(request.taskId);
       const existing = await this.loadEvents(request.taskId);
       if (existing.length !== request.expectedVersion) {
         throw new VersionConflictError(request.expectedVersion, existing.length);
@@ -188,23 +189,13 @@ export class FileFactStore implements FactPort {
       } catch {
         if (index === lines.length - 1) {
           // Torn tail: a crash mid-append can leave a partial final line that was
-          // never fully committed. Drop it and truncate the file back to the last
-          // valid newline so a subsequent append does not bury the partial line in
-          // the middle of the log (which would turn it into a non-tail corruption
-          // and fail-closed on the next read). Corruption of any earlier line
-          // stays fail-closed. When called from append() the task lock is already
-          // held, so the truncation is performed under the lock.
-          console.warn(`Repairing torn final event line ${index + 1} in ${path}`);
-          const validLines = lines.slice(0, index);
-          const validText = validLines.length > 0 ? `${validLines.join("\n")}\n` : "";
-          const offset = Buffer.byteLength(validText, "utf8");
-          await truncate(path, offset);
-          const syncHandle = await open(path, "r");
-          try {
-            await syncHandle.sync();
-          } finally {
-            await syncHandle.close();
-          }
+          // never fully committed. Skip it in memory; the file is repaired by
+          // repairTornTail() under the task lock on the next append. Corruption
+          // of any earlier line stays fail-closed. loadEvents is a public read
+          // method callable without the task lock, so it must NOT mutate the
+          // file — doing so would race with a concurrent append and truncate
+          // away newly-written entries.
+          console.warn(`Skipping torn final event line ${index + 1} in ${path}`);
           continue;
         }
         throw new Error(`Invalid event JSON at ${path}:${index + 1}`);
@@ -220,6 +211,37 @@ export class FileFactStore implements FactPort {
       events.push(committed);
     }
     return events.filter((event) => event.seq > afterSeq);
+  }
+
+  /**
+   * Repair a torn final line by truncating the file back to the last valid
+   * newline. Must be called under the task lock (e.g., from append()) so the
+   * truncation does not race with a concurrent append — otherwise a new entry
+   * written between the read and the truncate would be lost.
+   */
+  private async repairTornTail(taskId: string): Promise<void> {
+    const path = join(this.taskDirectory(taskId), "events.jsonl");
+    if (!(await exists(path))) return;
+    const text = await readFile(path, "utf8");
+    const lines = text.split("\n").filter(Boolean);
+    if (lines.length === 0) return;
+    try {
+      JSON.parse(lines[lines.length - 1]!);
+      return; // Last line parses — no torn tail.
+    } catch {
+      // Last line is a torn tail — truncate it away.
+      console.warn(`Repairing torn final event line ${lines.length} in ${path}`);
+      const validLines = lines.slice(0, -1);
+      const validText = validLines.length > 0 ? `${validLines.join("\n")}\n` : "";
+      const offset = Buffer.byteLength(validText, "utf8");
+      await truncate(path, offset);
+      const syncHandle = await open(path, "r");
+      try {
+        await syncHandle.sync();
+      } finally {
+        await syncHandle.close();
+      }
+    }
   }
 
   async loadCheckpoint(taskId: string): Promise<KernelCheckpointV1 | undefined> {

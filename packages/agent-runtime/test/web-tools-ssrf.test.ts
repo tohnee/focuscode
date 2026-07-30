@@ -71,6 +71,30 @@ describe("isPrivateAddress", () => {
   it("does not flag 11.0.0.1 as private (outside 10/8 range)", () => {
     expect(isPrivateAddress("11.0.0.1")).toBe(false);
   });
+
+  it("TC-P0-4-20: detects ::ffff:169.254.169.254 as private (IPv4-mapped metadata)", () => {
+    expect(isPrivateAddress("::ffff:169.254.169.254")).toBe(true);
+  });
+
+  it("TC-P0-4-21: detects ::ffff:127.0.0.1 as private (IPv4-mapped loopback)", () => {
+    expect(isPrivateAddress("::ffff:127.0.0.1")).toBe(true);
+  });
+
+  it("TC-P0-4-22: detects ::ffff:10.0.0.1 as private (IPv4-mapped RFC1918)", () => {
+    expect(isPrivateAddress("::ffff:10.0.0.1")).toBe(true);
+  });
+
+  it("TC-P0-4-23: detects ::ffff:a9fe:a9fe as private (full-hex IPv4-mapped metadata)", () => {
+    expect(isPrivateAddress("::ffff:a9fe:a9fe")).toBe(true);
+  });
+
+  it("TC-P0-4-24: does not flag ::ffff:8.8.8.8 as private (IPv4-mapped public)", () => {
+    expect(isPrivateAddress("::ffff:8.8.8.8")).toBe(false);
+  });
+
+  it("TC-P0-4-25: detects ::169.254.169.254 as private (IPv4-compatible metadata)", () => {
+    expect(isPrivateAddress("::169.254.169.254")).toBe(true);
+  });
 });
 
 describe("parseFetchUrl SSRF protection", () => {

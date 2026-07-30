@@ -189,7 +189,7 @@ describe("SessionStore persistent JSONL backend", () => {
     expect(loaded.entries[0]?.message.content).toBe("hello");
   });
 
-  it("truncates the file after dropping a torn final JSONL line", async () => {
+  it("load skips a torn final JSONL line without mutating the file; append repairs under lock", async () => {
     const directory = await tempStoreDirectory();
     const writer = new SessionStore(directory, true, now);
     const session = await writer.create({ cwd: process.cwd(), model });
@@ -198,15 +198,23 @@ describe("SessionStore persistent JSONL backend", () => {
     const original = await readFile(path, "utf8");
     await appendFile(path, '{"type":"entry","en', "utf8");
 
+    // load is a public read method callable without the session lock, so it
+    // must NOT truncate the file — doing so would race with a concurrent
+    // appendMessage. It only skips the torn tail in memory.
     const reader = new SessionStore(directory, true, now);
     const loaded = await reader.load(session.header.sessionId);
     expect(loaded.entries).toHaveLength(1);
     expect(loaded.entries[0]?.message.content).toBe("hello");
 
-    const after = await readFile(path, "utf8");
-    expect(after).toBe(original);
-    expect(after.endsWith("\n")).toBe(true);
-    expect(after.endsWith('{"type":"entry","en')).toBe(false);
+    const afterLoad = await readFile(path, "utf8");
+    expect(afterLoad).toBe(`${original}{"type":"entry","en`);
+
+    // The repair happens under the session lock on the next mutation.
+    await reader.appendMessage(session.header.sessionId, { role: "assistant", content: "ok" });
+
+    const afterAppend = await readFile(path, "utf8");
+    expect(afterAppend.endsWith("\n")).toBe(true);
+    expect(afterAppend.endsWith('{"type":"entry","en')).toBe(false);
   });
 
   it("appends a new message after torn-tail recovery and keeps the log readable", async () => {

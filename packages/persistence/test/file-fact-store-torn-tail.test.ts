@@ -22,7 +22,7 @@ function eventsPath(root: string, taskId: string): string {
 }
 
 describe("FileFactStore torn-tail recovery (P0-3)", () => {
-  it("TC-P0-3-01: truncates the file after dropping a torn final line", async () => {
+  it("TC-P0-3-01: loadEvents skips a torn final line without mutating the file; append repairs under lock", async () => {
     const root = await createTestDirectory("p03-truncate");
     const store = new FileFactStore(root);
     await store.append({
@@ -34,15 +34,25 @@ describe("FileFactStore torn-tail recovery (P0-3)", () => {
     const original = await readFile(path, "utf8");
     await appendFile(path, '{"schemaVersion":"domain-ev', "utf8");
 
+    // loadEvents is a public read method callable without the task lock, so
+    // it must NOT truncate the file — doing so would race with a concurrent
+    // append. It only skips the torn tail in memory.
     const events = await store.loadEvents("task-1");
     expect(events.map((event) => event.seq)).toEqual([1, 2]);
 
-    const after = await readFile(path, "utf8");
-    expect(after).toBe(original);
-    // The file must end with a newline (the torn tail had none).
-    expect(after.endsWith("\n")).toBe(true);
-    // The torn partial fragment must not survive as a trailing incomplete line.
-    expect(after.endsWith('{"schemaVersion":"domain-ev')).toBe(false);
+    const afterLoad = await readFile(path, "utf8");
+    expect(afterLoad).toBe(`${original}{"schemaVersion":"domain-ev`);
+
+    // The repair happens under the task lock on the next append.
+    await store.append({
+      taskId: "task-1",
+      expectedVersion: 2,
+      events: [makeEvent("task-1", 3)],
+    });
+
+    const afterAppend = await readFile(path, "utf8");
+    expect(afterAppend.endsWith("\n")).toBe(true);
+    expect(afterAppend.endsWith('{"schemaVersion":"domain-ev')).toBe(false);
   });
 
   it("TC-P0-3-02: append after torn-tail recovery keeps the log readable", async () => {

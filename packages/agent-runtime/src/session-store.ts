@@ -350,29 +350,51 @@ export class SessionStore {
       } catch {
         if (index === lines.length - 1) {
           // Torn tail: a crash mid-append can leave a partial final line that was
-          // never fully committed. Drop it and truncate the file back to the last
-          // valid newline so a subsequent append does not bury the partial line in
-          // the middle of the log (which would turn it into a non-tail corruption
-          // and fail-closed on the next read). Corruption of any earlier line
-          // stays fail-closed. When called from a mutation method the session
-          // lock is already held, so the truncation is performed under the lock.
-          console.warn(`Repairing torn final session line at ${path}:${index + 1}`);
-          const validLines = lines.slice(0, index);
-          const validText = validLines.length > 0 ? `${validLines.join("\n")}\n` : "";
-          const offset = Buffer.byteLength(validText, "utf8");
-          await truncate(path, offset);
-          const syncHandle = await open(path, "r");
-          try {
-            await syncHandle.sync();
-          } finally {
-            await syncHandle.close();
-          }
+          // never fully committed. Skip it in memory; the file is repaired by
+          // repairTornTail() under the session lock on the next mutation.
+          // Corruption of any earlier line stays fail-closed. readEvents is
+          // callable from the public load() path which does NOT hold the session
+          // lock, so it must NOT mutate the file — doing so would race with a
+          // concurrent appendMessage and truncate away newly-written entries.
+          console.warn(`Skipping torn final session line at ${path}:${index + 1}`);
           continue;
         }
         throw new Error(`Invalid session JSON at ${path}:${index + 1}`);
       }
     }
     return events;
+  }
+
+  /**
+   * Repair a torn final line by truncating the file back to the last valid
+   * newline. Must be called under the session lock (e.g., from
+   * withSessionLock()) so the truncation does not race with a concurrent
+   * append — otherwise a new entry written between the read and the truncate
+   * would be lost.
+   */
+  private async repairTornTail(sessionId: string): Promise<void> {
+    if (!this.persistent) return;
+    const path = this.pathFor(sessionId);
+    if (!(await stat(path).catch(() => undefined))) return;
+    const text = await readFile(path, "utf8");
+    const lines = text.split("\n").filter(Boolean);
+    if (lines.length === 0) return;
+    try {
+      JSON.parse(lines[lines.length - 1]!);
+      return; // Last line parses — no torn tail.
+    } catch {
+      console.warn(`Repairing torn final session line ${lines.length} at ${path}`);
+      const validLines = lines.slice(0, -1);
+      const validText = validLines.length > 0 ? `${validLines.join("\n")}\n` : "";
+      const offset = Buffer.byteLength(validText, "utf8");
+      await truncate(path, offset);
+      const syncHandle = await open(path, "r");
+      try {
+        await syncHandle.sync();
+      } finally {
+        await syncHandle.close();
+      }
+    }
   }
 
   private async write(sessionId: string, event: SessionFileEvent): Promise<void> {
@@ -421,6 +443,7 @@ export class SessionStore {
     if (!this.persistent) return fn();
     await this.acquireSessionLock(sessionId);
     try {
+      await this.repairTornTail(sessionId);
       return await fn();
     } finally {
       await this.releaseSessionLock(sessionId);

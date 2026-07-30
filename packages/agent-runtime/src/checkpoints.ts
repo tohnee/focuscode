@@ -122,16 +122,20 @@ export class CheckpointStore {
     const directory = join(this.rootDir, String(seq));
     const guard = await this.guard();
     for (const entry of manifest.files) {
+      let target: string;
       try {
-        const target = await guard.resolvePath(entry.path, { allowMissing: true });
-        if (entry.existed) {
-          await mkdir(dirname(target), { recursive: true });
-          await copyFile(join(directory, entry.path), target);
-        } else {
-          await rm(target, { force: true });
-        }
+        target = await guard.resolvePath(entry.path, { allowMissing: true });
       } catch {
-        // Skip entries whose realpath escapes the workspace.
+        // Skip entries whose realpath escapes the workspace; I/O errors
+        // from mkdir/copyFile/rm below propagate so a failed restore is
+        // surfaced rather than silently swallowed.
+        continue;
+      }
+      if (entry.existed) {
+        await mkdir(dirname(target), { recursive: true });
+        await copyFile(join(directory, entry.path), target);
+      } else {
+        await rm(target, { force: true });
       }
     }
     await rm(directory, { recursive: true, force: true });
