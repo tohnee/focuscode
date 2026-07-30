@@ -34,7 +34,7 @@ describe("web_fetch", () => {
         );
       },
       async (baseUrl) => {
-        const tool = createWebFetchTool();
+        const tool = createWebFetchTool({ allowPrivateAddresses: true });
         const result = await tool.execute({ url: `${baseUrl}/page` }, { cwd: "." });
         expect(result.isError).toBeUndefined();
         expect(result.content).toContain("Hello & welcome");
@@ -53,7 +53,7 @@ describe("web_fetch", () => {
         response.end("x".repeat(5_000));
       },
       async (baseUrl) => {
-        const tool = createWebFetchTool();
+        const tool = createWebFetchTool({ allowPrivateAddresses: true });
         const result = await tool.execute({ url: baseUrl, maxChars: 500 }, { cwd: "." });
         expect(result.content).toHaveLength(500);
         expect(result.metadata).toMatchObject({ truncated: true });
@@ -79,7 +79,7 @@ describe("web_fetch", () => {
         // Never respond.
       },
       async (baseUrl) => {
-        const tool = createWebFetchTool({ timeoutMs: 300 });
+        const tool = createWebFetchTool({ timeoutMs: 300, allowPrivateAddresses: true });
         const result = await tool.execute({ url: baseUrl }, { cwd: "." });
         expect(result.isError).toBe(true);
         expect(result.content).toContain("timed out");

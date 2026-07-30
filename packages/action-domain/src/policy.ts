@@ -5,6 +5,9 @@ import {
   classifyShell,
   commandReferencesPath,
   extractApplyPatchPaths,
+  PrefixRuleEngine,
+  type CommandPrefixRule,
+  type PrefixRuleCheckResult,
 } from "./shell-policy.js";
 
 export type PolicyDisposition = "grant" | "approval_required" | "deny";
@@ -43,6 +46,16 @@ export interface PolicyConfig {
    * when approvalMode is "auto-edit".
    */
   projectTrusted?: boolean;
+  /**
+   * User-configurable command prefix rules. When set, PolicyEngine constructs a
+   * PrefixRuleEngine (running its load-time self-test) and applies the rules
+   * inside evaluate(): prefix deny is immediate (stricter-than-engine), prefix
+   * allow promotes non-deny decisions to grant but cannot bypass hard denials
+   * (critical commands, protected paths, capability checks). This makes both
+   * the legacy PermissionController path and the effect spine path decide
+   * identically — the P0 fix for the spine prefixRules split-brain.
+   */
+  prefixRules?: CommandPrefixRule[];
 }
 
 export interface ApprovalRequest {
@@ -58,9 +71,63 @@ export interface ApprovalPort {
 }
 
 export class PolicyEngine {
-  constructor(private readonly config: PolicyConfig) {}
+  private readonly prefixEngine: PrefixRuleEngine | undefined;
+
+  constructor(private readonly config: PolicyConfig) {
+    // Construct the prefix engine (runs self-test) only when rules are
+    // provided. An empty array still constructs the engine but is a no-op.
+    this.prefixEngine = config.prefixRules ? new PrefixRuleEngine(config.prefixRules) : undefined;
+  }
 
   evaluate(
+    intent: ActionIntentV1,
+    tool: ToolSpecV1,
+    ledger: EffectLedgerSnapshot,
+    projectedRiskScore: number,
+  ): PolicyDecision {
+    // Prefix rule check (P0: spine prefixRules). Prefix deny is immediate
+    // (stricter-than-engine): always wins, even in full-auto, before any
+    // capability/budget check. Prefix allow is held back and applied only to
+    // non-deny decisions, so hard denials (critical commands, protected
+    // paths, unadvertised effects, capability/budget checks) cannot be
+    // bypassed. This mirrors the legacy PermissionController contract so both
+    // paths decide identically.
+    let prefixAllow: PrefixRuleCheckResult | undefined;
+    if (this.prefixEngine && tool.id === "bash") {
+      const command = readCommandArgument(intent.arguments);
+      if (typeof command === "string") {
+        const result = this.prefixEngine.check(command);
+        if (result) {
+          if (result.effect === "deny") {
+            return {
+              disposition: "deny",
+              reason: `Prefix rule denied: ${result.reason}`,
+              riskScore: projectedRiskScore,
+            };
+          }
+          prefixAllow = result;
+        }
+      }
+    }
+
+    const decision = this.evaluateCore(intent, tool, ledger, projectedRiskScore);
+
+    // Hard deny from the core cannot be overridden by prefix allow.
+    if (decision.disposition === "deny") return decision;
+
+    // Prefix allow promotes approval_required (and grant) to grant without
+    // prompting. It cannot override a hard deny (already returned above).
+    if (prefixAllow) {
+      return {
+        disposition: "grant",
+        reason: `Prefix rule allowed: ${prefixAllow.reason}`,
+        riskScore: projectedRiskScore,
+      };
+    }
+    return decision;
+  }
+
+  private evaluateCore(
     intent: ActionIntentV1,
     tool: ToolSpecV1,
     ledger: EffectLedgerSnapshot,

@@ -29,8 +29,11 @@ await command(
 );
 const entrypoint = join(installed, "node_modules", "@focuscode", "cli", "bundle", "focuscode.mjs");
 const version = (await command(process.execPath, [entrypoint, "--version"], root)).stdout.trim();
-if (version !== "0.4.0-beta.2")
-  throw new Error("Installed CLI reported unexpected version: " + version);
+const expectedVersion = JSON.parse(await readFile(join(root, "package.json"), "utf8")).version;
+if (version !== expectedVersion)
+  throw new Error(
+    `Installed CLI version ${version} does not match package.json ${expectedVersion}`,
+  );
 const mascots = (await command(process.execPath, [entrypoint, "mascots"], root)).stdout;
 if (!mascots.includes("mochi") || !mascots.includes("kumo")) {
   throw new Error("Installed CLI did not expose the bundled TUI mascots");

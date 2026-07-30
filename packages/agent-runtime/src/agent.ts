@@ -22,7 +22,7 @@ import { TodoState, createTodoTool, renderTodoItems, type TodoCounts } from "./t
 import { AgentToolRegistry } from "./tools.js";
 import { buildSkillPrompt, selectSkills, type Skill } from "./skills.js";
 import { SpecEngine } from "./spec-engine.js";
-import type { SpecEngineOptions, SpecEngineDeps } from "./spec-types.js";
+import type { SpecClarifyResult, SpecEngineDeps, SpecEngineOptions } from "./spec-types.js";
 import type {
   AgentEvent,
   AgentMessage,
@@ -283,20 +283,29 @@ export class CodingAgent {
         `Model ${this.model.provider}/${this.model.model} is not configured for image input`,
       );
     }
+    if (this.running) throw new Error("Agent is already processing a prompt");
+    this.running = true;
     // === SpecEngine preprocessing (optional) ===
     if (this.specEngine && this.options.specEngine?.enabled !== false) {
-      const result = await this.specEngine.clarify({
-        prompt,
-        ...(attachments?.length ? { attachments } : {}),
-        cwd: this.options.cwd,
-        sessionBranch: activeBranch(this.session).map((e) => e.message),
-        modelClient: this.modelClient,
-        model: this.model,
-        toolRegistry: this.registry,
-        ...(this.eventSink ? { eventSink: this.eventSink } : {}),
-        ...(externalSignal ? { externalSignal } : {}),
-      });
+      let result: SpecClarifyResult;
+      try {
+        result = await this.specEngine.clarify({
+          prompt,
+          ...(attachments?.length ? { attachments } : {}),
+          cwd: this.options.cwd,
+          sessionBranch: activeBranch(this.session).map((e) => e.message),
+          modelClient: this.modelClient,
+          model: this.model,
+          toolRegistry: this.registry,
+          ...(this.eventSink ? { eventSink: this.eventSink } : {}),
+          ...(externalSignal ? { externalSignal } : {}),
+        });
+      } catch (error) {
+        this.running = false;
+        throw error;
+      }
       if (result.action === "abort") {
+        this.running = false;
         return {
           sessionId: this.sessionId,
           entryId: "",
@@ -323,8 +332,6 @@ export class CodingAgent {
       }
       // action === "skip": use original prompt as-is
     }
-    if (this.running) throw new Error("Agent is already processing a prompt");
-    this.running = true;
     // Reset doom-loop detection for the new turn.
     this.doomLoopFingerprint = "";
     this.doomLoopCount = 0;

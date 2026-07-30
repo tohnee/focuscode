@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { access, mkdir, open, readFile, readdir, rename, unlink } from "node:fs/promises";
+import { access, mkdir, open, readFile, readdir, rename, truncate, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import {
   DomainEventSchema,
@@ -188,9 +188,23 @@ export class FileFactStore implements FactPort {
       } catch {
         if (index === lines.length - 1) {
           // Torn tail: a crash mid-append can leave a partial final line that was
-          // never fully committed. It is dropped; corruption of any earlier line
-          // stays fail-closed.
-          console.warn(`Dropping torn final event line ${index + 1} in ${path}`);
+          // never fully committed. Drop it and truncate the file back to the last
+          // valid newline so a subsequent append does not bury the partial line in
+          // the middle of the log (which would turn it into a non-tail corruption
+          // and fail-closed on the next read). Corruption of any earlier line
+          // stays fail-closed. When called from append() the task lock is already
+          // held, so the truncation is performed under the lock.
+          console.warn(`Repairing torn final event line ${index + 1} in ${path}`);
+          const validLines = lines.slice(0, index);
+          const validText = validLines.length > 0 ? `${validLines.join("\n")}\n` : "";
+          const offset = Buffer.byteLength(validText, "utf8");
+          await truncate(path, offset);
+          const syncHandle = await open(path, "r");
+          try {
+            await syncHandle.sync();
+          } finally {
+            await syncHandle.close();
+          }
           continue;
         }
         throw new Error(`Invalid event JSON at ${path}:${index + 1}`);

@@ -189,6 +189,46 @@ describe("SessionStore persistent JSONL backend", () => {
     expect(loaded.entries[0]?.message.content).toBe("hello");
   });
 
+  it("truncates the file after dropping a torn final JSONL line", async () => {
+    const directory = await tempStoreDirectory();
+    const writer = new SessionStore(directory, true, now);
+    const session = await writer.create({ cwd: process.cwd(), model });
+    await writer.appendMessage(session.header.sessionId, { role: "user", content: "hello" });
+    const path = join(directory, `${session.header.sessionId}.jsonl`);
+    const original = await readFile(path, "utf8");
+    await appendFile(path, '{"type":"entry","en', "utf8");
+
+    const reader = new SessionStore(directory, true, now);
+    const loaded = await reader.load(session.header.sessionId);
+    expect(loaded.entries).toHaveLength(1);
+    expect(loaded.entries[0]?.message.content).toBe("hello");
+
+    const after = await readFile(path, "utf8");
+    expect(after).toBe(original);
+    expect(after.endsWith("\n")).toBe(true);
+    expect(after.endsWith('{"type":"entry","en')).toBe(false);
+  });
+
+  it("appends a new message after torn-tail recovery and keeps the log readable", async () => {
+    const directory = await tempStoreDirectory();
+    const writer = new SessionStore(directory, true, now);
+    const session = await writer.create({ cwd: process.cwd(), model });
+    await writer.appendMessage(session.header.sessionId, { role: "user", content: "hello" });
+    await appendFile(
+      join(directory, `${session.header.sessionId}.jsonl`),
+      '{"type":"entry","en',
+      "utf8",
+    );
+
+    const reader = new SessionStore(directory, true, now);
+    await reader.load(session.header.sessionId);
+    await reader.appendMessage(session.header.sessionId, { role: "assistant", content: "hi back" });
+
+    const finalReader = new SessionStore(directory, true, now);
+    const loaded = await finalReader.load(session.header.sessionId);
+    expect(loaded.entries.map((entry) => entry.message.content)).toEqual(["hello", "hi back"]);
+  });
+
   it("rejects a session file with a corrupted JSONL line in the middle", async () => {
     const directory = await tempStoreDirectory();
     const writer = new SessionStore(directory, true, now);

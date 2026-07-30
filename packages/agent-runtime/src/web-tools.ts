@@ -10,6 +10,12 @@ const DUCKDUCKGO_LITE = "https://lite.duckduckgo.com/lite/";
 export interface WebFetchToolOptions {
   /** Request timeout; injectable for tests. Defaults to 20s. */
   timeoutMs?: number;
+  /**
+   * Allow fetching private/loopback/metadata addresses. Defaults to false.
+   * When false, SSRF protection blocks 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12,
+   * 192.168.0.0/16, 169.254.0.0/16, 0.0.0.0, ::1, fc00::/7, and fe80::/10.
+   */
+  allowPrivateAddresses?: boolean;
 }
 
 export interface WebSearchToolOptions {
@@ -30,6 +36,7 @@ export interface WebSearchResult {
 
 export function createWebFetchTool(options: WebFetchToolOptions = {}): AgentTool {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const allowPrivate = options.allowPrivateAddresses ?? false;
   return {
     definition: {
       name: "web_fetch",
@@ -49,10 +56,10 @@ export function createWebFetchTool(options: WebFetchToolOptions = {}): AgentTool
     },
     async execute(input, context) {
       try {
-        const url = parseFetchUrl(input.url);
+        const url = parseFetchUrl(input.url, allowPrivate);
         if (typeof url === "object") return url;
         const maxChars = boundedInteger(input.maxChars, DEFAULT_MAX_CHARS, 100, MAX_CHARS_LIMIT);
-        const response = await fetchWithTimeout(url, timeoutMs, context.signal);
+        const response = await fetchWithTimeout(url, timeoutMs, context.signal, allowPrivate);
         const declared = Number(response.headers.get("content-length") ?? 0);
         if (declared > MAX_BODY_BYTES) {
           return failure(`Response declares ${declared} bytes, over the 2 MB limit`);
@@ -173,7 +180,72 @@ export function htmlToText(html: string): string {
   return collapseWhitespace(decodeEntities(stripTags(withoutBlocks)));
 }
 
-function parseFetchUrl(value: unknown): string | ToolExecutionResult {
+/**
+ * Detects private, loopback, link-local, and cloud-metadata addresses.
+ * Exported for tests. Does NOT perform DNS resolution — only inspects the
+ * hostname string literal, so it does not catch DNS rebinding to private IPs.
+ */
+export function isPrivateAddress(hostname: string): boolean {
+  const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  if (host === "localhost" || host.endsWith(".localhost")) return true;
+  const ipv4 = parseIPv4Octets(host);
+  if (ipv4) return isPrivateIPv4(ipv4);
+  const ipv6 = parseIPv6Groups(host);
+  if (ipv6) return isPrivateIPv6(ipv6);
+  return false;
+}
+
+function parseIPv4Octets(host: string): [number, number, number, number] | null {
+  const parts = host.split(".");
+  if (parts.length !== 4) return null;
+  const octets: number[] = [];
+  for (const part of parts) {
+    if (!/^\d+$/.test(part)) return null;
+    const num = Number(part);
+    if (num < 0 || num > 255) return null;
+    octets.push(num);
+  }
+  return [octets[0]!, octets[1]!, octets[2]!, octets[3]!];
+}
+
+function isPrivateIPv4([a, b]: [number, number, number, number]): boolean {
+  if (a === 0) return true; // 0.0.0.0/8
+  if (a === 10) return true; // 10.0.0.0/8 (RFC1918)
+  if (a === 127) return true; // 127.0.0.0/8 (loopback)
+  if (a === 169 && b === 254) return true; // 169.254.0.0/16 (link-local / cloud metadata)
+  if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12 (RFC1918)
+  if (a === 192 && b === 168) return true; // 192.168.0.0/16 (RFC1918)
+  return false;
+}
+
+function parseIPv6Groups(host: string): number[] | null {
+  if (!host.includes(":")) return null;
+  const halves = host.split("::");
+  if (halves.length > 2) return null;
+  const headParts = halves[0] ? halves[0].split(":").filter((p) => p !== "") : [];
+  const tailParts = halves[1] ? halves[1].split(":").filter((p) => p !== "") : [];
+  const missing = 8 - headParts.length - tailParts.length;
+  if (missing < 0) return null;
+  const groups: number[] = [];
+  for (const part of [...headParts, ...Array(missing).fill("0"), ...tailParts]) {
+    if (!/^[0-9a-f]{1,4}$/.test(part)) return null;
+    groups.push(parseInt(part, 16));
+  }
+  if (groups.length !== 8) return null;
+  return groups;
+}
+
+function isPrivateIPv6(groups: number[]): boolean {
+  // ::1 (loopback) — 0000:0000:0000:0000:0000:0000:0000:0001
+  if (groups.every((g, i) => (i === 7 ? g === 1 : g === 0))) return true;
+  // fc00::/7 — Unique Local Address (ULA)
+  if ((groups[0]! & 0xfe00) === 0xfc00) return true;
+  // fe80::/10 — link-local
+  if ((groups[0]! & 0xffc0) === 0xfe80) return true;
+  return false;
+}
+
+export function parseFetchUrl(value: unknown, allowPrivate = false): string | ToolExecutionResult {
   if (typeof value !== "string" || !value.trim()) return failure("web_fetch requires a url");
   let url: URL;
   try {
@@ -186,6 +258,9 @@ function parseFetchUrl(value: unknown): string | ToolExecutionResult {
   }
   if (url.username || url.password) {
     return failure("URLs with embedded credentials are not allowed");
+  }
+  if (!allowPrivate && isPrivateAddress(url.hostname)) {
+    return failure(`URL hostname is a private or internal address: ${url.hostname}`);
   }
   return url.toString();
 }
@@ -240,6 +315,7 @@ async function fetchWithTimeout(
   url: string,
   timeoutMs: number,
   parentSignal: AbortSignal | undefined,
+  allowPrivate = false,
 ): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(
@@ -250,11 +326,47 @@ async function fetchWithTimeout(
   if (parentSignal?.aborted) onAbort();
   else parentSignal?.addEventListener("abort", onAbort, { once: true });
   try {
-    return await fetch(url, {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: { "user-agent": USER_AGENT, accept: "text/html, text/plain, application/json, */*" },
-    });
+    // Use redirect:"manual" so each redirect target can be re-validated for
+    // scheme, credentials, and SSRF (private/loopback/metadata addresses).
+    // This prevents redirect-based SSRF where a public URL 302s to an
+    // internal service (e.g., 169.254.169.254 cloud metadata endpoint).
+    const MAX_REDIRECTS = 5;
+    let currentUrl = url;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const response = await fetch(currentUrl, {
+        signal: controller.signal,
+        redirect: "manual",
+        headers: {
+          "user-agent": USER_AGENT,
+          accept: "text/html, text/plain, application/json, */*",
+        },
+      });
+      if (response.status < 300 || response.status >= 400) {
+        return response;
+      }
+      const location = response.headers.get("location");
+      if (!location) return response;
+      if (hop === MAX_REDIRECTS) {
+        throw new Error(`Too many redirects (max ${MAX_REDIRECTS})`);
+      }
+      let nextUrl: URL;
+      try {
+        nextUrl = new URL(location, currentUrl);
+      } catch {
+        throw new Error(`Invalid redirect Location: ${location}`);
+      }
+      if (nextUrl.protocol !== "http:" && nextUrl.protocol !== "https:") {
+        throw new Error(`Redirect to unsupported protocol: ${nextUrl.protocol}`);
+      }
+      if (nextUrl.username || nextUrl.password) {
+        throw new Error("Redirect to URL with embedded credentials is not allowed");
+      }
+      if (!allowPrivate && isPrivateAddress(nextUrl.hostname)) {
+        throw new Error(`Redirect to private address is not allowed: ${nextUrl.hostname}`);
+      }
+      currentUrl = nextUrl.toString();
+    }
+    throw new Error(`Too many redirects (max ${MAX_REDIRECTS})`);
   } finally {
     clearTimeout(timer);
     parentSignal?.removeEventListener("abort", onAbort);

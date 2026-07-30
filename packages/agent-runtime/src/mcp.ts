@@ -415,7 +415,10 @@ export class McpHttpClient implements McpClient {
   private capabilitiesValue: unknown;
   private connected = false;
   private aborted = false;
-  private readonly abortController = new AbortController();
+  // Client-level signal aborted only by close(). Each request combines this
+  // signal with its own per-request timeout controller (see request()), so a
+  // single timeout cannot pollute concurrent or subsequent requests.
+  private readonly closeController = new AbortController();
 
   constructor(options: McpClientOptions) {
     this.id = options.id;
@@ -471,12 +474,10 @@ export class McpHttpClient implements McpClient {
       )) as { serverInfo?: { name?: string; version?: string }; capabilities?: unknown };
       this.serverInfoValue = result.serverInfo ?? {};
       this.capabilitiesValue = result.capabilities;
-      // notifications/initialized is a notification — best-effort, ignore the
-      // response. Some servers reply 202 with an empty result, some 200 with
-      // a result envelope, either is acceptable.
-      await this.request("notifications/initialized", undefined, this.timeoutMs).catch(
-        () => undefined,
-      );
+      // notifications/initialized completes the handshake. A timeout or error
+      // here means the connection is unhealthy, so let it propagate rather
+      // than silently swallowing it and leaving the client in a broken state.
+      await this.request("notifications/initialized", undefined, this.timeoutMs);
     } catch (error) {
       await this.close();
       throw error;
@@ -530,7 +531,7 @@ export class McpHttpClient implements McpClient {
     if (this.aborted) return;
     this.aborted = true;
     this.connected = false;
-    this.abortController.abort();
+    this.closeController.abort();
   }
 
   private async request(method: string, params: unknown, timeoutMs: number): Promise<unknown> {
@@ -539,8 +540,15 @@ export class McpHttpClient implements McpClient {
     }
     const id = nextHttpRequestId();
     const body = JSON.stringify({ jsonrpc: "2.0", id, method, params });
+    // Each request gets its own AbortController for timeout isolation. The
+    // combined signal merges the per-request timeout with the client-level
+    // close signal: close() cancels all in-flight requests, but a single
+    // timeout only affects that one request — it never poisons the shared
+    // close signal or subsequent requests.
+    const requestController = new AbortController();
+    const signal = AbortSignal.any([requestController.signal, this.closeController.signal]);
     const timer = setTimeout(() => {
-      this.abortController.abort(new Error(`timeout ${method}`));
+      requestController.abort(new Error(`timeout ${method}`));
     }, timeoutMs);
     timer.unref();
     try {
@@ -548,7 +556,7 @@ export class McpHttpClient implements McpClient {
         method: "POST",
         headers: this.headers,
         body,
-        signal: this.abortController.signal,
+        signal,
       });
       if (!response.ok) {
         throw new Error(`MCP server ${this.id} HTTP ${String(response.status)}`);
@@ -570,17 +578,17 @@ export class McpHttpClient implements McpClient {
       }
       return record.result;
     } catch (error) {
-      // Distinguish timeout-driven abort from external close: if the signal
-      // was aborted with a "timeout <method>" reason, surface a timed-out
-      // error; otherwise the close() path already marked the client as
-      // not connected.
-      if (this.abortController.signal.aborted) {
-        const reason = (this.abortController.signal.reason as Error | undefined)?.message;
-        if (reason && reason.startsWith("timeout ")) {
-          throw new Error(
-            `MCP server ${this.id} request "${method}" timed out after ${String(timeoutMs)}ms`,
-          );
-        }
+      // Distinguish per-request timeout from close()-driven abort: if the
+      // request's own controller was aborted, the timer fired (timeout);
+      // if the close controller was aborted, close() was called. Checking
+      // individual controllers (instead of a shared one) is what keeps one
+      // request's timeout from leaking into others.
+      if (requestController.signal.aborted) {
+        throw new Error(
+          `MCP server ${this.id} request "${method}" timed out after ${String(timeoutMs)}ms`,
+        );
+      }
+      if (this.closeController.signal.aborted) {
         throw new Error(`MCP server ${this.id} is not connected`);
       }
       throw error;
@@ -608,12 +616,30 @@ function buildChildEnv(extra: Record<string, string> | undefined): Record<string
   return env;
 }
 
+/**
+ * Deterministic digest of a tool's observable contract: name, description,
+ * inputSchema and annotations. `stableStringify` (via {@link sha256Digest})
+ * sorts object keys and drops `undefined` entries, so a tool that omits an
+ * optional field hashes identically regardless of which keys are present.
+ *
+ * output schema is intentionally excluded: MCP `tools/list` does not expose an
+ * output schema, so it cannot contribute a stable value.
+ */
+function computeToolContractDigest(tool: McpToolInfo): string {
+  return sha256Digest({
+    name: tool.name,
+    description: tool.description,
+    inputSchema: tool.inputSchema,
+    annotations: tool.annotations,
+  });
+}
+
 export function computeToolPin(client: McpClient, tool: McpToolInfo): McpToolPinV1 {
   return {
     serverId: client.id,
     serverVersion: client.serverVersion,
     toolName: tool.name,
-    schemaDigest: sha256Digest(tool.inputSchema ?? null),
+    schemaDigest: computeToolContractDigest(tool),
     transportDigest: sha256Digest(client.transportDigestPayload),
   };
 }
@@ -629,6 +655,9 @@ export function verifyPins(pins: readonly McpToolPinV1[], observed: readonly Mcp
         pin.toolName,
         "tool not observed on the connected server (fail closed)",
       );
+    }
+    if (pin.serverVersion && match.serverVersion !== pin.serverVersion) {
+      throw new McpPinMismatchError(pin.serverId, pin.toolName, "serverVersion changed");
     }
     if (match.schemaDigest !== pin.schemaDigest) {
       throw new McpPinMismatchError(pin.serverId, pin.toolName, "schemaDigest changed");

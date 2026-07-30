@@ -283,6 +283,7 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
           mode: effectiveApproval,
           projectTrusted: config.projectTrusted,
           protectedPaths: config.protectedPaths,
+          ...(prefixRules ? { prefixRules } : {}),
         },
         ...(approve ? { approve } : {}),
       })

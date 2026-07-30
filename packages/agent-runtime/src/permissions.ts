@@ -5,8 +5,6 @@ import {
   type CommandPrefixRule,
   type EffectLedgerSnapshot,
   type PolicyDecision,
-  type PrefixRuleCheckResult,
-  PrefixRuleEngine,
 } from "@focuscode/action-domain";
 import { buildActionIntent, buildSessionToolSpec } from "./effect-gateway.js";
 import type {
@@ -57,7 +55,6 @@ const EMPTY_LEDGER: EffectLedgerSnapshot = {
 export class PermissionController {
   readonly mode: ApprovalMode;
   private readonly engine: PolicyEngine;
-  private readonly prefixEngine: PrefixRuleEngine | undefined;
 
   constructor(private readonly options: PermissionControllerOptions) {
     this.mode = options.mode;
@@ -76,10 +73,10 @@ export class PermissionController {
       autoGrantSafeWrites: false,
       approvalMode: options.mode,
       projectTrusted: options.projectTrusted,
+      // Prefix rules are enforced inside PolicyEngine so the legacy path and
+      // the effect spine path decide identically (P0: spine prefixRules).
+      ...(options.prefixRules ? { prefixRules: options.prefixRules } : {}),
     });
-    // Construct the prefix engine (runs self-test) only when rules are
-    // provided. An empty array still constructs the engine but is a no-op.
-    this.prefixEngine = options.prefixRules ? new PrefixRuleEngine(options.prefixRules) : undefined;
   }
 
   evaluate(tool: ToolDefinition, call: AgentToolCall): PermissionDecision {
@@ -114,30 +111,12 @@ export class PermissionController {
   }
 
   private decide(tool: ToolDefinition, call: AgentToolCall): PolicyDecision {
-    // Prefix rules take precedence over shell classification: a deny rule
-    // short-circuits to deny, an allow rule short-circuits to grant. Both
-    // bypass the PolicyEngine shell-classification path, but protected-path
-    // checks still apply to commands that do not match any prefix rule.
-    if (this.prefixEngine && tool.name === "bash") {
-      const command = call.arguments.command;
-      if (typeof command === "string") {
-        const result: PrefixRuleCheckResult | undefined = this.prefixEngine.check(command);
-        if (result) {
-          if (result.effect === "deny") {
-            return {
-              disposition: "deny",
-              reason: `Prefix rule denied: ${result.reason}`,
-              riskScore: 0,
-            };
-          }
-          return {
-            disposition: "grant",
-            reason: `Prefix rule allowed: ${result.reason}`,
-            riskScore: 0,
-          };
-        }
-      }
-    }
+    // Prefix rule enforcement now lives inside PolicyEngine.evaluate(), so
+    // this method is a thin adapter: build the intent/spec, delegate to the
+    // engine, and let it apply prefix deny/allow with the same semantics as
+    // the effect spine path. This eliminates the execpolicy split-brain
+    // where the legacy path and the spine path used to diverge on prefix
+    // rules.
     return this.engine.evaluate(
       buildActionIntent(call, tool, PERMISSION_CHECK_TASK_ID),
       buildSessionToolSpec(tool),

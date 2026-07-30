@@ -43,11 +43,14 @@ export function buildModelClientChain(
   const fallbackClients = fallbacks.map((profile) =>
     circuitBreakingClient(profile, options.factory),
   );
-  return new FallbackModelClient(
-    primaryClient,
-    fallbackClients,
-    options.onFallback ? { onFallback: options.onFallback } : {},
-  );
+  return new FallbackModelClient(primaryClient, fallbackClients, {
+    ...(options.onFallback ? { onFallback: options.onFallback } : {}),
+    // Pass model ids so each provider receives the model it was configured
+    // for; without this the fallback chain forwards the primary model id to
+    // every fallback provider verbatim.
+    primaryModel: primary.model,
+    fallbackModels: fallbacks.map((profile) => profile.model),
+  });
 }
 
 function circuitBreakingClient(

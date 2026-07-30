@@ -25,6 +25,21 @@ export interface FallbackEvent {
 
 export interface FallbackModelClientOptions {
   onFallback?: (event: FallbackEvent) => void;
+  /**
+   * Model id the primary client expects in `ModelRequest.model`. When set,
+   * the request's `model` field is rewritten to this value before being
+   * dispatched to the primary, so a request that arrived targeting a
+   * fallback model is never forwarded to the primary provider verbatim.
+   * When omitted, the request is passed unchanged (backward compatible).
+   */
+  primaryModel?: string;
+  /**
+   * Model ids for the fallback clients, in chain order. `fallbackModels[i]`
+   * is used to rewrite `ModelRequest.model` when dispatching to
+   * `fallbacks[i]`. Entries may be `undefined` to opt out of rewriting for
+   * a specific link. When the whole array is omitted, no rewriting occurs.
+   */
+  fallbackModels?: string[];
 }
 
 /**
@@ -41,7 +56,14 @@ export interface FallbackModelClientOptions {
  *
  * Stream events (`onEvent`) from discarded attempts are suppressed; only the
  * winning client's stream reaches the caller, so downstream consumers never
- * observe partial output from a model that was abandoned mid-stream.
+ * observe partial output from a model that was abandoned mid-stream. Each
+ * attempt's events are buffered locally and flushed to the caller only after
+ * that attempt is confirmed the winner.
+ *
+ * When `primaryModel` / `fallbackModels` are supplied, the request's `model`
+ * field is rewritten per chain link so every provider receives the model id it
+ * was configured for — the primary model id is never forwarded to a fallback
+ * provider (or vice versa).
  */
 export class FallbackModelClient implements ModelClient {
   readonly protocol: string;
@@ -58,17 +80,34 @@ export class FallbackModelClient implements ModelClient {
     request: ModelRequest,
     onEvent?: (event: ModelStreamEvent) => void,
   ): Promise<ModelResponse> {
-    const chain: Array<{ client: ModelClient; label: string }> = [
-      { client: this.primary, label: "primary" },
-      ...this.fallbacks.map((client, index) => ({ client, label: `fallback[${index}]` })),
+    const chain: Array<{ client: ModelClient; label: string; model: string | undefined }> = [
+      { client: this.primary, label: "primary", model: this.options.primaryModel },
+      ...this.fallbacks.map((client, index) => ({
+        client,
+        label: `fallback[${index}]`,
+        model: this.options.fallbackModels?.[index],
+      })),
     ];
 
     let lastError: unknown;
     for (let i = 0; i < chain.length; i++) {
       const current = chain[i]!;
-      const { client, label } = current;
+      const { client, label, model } = current;
+      // Rewrite the model id so each provider receives the model it was
+      // configured for. Without this, a fallback provider would be asked to
+      // serve the primary model id (or vice versa), which either 404s at the
+      // upstream API or silently routes to the wrong model.
+      const attemptRequest: ModelRequest = model !== undefined ? { ...request, model } : request;
+      // Buffer stream events for this attempt. If the attempt is discarded
+      // (error or stopReason=error), the buffer is dropped so partial deltas
+      // never reach the caller. If it wins, the buffer is flushed to the real
+      // onEvent in emission order. Without this isolation, a model that
+      // streams partial output before failing would leak that output to
+      // downstream consumers.
+      const buffer: ModelStreamEvent[] = [];
+      const sink = onEvent ? (ev: ModelStreamEvent) => buffer.push(ev) : undefined;
       try {
-        const response = await client.complete(request, onEvent);
+        const response = await client.complete(attemptRequest, sink);
         if (response.stopReason === "error" && i < chain.length - 1) {
           const next = chain[i + 1]!;
           this.options.onFallback?.({
@@ -78,6 +117,9 @@ export class FallbackModelClient implements ModelClient {
           });
           lastError = new Error(`${label} returned stopReason=error`);
           continue;
+        }
+        if (onEvent) {
+          for (const ev of buffer) onEvent(ev);
         }
         return response;
       } catch (error) {

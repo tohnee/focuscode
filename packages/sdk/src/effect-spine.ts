@@ -5,6 +5,7 @@ import {
   type ApprovalMode,
   type ApprovalPort,
   type ApprovalRequest,
+  type CommandPrefixRule,
   type PolicyConfig,
 } from "@focuscode/action-domain";
 import {
@@ -37,6 +38,8 @@ export interface SessionEffectSpineOptions {
     mode: ApprovalMode;
     projectTrusted: boolean;
     protectedPaths: string[];
+    /** User-configurable command prefix rules; enforced inside PolicyEngine. */
+    prefixRules?: CommandPrefixRule[];
   };
   /** Bridges PolicyEngine approvals to the session approval handler; omit to deny. */
   approve?: ApprovalHandler;
@@ -189,6 +192,7 @@ function sessionPolicyConfig(permission: SessionEffectSpineOptions["permission"]
     autoGrantSafeWrites: false,
     approvalMode: permission.mode,
     projectTrusted: permission.projectTrusted,
+    ...(permission.prefixRules ? { prefixRules: permission.prefixRules } : {}),
   };
 }
 
@@ -214,6 +218,7 @@ function sessionEffectContext(options: SessionEffectSpineOptions): EffectContext
       mode: options.permission.mode,
       projectTrusted: options.permission.projectTrusted,
       protectedPaths: options.permission.protectedPaths,
+      ...(options.permission.prefixRules ? { prefixRules: options.permission.prefixRules } : {}),
     }),
     budget: {
       maxTurns: 200,

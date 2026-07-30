@@ -1,5 +1,6 @@
 import { chmod, copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { WorkspaceGuard } from "@focuscode/action-backends";
 
 export interface CheckpointFileEntry {
   path: string;
@@ -33,11 +34,19 @@ export class CheckpointStore {
   private readonly rootDir: string;
   private readonly workspaceRoot: string;
   private readonly maxCheckpoints: number;
+  private guardInstance: WorkspaceGuard | undefined;
 
   constructor(options: { rootDir: string; workspaceRoot: string; maxCheckpoints?: number }) {
     this.rootDir = resolve(options.rootDir);
     this.workspaceRoot = resolve(options.workspaceRoot);
     this.maxCheckpoints = options.maxCheckpoints ?? DEFAULT_MAX_CHECKPOINTS;
+  }
+
+  private async guard(): Promise<WorkspaceGuard> {
+    if (!this.guardInstance) {
+      this.guardInstance = await WorkspaceGuard.create(this.workspaceRoot);
+    }
+    return this.guardInstance;
   }
 
   async capture(label: string, files: string[]): Promise<CheckpointManifest | undefined> {
@@ -50,10 +59,11 @@ export class CheckpointStore {
     const directory = join(this.rootDir, String(seq));
     await mkdir(directory, { recursive: true, mode: 0o700 });
     const entries: CheckpointFileEntry[] = [];
+    const guard = await this.guard();
     for (const path of targets) {
       let existed = false;
       try {
-        const source = resolve(this.workspaceRoot, path);
+        const source = await guard.resolvePath(path, { allowMissing: true });
         if ((await stat(source)).isFile()) {
           const destination = join(directory, path);
           await mkdir(dirname(destination), { recursive: true, mode: 0o700 });
@@ -110,13 +120,18 @@ export class CheckpointStore {
     const manifest = await this.readManifest(seq);
     if (!manifest) return undefined;
     const directory = join(this.rootDir, String(seq));
+    const guard = await this.guard();
     for (const entry of manifest.files) {
-      const target = resolve(this.workspaceRoot, entry.path);
-      if (entry.existed) {
-        await mkdir(dirname(target), { recursive: true });
-        await copyFile(join(directory, entry.path), target);
-      } else {
-        await rm(target, { force: true });
+      try {
+        const target = await guard.resolvePath(entry.path, { allowMissing: true });
+        if (entry.existed) {
+          await mkdir(dirname(target), { recursive: true });
+          await copyFile(join(directory, entry.path), target);
+        } else {
+          await rm(target, { force: true });
+        }
+      } catch {
+        // Skip entries whose realpath escapes the workspace.
       }
     }
     await rm(directory, { recursive: true, force: true });
