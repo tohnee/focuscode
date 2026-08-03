@@ -3,6 +3,7 @@ export * from "./audit-journal.js";
 export * from "./checkpoints.js";
 export * from "./circuit-breaker.js";
 export * from "./config.js";
+export * from "./cost.js";
 export * from "./context.js";
 export * from "./delegate.js";
 export * from "./diagnostics.js";
