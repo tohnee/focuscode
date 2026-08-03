@@ -132,15 +132,19 @@ describe("printCostPanel", () => {
 
     it("includes a cached cost segment when cachedInput is priced", () => {
       const usage: TokenUsage = {
-        inputTokens: 1_000_000, // 1M * $10 = $10
+        inputTokens: 1_000_000,
         outputTokens: 500_000, // 0.5M * $30 = $15
-        cachedInputTokens: 3_000_000, // 3M * $1 = $3
+        cachedInputTokens: 400_000, // 0.4M * $1 = $0.4
       };
       const output = captureStderr(() => printCostPanel(usage, config));
-      // Total = 10 + 15 + 3 = 28
-      expect(output).toContain("$28.000000");
-      expect(output).toContain("cached $3.000000 @ $1.00/M");
-      expect(output).toContain("1000000 in / 500000 out / 3000000 cached tokens");
+      // Cached tokens are included in inputTokens, so input is billed only
+      // for the uncached remainder: (1M - 400k) / 1M * $10 = $6.
+      // Total = 6 + 15 + 0.4 = 21.4
+      expect(output).toContain("$21.400000");
+      expect(output).toContain("cached $0.400000 @ $1.00/M");
+      expect(output).toContain("600000 in / 500000 out / 400000 cached tokens");
+      // The cache segment reports the same 40% hit ratio.
+      expect(output).toContain("cache hit 40%");
     });
 
     it("treats missing cachedInputTokens on usage as 0 cached tokens", () => {

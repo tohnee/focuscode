@@ -4,7 +4,9 @@ import { join, resolve } from "node:path";
 import { writeFile, readFile, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import {
+  cacheMetrics,
   CodingAgent,
+  estimateCostUsd,
   ExtensionHost,
   FileAuditJournal,
   ProcessExtensionHost,
@@ -805,9 +807,9 @@ export function printModels(): void {
 }
 
 export function printCostPanel(usage: TokenUsage, config: ResolvedAgentConfig): void {
-  // First-wave --cost panel: resolve pricing by "provider/model" then bare
-  // model id (matching AgentConfigFile.pricing keys), compute USD per 1M
-  // tokens, and emit to stderr so stdout JSON/print output stays parseable.
+  // Resolve pricing by "provider/model" then bare model id (matching
+  // AgentConfigFile.pricing keys), compute USD per 1M tokens, and emit to
+  // stderr so stdout JSON/print output stays parseable.
   const modelKey = `${config.model.provider}/${config.model.model}`;
   const pricing = config.pricing[modelKey] ?? config.pricing[config.model.model];
   const input = usage.inputTokens;
@@ -819,18 +821,23 @@ export function printCostPanel(usage: TokenUsage, config: ResolvedAgentConfig): 
     );
     return;
   }
-  const inputCost = (input / 1_000_000) * pricing.input;
-  const outputCost = (output / 1_000_000) * pricing.output;
-  const cachedCost =
-    pricing.cachedInput !== undefined ? (cached / 1_000_000) * pricing.cachedInput : 0;
-  const total = inputCost + outputCost + cachedCost;
+  const { hitRatio } = cacheMetrics(usage);
+  const { inputUsd, outputUsd, cachedUsd, totalUsd } = estimateCostUsd(usage, pricing);
+  const uncached = Math.max(0, input - cached);
+  const savedUsd = hitRatio > 0 ? (cached / 1_000_000) * pricing.input : 0;
+  const cacheLine =
+    hitRatio > 0
+      ? ` · cache hit ${Math.round(hitRatio * 100)}% (${cached} cached, saved $${savedUsd.toFixed(6)})`
+      : "";
   process.stderr.write(
-    `Cost: $${total.toFixed(6)} (input $${inputCost.toFixed(6)} @ $${pricing.input.toFixed(2)}/M` +
-      ` · output $${outputCost.toFixed(6)} @ $${pricing.output.toFixed(2)}/M` +
+    `Cost: $${totalUsd.toFixed(6)} (input $${inputUsd.toFixed(6)} @ $${pricing.input.toFixed(2)}/M` +
+      ` · output $${outputUsd.toFixed(6)} @ $${pricing.output.toFixed(2)}/M` +
       (pricing.cachedInput !== undefined
-        ? ` · cached $${cachedCost.toFixed(6)} @ $${pricing.cachedInput.toFixed(2)}/M`
+        ? ` · cached $${cachedUsd.toFixed(6)} @ $${pricing.cachedInput.toFixed(2)}/M`
         : "") +
-      `) — ${input} in / ${output} out / ${cached} cached tokens\n`,
+      `) — ${uncached} in / ${output} out / ${cached} cached tokens` +
+      cacheLine +
+      "\n",
   );
 }
 
