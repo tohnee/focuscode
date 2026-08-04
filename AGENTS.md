@@ -4,7 +4,7 @@
 
 ## 项目概览
 
-FocusCode（当前 `0.4.0-beta.2`）是一个模型可移植、策略可控的 Coding Agent Harness，TypeScript
+FocusCode（当前 `0.5.0`）是一个模型可移植、策略可控的 Coding Agent Harness，TypeScript
 ESM 实现，pnpm monorepo。它不是某个模型的薄包装：Provider、上下文、会话、工具、权限、执行
 隔离与扩展资产都有稳定边界，更换模型不会丢失本地会话与 Harness 资产。
 
@@ -32,13 +32,13 @@ pnpm install --frozen-lockfile
 
 ## 常用命令
 
-- `pnpm verify` —— 必需的本地门禁：架构边界检查 + prettier check + build + 带覆盖率的测试
+- `pnpm verify` —— 必需的本地门禁：架构边界 + schema 导出检查 + prettier check + build + 带覆盖率的测试
 - `pnpm build` —— `pnpm -r build`，各包用 `tsc -p tsconfig.json` 编译到 `dist/`
 - `pnpm test` —— 先 build 再 `vitest run`；vitest 跑的是构建产物 `dist/`，
   陈旧构建会导致莫名其妙的失败
 - 单个测试文件：`pnpm build && npx vitest run packages/<pkg>/test/<file>.test.ts`
 - 构建单个包：`pnpm --filter @focuscode/<pkg> build`
-- `pnpm lint` —— `node scripts/check-boundaries.mjs && prettier --check .`
+- `pnpm lint` —— `node scripts/check-boundaries.mjs && node scripts/export-schemas.mjs --check && prettier --check .`
 - `pnpm format` —— 提交前运行；lint 包含 `prettier --check .`，不要手工排版
 - `pnpm schemas` —— `packages/contracts` 的契约/schema 变更后必须运行，并提交重新生成的
   `docs/schemas/`
@@ -133,8 +133,11 @@ protocols 只映射边界语义、不直接写 fact；Model Pack 保持声明式
 - `--sandbox host` 不是安全沙箱，只是兼容路径；默认 `auto`（gVisor → Docker → seatbelt
   [仅 darwin] → Host [仅 `allowHostFallback` 时] → fail），不允许回退 Host
 - `--sandbox seatbelt` 使用 macOS `sandbox-exec` 与 seatbelt profile language
-  （`(deny default)` 基线 + 显式 allow 系统二进制与 workspace 写），无需 Docker 即可
-  获得 OS-level containment；非 darwin 平台 `health()` fail-quiet 返回 unavailable
+  （`(deny default)` 基线 + 进程执行白名单 + **写仅限 workspace**，读为全局允许、
+  默认无网络），无需 Docker 即可获得 OS-level 写隔离；沙箱内固定以 POSIX
+  `sh` 模式执行（交互式 zsh/bash 在 hardened profile 下 SIGABRT）；非 darwin
+  平台 `health()` fail-quiet 返回 unavailable。`health()` 用最小 profile 真实
+  执行探测（`-h` 在 macOS 25 上退出码 64，不可用作探测）
 - 容器只包住 Bash 及其子进程；Provider/OAuth/Session/Extension Host 留在 CLI 进程，
   模型凭据不进入不可信执行环境，Tool 子进程只获得精简环境
 - MCP server 在 CLI 主进程通过 stdio 通信，工具注册发生在 `CodingAgent.create` 之前；
@@ -169,6 +172,7 @@ protocols 只映射边界语义、不直接写 fact；Model Pack 保持声明式
 - `DEVELOPMENT_STATUS.md`、`TEST_REPORT.md` —— 进度与测试现状
 - `OAUTH_AND_PROVIDERS.md`、`TUI_AND_MULTIMODAL.md`、`EXTENSIONS_AND_SHARING.md`、
   `SANDBOXING.md`、`NPM_RELEASE.md` —— 各子系统专题
+- `SDK_GUIDE.md`、`API_MANUAL.md` —— SDK 组合 API 与运行手册
 - `V0.4_ENTERPRISE_DEPLOYMENT.md` —— 企业接入与发布 Gate
 - `docs/adr/`、`docs/threat-models/`、`docs/runbooks/`、`docs/schemas/` —— 决策记录、
   威胁模型、运维手册、导出 schema

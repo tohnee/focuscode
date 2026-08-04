@@ -53,6 +53,38 @@ focuscode --theme .focuscode/team-theme.json --mascot .focuscode/team-mascot.jso
 
 运行中 `Ctrl+T` 轮换主题、`Ctrl+G` 轮换伙伴。
 
+## 2.5 布局模式
+
+默认布局是 `workbench`（yazi × tmux 风格三栏工作台）：左侧导航栏 + 中央对话流 + 右侧
+预览栏（任务进度/最近工具输出/上下文用量/成本/输入实时预览），底部输入行带语境前缀与
+上下文快捷键提示，最底部是 tmux 风格分段状态栏（`[1]Nav [2]Chat [3]Preview` + 右侧
+model·approval·sandbox 系统信息）。全部布局：
+
+| 模式      | 说明                                                    |
+| --------- | ------------------------------------------------------- |
+| workbench | 三栏工作台（默认）；宽 <140 隐藏预览栏，<100 隐藏导航栏 |
+| minimal   | 极简流式；窄终端同样生效                                |
+| classic   | 传统三栏 + mascot（黄金路径，逐字节兼容）               |
+| split     | 消息主区 + todo/spec/context 侧栏（70/30）              |
+| focus     | 隐藏 mascot 的全宽消息流                                |
+| wide      | 消息主区 + 更宽侧栏（60/40）                            |
+
+`/layout <mode>` 或 `/layout`（循环）切换；`Ctrl+G` 轮换 mascot 仍可在
+classic/split/wide 下使用。workbench 下 todo/spec 侧栏通过 `/todopanel`、
+`/spec` 相关命令按需唤起。
+
+### 2.5.1 workbench 键盘导航（yazi × tmux）
+
+- **Ctrl+B 前缀键**（tmux 风格）：`Ctrl+B` 后按 `←`/`→` 在 Nav/Chat/Preview 面板间
+  移动焦点，按 `z` 缩放对话流（隐藏导航/预览栏，再按还原）。
+- **NORMAL 模式**（yazi 列表导航）：导航面板聚焦时 `j`/`k` 移动 todo 选择，
+  `G` 跳到底部，`Enter` 切换选中项状态，`q`/`Esc` 返回输入框；预览面板聚焦时
+  `q`/`Esc` 返回，其余按键不落入输入框。
+- **Ctrl+/**：状态栏提示完整键位（前缀组合、NORMAL 键、面板/搜索/补全入口）。
+- **命令浮层**：输入 `/` 开头自动唤起命令补全，随输入实时过滤，`Tab` 循环候选。
+- **输入行**：`/` 前缀显示命令语境，普通输入显示 `>` 对话语境；多行输入自动向上
+  扩展；右侧预览栏同步显示输入的 markdown 实时预览。
+
 ## 3. 快捷键
 
 默认：
