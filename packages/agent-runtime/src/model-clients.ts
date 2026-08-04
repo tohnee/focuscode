@@ -260,6 +260,10 @@ export function buildOpenAIRequest(
     messages,
     stream: true,
   };
+  const cacheField = compatibility.cacheControl.promptCacheKeyField;
+  if (mode === "openai-prefix" && cacheField && request.cacheKey) {
+    body[cacheField] = request.cacheKey;
+  }
   if (request.tools.length > 0) {
     body.tools = request.tools.map((tool) => ({
       type: "function",
@@ -323,6 +327,9 @@ export function compatibilityPolicy(options: ClientOptions): Required<ProviderCo
       mode: options.compatibility?.cacheControl?.mode ?? "none",
       ...(options.compatibility?.cacheControl?.minPrefixTokens !== undefined
         ? { minPrefixTokens: options.compatibility.cacheControl.minPrefixTokens }
+        : {}),
+      ...(options.compatibility?.cacheControl?.promptCacheKeyField !== undefined
+        ? { promptCacheKeyField: options.compatibility.cacheControl.promptCacheKeyField }
         : {}),
     },
   };

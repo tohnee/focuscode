@@ -445,6 +445,7 @@ export class CodingAgent {
               model: this.model.model,
               systemPrompt,
               systemPromptParts,
+              cacheKey: this.sessionId,
               messages: compiled.messages,
               tools: modelTools,
               temperature: this.model.temperature,

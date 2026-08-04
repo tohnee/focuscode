@@ -423,7 +423,11 @@ const PRESETS: Record<string, ProviderPreset> = {
         high: "max",
         max: "max",
       },
-      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
+      cacheControl: {
+        mode: "openai-prefix",
+        minPrefixTokens: 1024,
+        promptCacheKeyField: "prompt_cache_key",
+      },
     },
   },
   "kimi-cn": {
@@ -449,7 +453,11 @@ const PRESETS: Record<string, ProviderPreset> = {
         high: "max",
         max: "max",
       },
-      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
+      cacheControl: {
+        mode: "openai-prefix",
+        minPrefixTokens: 1024,
+        promptCacheKeyField: "prompt_cache_key",
+      },
     },
   },
   moonshot: {

@@ -91,6 +91,8 @@ export interface ModelRequest {
   temperature: number;
   maxOutputTokens: number;
   reasoningEffort?: ReasoningEffort;
+  /** 稳定缓存键（如 session/task ID），由 provider 的 cacheControl.promptCacheKeyField 声明后写入请求体。 */
+  cacheKey?: string;
   signal?: AbortSignal;
 }
 
@@ -126,6 +128,11 @@ export interface ProviderCompatibility {
     mode: "anthropic-ephemeral" | "openai-prefix" | "none";
     /** OpenAI prefix cache 最小前缀 token 估算（仅用于日志阈值判断，不影响请求） */
     minPrefixTokens?: number;
+    /**
+     * Provider 要求的稳定缓存键字段名（如 Kimi 的 "prompt_cache_key"）。
+     * 设置了该字段且 openai-prefix 模式下，把 request.cacheKey 写入 body 对应字段。
+     */
+    promptCacheKeyField?: string;
   };
 }
 

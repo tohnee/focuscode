@@ -281,3 +281,57 @@ describe("D7 cache_control · E. 日志埋点", () => {
     expect(body.stream).toBe(true);
   });
 });
+
+describe("D7 cache_control · F. promptCacheKeyField (Kimi prompt_cache_key)", () => {
+  it("TC-D7-23: openai-prefix + promptCacheKeyField + cacheKey 写入 body 对应字段", () => {
+    const request = baseRequest({
+      systemPromptParts: { stable: "stable", dynamic: "dynamic" },
+      cacheKey: "sess-123",
+    });
+    const compatibility = fullCompatibility({
+      cacheControl: {
+        mode: "openai-prefix",
+        minPrefixTokens: 1024,
+        promptCacheKeyField: "prompt_cache_key",
+      },
+    });
+    const body = buildOpenAIRequest(request, compatibility);
+    expect(body.prompt_cache_key).toBe("sess-123");
+  });
+
+  it("TC-D7-24: 未声明 promptCacheKeyField 时即使有 cacheKey 也不写入（向后兼容）", () => {
+    const request = baseRequest({
+      systemPromptParts: { stable: "stable", dynamic: "dynamic" },
+      cacheKey: "sess-456",
+    });
+    const compatibility = fullCompatibility({
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
+    });
+    const body = buildOpenAIRequest(request, compatibility);
+    expect(body.prompt_cache_key).toBeUndefined();
+  });
+
+  it("TC-D7-25: 声明 promptCacheKeyField 但 cacheKey 未设置时字段不出现", () => {
+    const request = baseRequest({
+      systemPromptParts: { stable: "stable", dynamic: "dynamic" },
+    });
+    const compatibility = fullCompatibility({
+      cacheControl: {
+        mode: "openai-prefix",
+        minPrefixTokens: 1024,
+        promptCacheKeyField: "prompt_cache_key",
+      },
+    });
+    const body = buildOpenAIRequest(request, compatibility);
+    expect(body).not.toHaveProperty("prompt_cache_key");
+  });
+
+  it("TC-D7-26: 非 openai-prefix 模式下即使声明字段也不写入", () => {
+    const request = baseRequest({ cacheKey: "sess-789" });
+    const compatibility = fullCompatibility({
+      cacheControl: { mode: "none", promptCacheKeyField: "prompt_cache_key" },
+    });
+    const body = buildOpenAIRequest(request, compatibility);
+    expect(body).not.toHaveProperty("prompt_cache_key");
+  });
+});

@@ -123,6 +123,28 @@ describe("configuration and resources", () => {
     expect(vision.model.reliability.maxRetries).toBe(4);
   });
 
+  it("declares Kimi prompt_cache_key as the provider cache key field", async () => {
+    const root = await createTestDirectory("kimi-prompt-cache-key");
+    const config = await resolveAgentConfig(root, {
+      provider: "kimi",
+      apiKey: "fixture-key",
+      globalConfigPath: join(root, "missing.json"),
+      projectConfigPath: join(root, "missing-project.json"),
+    });
+    expect(config.model.compatibility.cacheControl).toMatchObject({
+      mode: "openai-prefix",
+      minPrefixTokens: 1024,
+      promptCacheKeyField: "prompt_cache_key",
+    });
+    const cn = await resolveAgentConfig(root, {
+      provider: "kimi-cn",
+      apiKey: "fixture-key",
+      globalConfigPath: join(root, "missing.json"),
+      projectConfigPath: join(root, "missing-project.json"),
+    });
+    expect(cn.model.compatibility.cacheControl?.promptCacheKeyField).toBe("prompt_cache_key");
+  });
+
   it("enforces enterprise provider, model, media, extension and sandbox boundaries", async () => {
     const root = await createTestDirectory("agent-enterprise-policy");
     const base = {
