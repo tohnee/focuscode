@@ -34,7 +34,52 @@ function baseState(overrides: Partial<TuiRenderState> = {}): TuiRenderState {
 
 describe("layout snapshot tests", () => {
   it("classic layout renders without sidebar", () => {
-    const frame = renderTui(baseState({ layout: createInitialLayout() }));
+    const layout = { ...createInitialLayout(), mode: "classic" as const };
+    const frame = renderTui(baseState({ layout }));
+    expect(frame).toMatchSnapshot();
+  });
+
+  it("minimal layout renders borderless message stream", () => {
+    const layout = { ...createInitialLayout(), mode: "minimal" as const };
+    const frame = renderTui(
+      baseState({
+        layout,
+        transcript: [
+          { role: "user", text: "修复登录 bug" },
+          { role: "assistant", text: "我来看一下。" },
+          { role: "tool", text: '{"output":"grep 完成，命中 3 处"}' },
+        ],
+        input: "继续",
+      }),
+    );
+    expect(frame).toMatchSnapshot();
+  });
+
+  it("workbench layout renders three columns (nav/chat/preview)", () => {
+    const layout = createInitialLayout();
+    const frame = renderTui(
+      baseState({
+        width: 180,
+        layout,
+        transcript: [
+          { role: "user", text: "修复登录 bug" },
+          { role: "assistant", text: "我来看一下。" },
+          { role: "tool", text: '{"output":"grep 完成，命中 3 处"}' },
+        ],
+        input: "继续",
+        inputCursor: { row: 0, col: 2 },
+        todoPanel: setTodoItems(createInitialTodoPanel(), [
+          { id: "1", content: "Task A", status: "in_progress", priority: "high" },
+          { id: "2", content: "Task B", status: "pending", priority: "medium" },
+        ]),
+        activePane: "nav",
+      }),
+    );
+    expect(frame).toContain("▌Todo");
+    expect(frame).toContain("Task A");
+    expect(frame).toContain("[1]Nav");
+    expect(frame).toContain("[2]Chat");
+    expect(frame).toContain("[3]Preview");
     expect(frame).toMatchSnapshot();
   });
 

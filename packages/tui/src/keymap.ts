@@ -34,6 +34,18 @@ export type TuiAction =
   | "toggle_tree_panel"
   | "cycle_sidebar_focus"
   | "sidebar_action"
+  // ─── Workbench 面板与 NORMAL 模式（tmux 前缀键 + yazi 列表导航）───
+  | "prefix"
+  | "panel_focus_left"
+  | "panel_focus_right"
+  | "panel_zoom"
+  | "nav_up"
+  | "nav_down"
+  | "nav_top"
+  | "nav_bottom"
+  | "nav_activate"
+  | "nav_back"
+  | "toggle_help"
   | "upcase_word"
   | "downcase_word"
   | "capitalize_word"
@@ -90,6 +102,17 @@ export const DEFAULT_KEYMAP: TuiKeymap = {
   "alt+]": "cycle_sidebar_focus",
   "alt+enter": "sidebar_action",
   "alt+h": "spec_history_toggle",
+  "ctrl+b": "prefix",
+  "ctrl+/": "toggle_help",
+};
+
+/**
+ * tmux 风格前缀组合：Ctrl+B 之后的下一个键。
+ * 方向键/h/l 切换面板焦点，z 缩放对话流（隐藏导航/预览栏）。
+ */
+export const PREFIX_BINDINGS: Partial<Record<TuiAction, TuiAction>> = {
+  cursor_left: "panel_focus_left",
+  cursor_right: "panel_focus_right",
 };
 
 export type ParsedKey =
@@ -352,6 +375,10 @@ function terminalKeyAt(value: string, index: number): { key: string; length: num
   const code = value.charCodeAt(index);
   if (code >= 1 && code <= 26) {
     return { key: "ctrl+" + String.fromCharCode(96 + code), length: 1 };
+  }
+  // Ctrl+/ 发送 0x1F，不在 1-26 的字母映射内，单独映射。
+  if (code === 31) {
+    return { key: "ctrl+/", length: 1 };
   }
   return undefined;
 }

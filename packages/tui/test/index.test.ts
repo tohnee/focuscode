@@ -69,7 +69,7 @@ describe("TUI public exports", () => {
     expect(typeof Tui.setLayoutMode).toBe("function");
     expect(typeof Tui.computeLayout).toBe("function");
     expect(Array.isArray(Tui.LAYOUT_MODES)).toBe(true);
-    expect(Tui.LAYOUT_MODES.length).toBe(4);
+    expect(Tui.LAYOUT_MODES.length).toBe(6);
   });
 
   it("exports todo-panel module functions", () => {
@@ -84,7 +84,7 @@ describe("TUI public exports", () => {
 
   it("exports layout/todo-panel type definitions via type re-export", () => {
     const layout: Tui.LayoutState = Tui.createInitialLayout();
-    expect(layout.mode).toBe("classic");
+    expect(layout.mode).toBe("workbench");
     expect(layout.panes.length).toBeGreaterThan(0);
     const todo: Tui.TodoPanelState = Tui.createInitialTodoPanel();
     expect(todo.items).toEqual([]);

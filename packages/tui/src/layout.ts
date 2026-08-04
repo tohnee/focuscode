@@ -5,11 +5,19 @@
  * 不持有任何运行时状态，仅依赖 TypeScript 标准类型与本包内部模块。
  */
 
-export type PaneId = "transcript" | "input" | "todo" | "spec" | "context" | "tree";
+export type PaneId =
+  "transcript" | "input" | "todo" | "spec" | "context" | "tree" | "nav" | "preview";
 
-export type LayoutMode = "classic" | "split" | "focus" | "wide";
+export type LayoutMode = "workbench" | "classic" | "split" | "focus" | "wide" | "minimal";
 
-export const LAYOUT_MODES: readonly LayoutMode[] = ["classic", "split", "focus", "wide"] as const;
+export const LAYOUT_MODES: readonly LayoutMode[] = [
+  "workbench",
+  "classic",
+  "split",
+  "focus",
+  "wide",
+  "minimal",
+] as const;
 
 export interface PaneConfig {
   id: PaneId;
@@ -27,6 +35,8 @@ export interface LayoutState {
   mode: LayoutMode;
   panes: PaneConfig[];
   activePane: PaneId;
+  /** workbench 缩放态（tmux Ctrl+B z）：隐藏导航/预览栏，对话流全宽。 */
+  zoom?: boolean;
 }
 
 /** 渲染时计算出的 pane 几何信息。 */
@@ -34,6 +44,10 @@ export interface ComputedLayout {
   mode: LayoutMode;
   main: PaneGeometry;
   sidebar?: PaneGeometry;
+  /** workbench 模式的左侧导航栏几何；窄屏降级时缺省。 */
+  nav?: PaneGeometry;
+  /** workbench 模式的右侧预览栏几何；窄屏降级时缺省。 */
+  preview?: PaneGeometry;
   /** focus 模式下隐藏吉祥物。 */
   hideMascot: boolean;
   /** sidebar 可见的具体 pane id 列表（按渲染顺序）。 */
@@ -50,12 +64,12 @@ export interface PaneGeometry {
 }
 
 /**
- * 创建初始 LayoutState：classic 模式，所有侧栏 pane 不可见。
- * classic 模式必须保持与重构前完全一致的渲染输出（向后兼容黄金路径）。
+ * 创建初始 LayoutState：workbench 模式（yazi × tmux 风格三栏工作台，默认体验）。
+ * 所有侧栏 pane 不可见；classic/minimal 保留在 /layout 循环中。
  */
 export function createInitialLayout(): LayoutState {
   return {
-    mode: "classic",
+    mode: "workbench",
     activePane: "transcript",
     panes: [
       { id: "transcript", visible: true, side: "main" },
@@ -68,7 +82,7 @@ export function createInitialLayout(): LayoutState {
   };
 }
 
-/** 循环切换布局模式：classic → split → focus → wide → classic。 */
+/** 循环切换布局模式：workbench → classic → split → focus → wide → minimal → workbench。 */
 export function cycleLayoutMode(mode: LayoutMode): LayoutMode {
   const idx = LAYOUT_MODES.indexOf(mode);
   return LAYOUT_MODES[(idx + 1) % LAYOUT_MODES.length]!;
@@ -76,7 +90,7 @@ export function cycleLayoutMode(mode: LayoutMode): LayoutMode {
 
 /**
  * 切换到指定布局模式，并相应调整 sidebar pane 可见性。
- * split / wide 模式下显示 todo/spec/context 侧栏；classic / focus 模式下隐藏。
+ * split / wide 模式下显示 todo/spec/context 侧栏；classic / focus / minimal 模式下隐藏。
  */
 export function setLayoutMode(state: LayoutState, mode: LayoutMode): LayoutState {
   const showSidebar = mode === "split" || mode === "wide";
@@ -92,14 +106,19 @@ export function setLayoutMode(state: LayoutState, mode: LayoutMode): LayoutState
 /**
  * 根据当前 LayoutState 和终端尺寸计算 pane 几何。
  *
- * 强制回退条件：
- * - 宽度 < 100 列 → classic（侧栏太窄无意义）
- * - 高度 < 20 行 → classic（侧栏内容显示不足）
+ * 强制回退/降级规则：
+ * - workbench 在宽度 < 140 时隐藏预览栏；< 100 时进一步隐藏导航栏
+ *   （退化为经典单栏，保证任何终端都可用）
+ * - split / wide 在宽度 < 100 或高度 < 20 时回退 classic（侧栏太窄无意义）
  *
- * 回退时 mode 字段也返回 "classic"，让 renderer 能正确分派。
+ * classic / focus / minimal 无侧栏，任何尺寸都按自身计算。
+ * 回退时 mode 字段返回实际生效的模式，让 renderer 能正确分派。
  */
 export function computeLayout(state: LayoutState, width: number, height: number): ComputedLayout {
-  if (width < 100 || height < 20) {
+  if (state.mode === "workbench") {
+    return computeWorkbenchLayout(width, height, state.zoom);
+  }
+  if ((width < 100 || height < 20) && (state.mode === "split" || state.mode === "wide")) {
     return computeClassicLayout(width, height);
   }
   switch (state.mode) {
@@ -111,9 +130,37 @@ export function computeLayout(state: LayoutState, width: number, height: number)
       return computeFocusLayout(width, height);
     case "wide":
       return computeWideLayout(width, height, state);
+    case "minimal":
+      return computeMinimalLayout(width, height);
     default:
       return computeClassicLayout(width, height);
   }
+}
+
+const WORKBENCH_NAV_WIDTH = 32;
+const WORKBENCH_PREVIEW_WIDTH = 38;
+const WORKBENCH_MIN_PREVIEW_WIDTH = 140;
+const WORKBENCH_MIN_NAV_WIDTH = 100;
+
+/**
+ * workbench（三栏工作台）几何：左导航 + 对话流 + 右预览，全高无边框损耗。
+ * 宽度 < 140 隐藏预览、< 100 隐藏导航（逐级降级）；zoom 时两者都隐藏。
+ */
+function computeWorkbenchLayout(width: number, height: number, zoom?: boolean): ComputedLayout {
+  const bodyHeight = Math.max(8, height - 4); // 输入行 + 状态栏占 2 行 + 分隔
+  const navWidth = !zoom && width >= WORKBENCH_MIN_NAV_WIDTH ? WORKBENCH_NAV_WIDTH : 0;
+  const previewWidth = !zoom && width >= WORKBENCH_MIN_PREVIEW_WIDTH ? WORKBENCH_PREVIEW_WIDTH : 0;
+  const mainWidth = Math.max(20, width - navWidth - previewWidth);
+  return {
+    mode: "workbench",
+    main: { width: mainWidth, height: bodyHeight, col: navWidth, row: 0 },
+    ...(navWidth > 0 ? { nav: { width: navWidth, height: bodyHeight, col: 0, row: 0 } } : {}),
+    ...(previewWidth > 0
+      ? { preview: { width: previewWidth, height: bodyHeight, col: navWidth + mainWidth, row: 0 } }
+      : {}),
+    hideMascot: true,
+    sidebarPanes: [],
+  };
 }
 
 function computeClassicLayout(width: number, height: number): ComputedLayout {
@@ -149,6 +196,19 @@ function computeFocusLayout(width: number, height: number): ComputedLayout {
   return {
     mode: "focus",
     main: { width: Math.max(40, width - 4), height: Math.max(10, height - 6), col: 2, row: 2 },
+    hideMascot: true,
+    sidebarPanes: [],
+  };
+}
+
+/**
+ * minimal（极简流式）布局：主区占满全宽、无边框损耗、隐藏 mascot 与侧栏。
+ * 留给 renderer-minimal 模块按消息流渲染。
+ */
+function computeMinimalLayout(width: number, height: number): ComputedLayout {
+  return {
+    mode: "minimal",
+    main: { width, height: Math.max(10, height - 3), col: 0, row: 0 },
     hideMascot: true,
     sidebarPanes: [],
   };

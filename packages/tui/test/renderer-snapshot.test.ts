@@ -223,7 +223,7 @@ describe("renderer snapshot — fallback to classic", () => {
   });
 
   it("forces classic when both width and height are sufficient but mode is classic", () => {
-    const layout = createInitialLayout();
+    const layout = { ...createInitialLayout(), mode: "classic" as const };
     const todoPanel = setTodoItems(createInitialTodoPanel(), [
       { id: "1", content: "Classic hides this", status: "pending", priority: "medium" },
     ]);

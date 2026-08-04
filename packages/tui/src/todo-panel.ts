@@ -6,7 +6,7 @@
  */
 
 import { fg, type ColorValue, type TuiTheme } from "./themes.js";
-import { stringWidth, stripAnsi, takeWidth } from "./width.js";
+import { sanitizeTerminalText, stringWidth, takeWidth } from "./width.js";
 
 export type TodoStatus = "pending" | "in_progress" | "completed";
 export type TodoPriority = "high" | "medium" | "low";
@@ -140,7 +140,10 @@ export function renderTodoPanel(
 }
 
 function truncateContent(text: string, width: number): string {
-  const clean = stripAnsi(text);
+  // stripAnsi only removes SGR; CSI/OSC/bare-ESC survive and would execute in
+  // the terminal. Todo content is model-derived (SpecEngine-injected), so
+  // strip all control sequences.
+  const clean = sanitizeTerminalText(text);
   if (stringWidth(clean) <= width) return clean;
   return takeWidth(clean, Math.max(1, width - 1)) + "…";
 }

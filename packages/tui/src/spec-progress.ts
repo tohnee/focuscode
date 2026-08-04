@@ -1,4 +1,5 @@
 import { bold, dim, faint, fg, type TuiTheme } from "./themes.js";
+import { sanitizeTerminalText } from "./width.js";
 
 export type SpecPhase =
   | "idle"
@@ -155,14 +156,19 @@ function formatDuration(ms: number): string {
 }
 
 function truncate(text: string, max: number): string {
-  if (text.length <= max) return text;
-  return text.slice(0, Math.max(1, max - 1)) + "…";
+  // Model-derived strings (topics, reasons, goals, options) must never carry
+  // terminal control sequences into the frame (documented rule: distrust
+  // control characters from model/tool output).
+  const clean = sanitizeTerminalText(text);
+  if (clean.length <= max) return clean;
+  return clean.slice(0, Math.max(1, max - 1)) + "…";
 }
 
 /** Word-wrap text to fit within `width` columns, breaking on spaces when possible. */
 function wrapText(text: string, width: number): string[] {
-  if (width <= 0) return [text];
-  const words = text.split(/\s+/);
+  const clean = sanitizeTerminalText(text);
+  if (width <= 0) return [clean];
+  const words = clean.split(/\s+/);
   const lines: string[] = [];
   let current = "";
   for (const word of words) {
@@ -219,7 +225,7 @@ export function renderSpecProgress(
       const tick = options?.tick ?? 0;
       icon = RUNNING_SPINNER[tick % RUNNING_SPINNER.length]!;
     }
-    const name = stage.name.padEnd(18);
+    const name = sanitizeTerminalText(stage.name).padEnd(18);
     let detail = "";
     if (stage.status === "done" && stage.durationMs !== undefined) {
       detail = "✓ " + formatDuration(stage.durationMs);
@@ -327,8 +333,8 @@ export function renderSpecConfirmation(
     const selected = i === decision.selectedIndex;
     const marker = selected ? "›" : " ";
     const label = selected
-      ? bold(fg(theme.accent, marker + " " + option.label))
-      : faint(fg(theme.muted, marker + " " + option.label));
+      ? bold(fg(theme.accent, marker + " " + sanitizeTerminalText(option.label)))
+      : faint(fg(theme.muted, marker + " " + sanitizeTerminalText(option.label)));
     const desc = faint(fg(theme.muted, " — " + truncate(option.description, innerWidth - 20)));
     lines.push("│ " + label + desc);
   }

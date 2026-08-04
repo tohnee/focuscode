@@ -1,5 +1,5 @@
 import { fg } from "./themes.js";
-import { stringWidth, takeWidth } from "./width.js";
+import { sanitizeTerminalText, stringWidth, takeWidth } from "./width.js";
 
 interface DiffOp {
   type: "same" | "del" | "add";
@@ -28,13 +28,17 @@ export function renderDiff(oldText: string, newText: string, width: number): str
       if (run.length > CONTEXT_LIMIT) {
         rendered.push(gray("... " + run.length + " unchanged lines ..."));
       } else {
-        for (const context of run) rendered.push(gray("  " + clip(context.text, columns - 2)));
+        for (const context of run)
+          rendered.push(gray("  " + clip(sanitizeTerminalText(context.text), columns - 2)));
       }
       index = end;
       continue;
     }
-    if (op.type === "del") rendered.push(fg(1, "- " + clip(op.text, columns - 2)));
-    else rendered.push(fg(2, "+ " + clip(op.text, columns - 2)));
+    // File content may contain terminal control sequences (hostile repo, log
+    // file): strip them before the line reaches the frame.
+    if (op.type === "del")
+      rendered.push(fg(1, "- " + clip(sanitizeTerminalText(op.text), columns - 2)));
+    else rendered.push(fg(2, "+ " + clip(sanitizeTerminalText(op.text), columns - 2)));
     index += 1;
   }
   return rendered;
