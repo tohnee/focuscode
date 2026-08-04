@@ -169,6 +169,8 @@ export class CodingAgent {
   // of per-round churn events (changed fields), for prompt-cache diagnostics.
   private lastEpoch: CacheEpochManifestV1 | undefined;
   private epochChurn: Array<{ at: number; changed: string[] }> = [];
+  /** 每轮 tool schema 序列化长度变化记录(诊断 tool schema 漂移)。 */
+  private schemaSizeHistory: Array<{ at: number; chars: number }> = [];
 
   private constructor(private readonly options: CodingAgentOptions) {
     if (options.effectPort && !options.effectContext) {
@@ -422,16 +424,25 @@ export class CodingAgent {
             ? []
             : this.registry.definitions();
         // Track cache-epoch churn: compute the current epoch from the stable
-        // inputs and record any field changes versus the previous round.
+        // inputs and record any field changes versus the previous round. The
+        // tool definitions are computed once and reused for both the epoch
+        // manifest and the per-round schema-size record (no double serialization).
+        const definitions = this.registry.definitions();
+        this.schemaSizeHistory.push({
+          at: Date.now(),
+          chars: JSON.stringify(definitions).length,
+        });
+        if (this.schemaSizeHistory.length > 200) this.schemaSizeHistory.shift();
         const epoch = computeEpochManifest({
           modelRevision: this.model.revision ?? this.model.model,
           systemStable: systemPromptParts.stable,
-          toolDefinitions: this.registry.definitions(),
+          toolDefinitions: definitions,
           compatibility: this.model.compatibility,
         });
         const changed = this.lastEpoch ? diffEpochs(this.lastEpoch, epoch) : [];
         if (changed.length > 0) {
           this.epochChurn.push({ at: Date.now(), changed });
+          if (this.epochChurn.length > 200) this.epochChurn.shift();
         }
         this.lastEpoch = epoch;
         await this.emit({ type: "model_start", model: this.model.model, round });
@@ -895,19 +906,34 @@ export class CodingAgent {
   /**
    * Cache-epoch diagnostics for the current session: the last computed epoch
    * manifest, the timestamp of the most recent churn (undefined when no epoch
-   * has churned yet), and the per-churn changed-field lists. Each churn reason
-   * is a comma-joined list of the fields that changed at that round (e.g.
-   * "toolBundleHash" when a tool was added/removed).
+   * has churned yet), the per-churn changed-field lists, plus per-round tool
+   * schema serialized sizes and the rounds where that size changed. Each churn
+   * reason is a comma-joined list of the fields that changed at that round
+   * (e.g. "toolBundleHash" when a tool was added/removed).
    */
   getCacheDiagnostics(): {
     current: CacheEpochManifestV1 | undefined;
     lastChanged: number | undefined;
     churnReasons: string[];
+    /** 每轮 tool schema 序列化长度(诊断 schema 漂移)。 */
+    schemaSizes: Array<{ at: number; chars: number }>;
+    /** tool schema 长度变化轮次(与上一轮不同才记录)。 */
+    schemaChanges: Array<{ at: number; from: number; to: number }>;
   } {
+    const schemaChanges: Array<{ at: number; from: number; to: number }> = [];
+    for (let i = 1; i < this.schemaSizeHistory.length; i += 1) {
+      const prev = this.schemaSizeHistory[i - 1]!;
+      const cur = this.schemaSizeHistory[i]!;
+      if (cur.chars !== prev.chars) {
+        schemaChanges.push({ at: cur.at, from: prev.chars, to: cur.chars });
+      }
+    }
     return {
       current: this.lastEpoch,
       lastChanged: this.epochChurn.at(-1)?.at,
       churnReasons: this.epochChurn.map((c) => c.changed.join(",")),
+      schemaSizes: [...this.schemaSizeHistory],
+      schemaChanges,
     };
   }
 

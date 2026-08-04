@@ -229,6 +229,9 @@ describe("CodingAgent epoch churn tracking", () => {
     expect(before.churnReasons).toEqual([]);
     expect(before.lastChanged).toBeUndefined();
     expect(before.current).toBeDefined();
+    // One schema-size record per round, and no change until a second round exists.
+    expect(before.schemaSizes).toHaveLength(1);
+    expect(before.schemaChanges).toEqual([]);
 
     // Register a second tool, then run round 2 — tool bundle must churn.
     registry.register({
@@ -247,5 +250,63 @@ describe("CodingAgent epoch churn tracking", () => {
     expect(after.churnReasons.some((reason) => reason.includes("toolBundleHash"))).toBe(true);
     expect(after.lastChanged).toBeDefined();
     expect(after.current).toBeDefined();
+    // Schema-size tracking: another record was appended and the new tool made
+    // the serialized bundle strictly larger (so from !== to).
+    expect(after.schemaSizes.length).toBeGreaterThan(before.schemaSizes.length);
+    expect(
+      after.schemaChanges.some((change) => change.from !== change.to && change.to > change.from),
+    ).toBe(true);
+  });
+
+  it("records schema sizes with monotonically non-decreasing timestamps", async () => {
+    const root = await createTestDirectory("schema-size-monotonic");
+    const registry = await createCodingToolRegistry(root);
+    const client = new QueueModelClient([
+      {
+        content: "round one done",
+        toolCalls: [],
+        usage: { inputTokens: 10, outputTokens: 5 },
+        stopReason: "stop",
+      },
+      {
+        content: "round two done",
+        toolCalls: [],
+        usage: { inputTokens: 10, outputTokens: 5 },
+        stopReason: "stop",
+      },
+      {
+        content: "round three done",
+        toolCalls: [],
+        usage: { inputTokens: 10, outputTokens: 5 },
+        stopReason: "stop",
+      },
+    ]);
+    const agent = await CodingAgent.create({
+      cwd: root,
+      model,
+      modelClient: client,
+      tools: registry.values(),
+      toolRegistry: registry,
+      permission: { mode: "full-auto", projectTrusted: true, protectedPaths: [] },
+      sessionStore: new SessionStore("schema-size-monotonic", false),
+      checkpoints: false,
+      maxRounds: 5,
+    });
+
+    await agent.submit("one");
+    await agent.submit("two");
+    await agent.submit("three");
+
+    const { schemaSizes } = agent.getCacheDiagnostics();
+    expect(schemaSizes.length).toBeGreaterThanOrEqual(3);
+    // Timestamps must never go backwards across rounds.
+    for (let i = 1; i < schemaSizes.length; i += 1) {
+      expect(schemaSizes[i].at).toBeGreaterThanOrEqual(schemaSizes[i - 1].at);
+    }
+    // Each record carries a plausible positive character count.
+    for (const entry of schemaSizes) {
+      expect(Number.isInteger(entry.chars)).toBe(true);
+      expect(entry.chars).toBeGreaterThan(0);
+    }
   });
 });
