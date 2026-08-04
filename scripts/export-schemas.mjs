@@ -20,6 +20,7 @@ try {
 
 const {
   ActionIntentSchema,
+  CacheEpochManifestSchema,
   CapabilityGrantSchema,
   DomainEventSchema,
   EffectReceiptSchema,
@@ -45,6 +46,7 @@ const schemas = new Map([
   ["memory-record.v1", MemoryRecordSchema],
   ["turn-input.v1", TurnInputSchema],
   ["verification-report.v1", VerificationReportSchema],
+  ["cache-epoch.v1", CacheEpochManifestSchema],
 ]);
 
 function schemaDocument(id, schema) {
