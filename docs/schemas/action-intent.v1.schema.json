@@ -28,11 +28,7 @@
     "tool": {
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "id",
-        "version",
-        "schemaDigest"
-      ],
+      "required": ["id", "version", "schemaDigest"],
       "properties": {
         "id": {
           "minLength": 1,
@@ -54,10 +50,7 @@
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "class",
-          "description"
-        ],
+        "required": ["class", "description"],
         "properties": {
           "class": {
             "anyOf": [

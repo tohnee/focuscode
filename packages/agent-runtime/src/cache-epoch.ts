@@ -35,7 +35,10 @@ export function computeEpochManifest(args: {
     toolBundleHash: stableHash(toolBundle),
     systemHash: stableHash(args.systemStable),
     ...(compat?.thinkingFormat
-      ? { chatTemplateHash: stableHash(compat.thinkingFormat), reasoningProtocol: compat.thinkingFormat }
+      ? {
+          chatTemplateHash: stableHash(compat.thinkingFormat),
+          reasoningProtocol: compat.thinkingFormat,
+        }
       : {}),
     ...(args.toolProtocol ? { toolProtocol: args.toolProtocol } : {}),
     ...(compat?.cacheControl?.mode ? { cacheMode: compat.cacheControl.mode } : {}),

@@ -42,10 +42,7 @@
     "actor": {
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "id",
-        "kind"
-      ],
+      "required": ["id", "kind"],
       "properties": {
         "id": {
           "minLength": 1,

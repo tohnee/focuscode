@@ -3,13 +3,7 @@
   "$id": "verification-report.v1",
   "additionalProperties": false,
   "type": "object",
-  "required": [
-    "schemaVersion",
-    "conclusion",
-    "phase",
-    "results",
-    "summary"
-  ],
+  "required": ["schemaVersion", "conclusion", "phase", "results", "summary"],
   "properties": {
     "schemaVersion": {
       "const": "verification-report.v1",

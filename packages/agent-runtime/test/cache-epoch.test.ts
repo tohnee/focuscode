@@ -23,36 +23,71 @@ describe("stableHash", () => {
 
 describe("computeEpochManifest", () => {
   const tools: ToolDefinition[] = [
-    { name: "read", label: "Read", description: "read file", parameters: { type: "object" }, effect: "read" },
+    {
+      name: "read",
+      label: "Read",
+      description: "read file",
+      parameters: { type: "object" },
+      effect: "read",
+    },
   ];
 
   it("produces identical manifest for identical inputs", () => {
-    const a = computeEpochManifest({ modelRevision: "r1", systemStable: "S", toolDefinitions: tools });
-    const b = computeEpochManifest({ modelRevision: "r1", systemStable: "S", toolDefinitions: tools });
+    const a = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S",
+      toolDefinitions: tools,
+    });
+    const b = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S",
+      toolDefinitions: tools,
+    });
     expect(a).toEqual(b);
   });
 
   it("changes toolBundleHash when tool schema changes", () => {
-    const a = computeEpochManifest({ modelRevision: "r1", systemStable: "S", toolDefinitions: tools });
+    const a = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S",
+      toolDefinitions: tools,
+    });
     const b = computeEpochManifest({
       modelRevision: "r1",
       systemStable: "S",
-      toolDefinitions: [...tools, { name: "write", label: "Write", description: "w", parameters: {}, effect: "write" }],
+      toolDefinitions: [
+        ...tools,
+        { name: "write", label: "Write", description: "w", parameters: {}, effect: "write" },
+      ],
     });
     expect(a.toolBundleHash).not.toBe(b.toolBundleHash);
     expect(a.systemHash).toBe(b.systemHash);
   });
 
   it("changes systemHash when stable system changes", () => {
-    const a = computeEpochManifest({ modelRevision: "r1", systemStable: "S", toolDefinitions: tools });
-    const b = computeEpochManifest({ modelRevision: "r1", systemStable: "S2", toolDefinitions: tools });
+    const a = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S",
+      toolDefinitions: tools,
+    });
+    const b = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S2",
+      toolDefinitions: tools,
+    });
     expect(a.systemHash).not.toBe(b.systemHash);
   });
 });
 
 describe("diffEpochs", () => {
   const tools: ToolDefinition[] = [
-    { name: "read", label: "Read", description: "read file", parameters: { type: "object" }, effect: "read" },
+    {
+      name: "read",
+      label: "Read",
+      description: "read file",
+      parameters: { type: "object" },
+      effect: "read",
+    },
   ];
   const writeTool: ToolDefinition = {
     name: "write",
@@ -63,13 +98,25 @@ describe("diffEpochs", () => {
   };
 
   it("returns [] when manifests are identical", () => {
-    const a = computeEpochManifest({ modelRevision: "r1", systemStable: "S", toolDefinitions: tools });
-    const b = computeEpochManifest({ modelRevision: "r1", systemStable: "S", toolDefinitions: tools });
+    const a = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S",
+      toolDefinitions: tools,
+    });
+    const b = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S",
+      toolDefinitions: tools,
+    });
     expect(diffEpochs(a, b)).toEqual([]);
   });
 
   it("reports toolBundleHash when only the tool bundle differs", () => {
-    const a = computeEpochManifest({ modelRevision: "r1", systemStable: "S", toolDefinitions: tools });
+    const a = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S",
+      toolDefinitions: tools,
+    });
     const b = computeEpochManifest({
       modelRevision: "r1",
       systemStable: "S",
@@ -79,15 +126,27 @@ describe("diffEpochs", () => {
   });
 
   it("reports multiple fields when several differ", () => {
-    const a = computeEpochManifest({ modelRevision: "r1", systemStable: "S", toolDefinitions: tools });
-    const b = computeEpochManifest({ modelRevision: "r2", systemStable: "S2", toolDefinitions: tools });
+    const a = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S",
+      toolDefinitions: tools,
+    });
+    const b = computeEpochManifest({
+      modelRevision: "r2",
+      systemStable: "S2",
+      toolDefinitions: tools,
+    });
     expect(diffEpochs(a, b)).toEqual(["modelRevision", "systemHash"]);
   });
 
   it("tracks churn across two simulated rounds (one more tool)", () => {
     // Simulates the agent's per-round semantics: manifest A in round 1, then
     // manifest B in round 2 after a new tool is registered.
-    const round1 = computeEpochManifest({ modelRevision: "r1", systemStable: "S", toolDefinitions: tools });
+    const round1 = computeEpochManifest({
+      modelRevision: "r1",
+      systemStable: "S",
+      toolDefinitions: tools,
+    });
     const round2 = computeEpochManifest({
       modelRevision: "r1",
       systemStable: "S",

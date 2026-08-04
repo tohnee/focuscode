@@ -23,7 +23,11 @@ describe("estimateCostUsd", () => {
   const pricing = { input: 2.0, output: 8.0, cachedInput: 0.2 };
 
   it("prices input/output/cached separately per 1M tokens", () => {
-    const usage: TokenUsage = { inputTokens: 1_000_000, outputTokens: 500_000, cachedInputTokens: 400_000 };
+    const usage: TokenUsage = {
+      inputTokens: 1_000_000,
+      outputTokens: 500_000,
+      cachedInputTokens: 400_000,
+    };
     const c = estimateCostUsd(usage, pricing);
     expect(c.inputUsd).toBeCloseTo(1.2);
     expect(c.outputUsd).toBeCloseTo(4.0);

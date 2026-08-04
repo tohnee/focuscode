@@ -3,14 +3,7 @@
   "$id": "task-spec.v1",
   "additionalProperties": false,
   "type": "object",
-  "required": [
-    "schemaVersion",
-    "repoId",
-    "baseRef",
-    "mode",
-    "objective",
-    "acceptanceCriteria"
-  ],
+  "required": ["schemaVersion", "repoId", "baseRef", "mode", "objective", "acceptanceCriteria"],
   "properties": {
     "schemaVersion": {
       "const": "task-spec.v1",
@@ -53,10 +46,7 @@
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "id",
-          "description"
-        ],
+        "required": ["id", "description"],
         "properties": {
           "id": {
             "minLength": 1,

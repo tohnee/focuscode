@@ -3,12 +3,7 @@
   "$id": "cache-epoch.v1",
   "additionalProperties": false,
   "type": "object",
-  "required": [
-    "schemaVersion",
-    "modelRevision",
-    "toolBundleHash",
-    "systemHash"
-  ],
+  "required": ["schemaVersion", "modelRevision", "toolBundleHash", "systemHash"],
   "properties": {
     "schemaVersion": {
       "const": "cache-epoch.v1",

@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Value } from "@sinclair/typebox/value";
-import {
-  CacheEpochManifestSchema,
-  type CacheEpochManifestV1,
-} from "../src/schemas.js";
+import { CacheEpochManifestSchema, type CacheEpochManifestV1 } from "../src/schemas.js";
 
 describe("CacheEpochManifestV1", () => {
   const manifest: CacheEpochManifestV1 = {
