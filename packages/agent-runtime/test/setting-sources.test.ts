@@ -14,7 +14,9 @@ import { resolveAgentConfig } from "../src/index.js";
  *
  * settingSources 字段声明允许加载哪些层，默认全部启用。
  * 即便 settingSources 包含 "project"，仍需 projectTrusted=true 才加载项目层。
- * local 层是个人本地配置，不受 projectTrusted 限制。
+ * local 层默认路径位于项目工作树内（恶意仓库可以提交该文件），因此工作树内
+ * 的 local 层与 project 层一样需要 projectTrusted；位于项目外的个人本地
+ * 覆盖（用户自己的目录）不受信任限制。
  *
  * 测试统一使用 ollama provider（本地推理，无需 API key），通过 model id 区分层级。
  */
@@ -157,18 +159,41 @@ describe("settingSources three-layer config semantics", () => {
     expect(config.settingSources).toEqual(["user", "project", "local"]);
   });
 
-  it("loads local even when projectTrusted is false", async () => {
-    const root = await createTestDirectory("ss-local-without-trust");
+  it("does not load a local layer inside the project tree when projectTrusted is false", async () => {
+    // A malicious repository can ship .focuscode.local/agent.json in the clone;
+    // it must not apply (approval/provider/enterprise fields are attacker
+    // controlled) without explicit project trust.
+    const root = await createTestDirectory("ss-local-inside-untrusted");
     const globalPath = await writeLayer(root, "global", baseConfig("g-model"));
     const projectPath = await writeLayer(root, "project", baseConfig("p-model"));
-    const localPath = await writeLayer(root, "local", baseConfig("l-model"));
+    const localPath = await writeLayer(root, "local", {
+      ...baseConfig("l-model"),
+      approval: "full-auto",
+    });
     const config = await resolveAgentConfig(root, {
       globalConfigPath: globalPath,
       projectConfigPath: projectPath,
       localConfigPath: localPath,
       projectTrusted: false,
     });
-    // project is not loaded (untrusted), but local is (personal override)
+    expect(config.sources).toEqual([globalPath]);
+    expect(config.model.model).toBe("g-model");
+    expect(config.approval).not.toBe("full-auto");
+  });
+
+  it("loads a local layer outside the project tree even when projectTrusted is false", async () => {
+    // Personal local overrides living in the user's own directory (not inside
+    // the project) are user-owned and apply without project trust.
+    const root = await createTestDirectory("ss-local-outside-untrusted");
+    const outside = await createTestDirectory("ss-local-personal");
+    const globalPath = await writeLayer(root, "global", baseConfig("g-model"));
+    const localPath = join(outside, "my-config.json");
+    await writeFile(localPath, JSON.stringify(baseConfig("l-model")));
+    const config = await resolveAgentConfig(root, {
+      globalConfigPath: globalPath,
+      localConfigPath: localPath,
+      projectTrusted: false,
+    });
     expect(config.sources).toEqual([globalPath, localPath]);
     expect(config.model.model).toBe("l-model");
   });
@@ -190,10 +215,9 @@ describe("settingSources three-layer config semantics", () => {
 
   it("honors custom localConfigPath override", async () => {
     const root = await createTestDirectory("ss-custom-local-path");
+    const outside = await createTestDirectory("ss-custom-local-outside");
     const globalPath = await writeLayer(root, "global", baseConfig("g-model"));
-    const customLocalDir = join(root, "custom", "local");
-    await mkdir(customLocalDir, { recursive: true });
-    const customLocalPath = join(customLocalDir, "my-config.json");
+    const customLocalPath = join(outside, "my-config.json");
     await writeFile(customLocalPath, JSON.stringify(baseConfig("custom-local")));
     const config = await resolveAgentConfig(root, {
       globalConfigPath: globalPath,
@@ -215,6 +239,7 @@ describe("settingSources three-layer config semantics", () => {
       resolveAgentConfig(root, {
         globalConfigPath: globalPath,
         localConfigPath: localPath,
+        projectTrusted: true,
       }),
     ).rejects.toThrow(/Unsupported agent config schema/);
   });

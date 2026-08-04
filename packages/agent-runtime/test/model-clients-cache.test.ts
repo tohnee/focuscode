@@ -1,4 +1,4 @@
-import { describe, expect, it, afterEach, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { ModelRequest, ProviderCompatibility } from "../src/index.js";
 import {
   anthropicSystemField,
@@ -218,6 +218,17 @@ describe("D7 cache_control · D. usage 解析", () => {
 
 describe("D7 cache_control · E. 日志埋点", () => {
   const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+
+  // cache 调试日志默认静默，测试需显式开启 FOCUSCODE_DEBUG_CACHE。
+  const prevDebug = process.env.FOCUSCODE_DEBUG_CACHE;
+  beforeAll(() => {
+    process.env.FOCUSCODE_DEBUG_CACHE = "1";
+  });
+
+  afterAll(() => {
+    if (prevDebug === undefined) delete process.env.FOCUSCODE_DEBUG_CACHE;
+    else process.env.FOCUSCODE_DEBUG_CACHE = prevDebug;
+  });
 
   afterEach(() => {
     stderrSpy.mockClear();

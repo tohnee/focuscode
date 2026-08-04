@@ -242,11 +242,13 @@ export function buildOpenAIRequest(
       ...(parts.dynamic ? [{ role: "system", content: parts.dynamic }] : []),
       ...request.messages.map((message) => toOpenAIMessageShape(message, compatibility)),
     ];
-    process.stderr.write(
-      `[cache:openai-prefix] stable=${parts.stable.length}ch dynamic=${parts.dynamic.length}ch\n`,
-    );
+    if (process.env.FOCUSCODE_DEBUG_CACHE) {
+      process.stderr.write(
+        `[cache:openai-prefix] stable=${parts.stable.length}ch dynamic=${parts.dynamic.length}ch\n`,
+      );
+    }
   } else {
-    if (mode === "openai-prefix" && !parts) {
+    if (mode === "openai-prefix" && !parts && process.env.FOCUSCODE_DEBUG_CACHE) {
       process.stderr.write(
         `[cache:none] reason=no-systemPromptParts mode=openai-prefix model=${request.model}\n`,
       );
@@ -755,9 +757,11 @@ export function anthropicSystemField(
   if (parts.dynamic) {
     blocks.push({ type: "text", text: parts.dynamic });
   }
-  process.stderr.write(
-    `[cache:anthropic-ephemeral] stable=${parts.stable.length}ch dynamic=${parts.dynamic.length}ch\n`,
-  );
+  if (process.env.FOCUSCODE_DEBUG_CACHE) {
+    process.stderr.write(
+      `[cache:anthropic-ephemeral] stable=${parts.stable.length}ch dynamic=${parts.dynamic.length}ch\n`,
+    );
+  }
   return blocks;
 }
 
@@ -912,7 +916,9 @@ export function openAIUsage(value: Record<string, unknown>): TokenUsage {
   const inputTokens = numberOrZero(value.prompt_tokens);
   if (cached > 0) {
     const ratio = inputTokens > 0 ? Math.round((cached / inputTokens) * 100) : 0;
-    process.stderr.write(`[cache:hit] cached=${cached} input=${inputTokens} ratio=${ratio}%\n`);
+    if (process.env.FOCUSCODE_DEBUG_CACHE) {
+      process.stderr.write(`[cache:hit] cached=${cached} input=${inputTokens} ratio=${ratio}%\n`);
+    }
   }
   return {
     inputTokens,
@@ -927,7 +933,9 @@ export function anthropicUsage(value: Record<string, unknown>): TokenUsage {
     numberOrZero(value.input_tokens) + numberOrZero(value.cache_creation_input_tokens) + cached;
   if (cached > 0) {
     const ratio = inputTokens > 0 ? Math.round((cached / inputTokens) * 100) : 0;
-    process.stderr.write(`[cache:hit] cached=${cached} input=${inputTokens} ratio=${ratio}%\n`);
+    if (process.env.FOCUSCODE_DEBUG_CACHE) {
+      process.stderr.write(`[cache:hit] cached=${cached} input=${inputTokens} ratio=${ratio}%\n`);
+    }
   }
   return {
     inputTokens,

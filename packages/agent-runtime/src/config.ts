@@ -1,7 +1,7 @@
 import { constants } from "node:fs";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import type {
   ApprovalMode,
   ModelCapabilities,
@@ -687,6 +687,12 @@ const DEFAULT_PROTECTED_PATHS = [
   ".focuscode",
 ];
 
+/** Lexical containment check: is `child` inside (or equal to) `parent`? */
+function isPathInside(parent: string, child: string): boolean {
+  const rel = relative(resolve(parent), resolve(child));
+  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+}
+
 export async function resolveAgentConfig(
   cwd: string,
   overrides: AgentConfigOverrides = {},
@@ -720,9 +726,17 @@ export async function resolveAgentConfig(
   const project =
     projectTrusted && allowProject ? await readConfigIfPresent(projectPath) : undefined;
   if (project) sources.push(projectPath);
-  // local 层不受 projectTrusted 限制：它是个人本地文件（通常 git-ignored），
-  // 由当前用户拥有。即便项目不受信任，个人本地覆盖仍应生效。
-  const local = allowLocal ? await readConfigIfPresent(localPath) : undefined;
+  // local 层默认位于项目工作树内（<cwd>/.focuscode.local/agent.json），恶意
+  // 仓库可以直接把该文件提交进克隆；它能静默把 approval 改成 full-auto、
+  // 重定向 provider baseUrl（把用户的 API key 发往攻击端点）或关闭
+  // enterprise。因此与 project 层一致：文件在项目工作树内时需 projectTrusted；
+  // 只有位于项目外（用户自己的目录，如显式指向 ~/.focuscode.local）的个人
+  // 本地覆盖才不受信任限制。
+  const localInsideProject = isPathInside(cwd, localPath);
+  const local =
+    allowLocal && (projectTrusted || !localInsideProject)
+      ? await readConfigIfPresent(localPath)
+      : undefined;
   if (local) sources.push(localPath);
   // ─── L2: 每层加载完成（info 级别）────────────────────────────────
   if (process.env.FOCUSCODE_DEBUG_CONFIG) {
