@@ -8,6 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import {
   activeBranch,
+  estimateCostUsd,
   expandPromptTemplate,
   loadImageAttachment,
   renderSessionHtml,
@@ -19,6 +20,7 @@ import {
   type CodingAgent,
   type ExtensionHostLike,
   type McpServerSpec,
+  type ModelPricing,
   type ModelProfile,
   type SessionStore,
   type TokenUsage,
@@ -50,8 +52,17 @@ import {
   type TuiKeymap,
   type TuiMascot,
   type TuiTheme,
+  TUI_THEMES,
   type VimState,
 } from "@focuscode/tui";
+import {
+  renderAgentsCommand,
+  renderConfigCommand,
+  renderDoctorCommand,
+  renderGoalCommand,
+  renderPermissionsCommand,
+  renderTaskCommand,
+} from "./tui-command-views.js";
 
 /** Foxy 小福 · 编程配备鼓励师: rotating encouragement lines per agent moment. */
 const FOX_CHEERS = {
@@ -73,19 +84,11 @@ function pickCheer(kind: CheerKind): string {
 
 /** Trusted ANSI welcome splash rendered once when the TUI opens. */
 function buildWelcomeLines(theme: TuiTheme, mascot: TuiMascot, model: string): string[] {
-  const art = [
-    "    /\\   /\\",
-    "   /  \\_/  \\   ♡",
-    "  (  o   o  ) ~",
-    "   \\   ᴥ   /",
-    "    ~~~~~~~",
-  ];
+  // minimal 布局默认开启：欢迎行保持极简，不带 ASCII 大图。
   const lines: string[] = [
-    ...art.map((line) => fg(theme.accent, line)),
     "",
-    fg(theme.accent, " 🦊 " + mascot.name + " · " + mascot.species),
-    fg(theme.secondary, " FocusCode · " + model),
-    fg(theme.muted, " 直接输入开始对话 · /help 命令 · Tab 补全 · Ctrl+O 换行 · /cheer 鼓励师开关"),
+    fg(theme.accent, " FocusCode · " + model),
+    fg(theme.muted, " 直接输入开始对话 · /help 全部命令 · Tab 补全 · Ctrl+O 换行"),
     "",
   ];
   return lines;
@@ -135,6 +138,17 @@ const TUI_SLASH_COMMANDS: Array<{ name: string; description: string }> = [
     name: "todopanel",
     description: "Toggle todo sidebar panel (on | off | toggle)",
   },
+  { name: "goal", description: "Show the current objective and in-flight work" },
+  { name: "task", description: "List tasks (or delegate to /todo subcommands)" },
+  { name: "agents", description: "Show the main agent and subagent activity" },
+  { name: "doctor", description: "Environment and session health summary" },
+  { name: "config", description: "Show the resolved configuration" },
+  { name: "clear", description: "Clear the context (compact + drop pending images)" },
+  { name: "rewind", description: "Restore the most recent checkpoint" },
+  { name: "permissions", description: "Show approval mode and tool permissions" },
+  { name: "theme", description: "Switch theme by name (or cycle)" },
+  { name: "login", description: "Show how to log in to a provider (OAuth)" },
+  { name: "logout", description: "Show how to log out of a provider (OAuth)" },
   { name: "exit", description: "Leave the TUI" },
   { name: "quit", description: "Leave the TUI" },
 ];
@@ -164,6 +178,12 @@ export interface FullScreenAgentOptions {
   pickerReasoningEffort?: ReasoningEffort;
   /** Optional session cost budget (USD) used by /cost and the cost widget. */
   sessionBudget?: number;
+  /**
+   * Optional USD-per-1M-token pricing, keyed by "provider/model" then bare
+   * model id (matching `AgentConfigFile.pricing`). Used by the session cost
+   * widget and /cost to show USD instead of raw token counts.
+   */
+  pricing?: Record<string, ModelPricing>;
   changeModel(spec: string): Promise<ModelProfile>;
   /** SpecEngine 确认回调透传。 */
   onSpecConfirm?(specId: string, choices: Record<string, string>): void;
@@ -178,6 +198,29 @@ export interface FullScreenAgentOptions {
 
 const DEFAULT_COMPANION_PATH = () => join(homedir(), ".focuscode", "companion.json");
 
+/**
+ * Pure session-cost accumulator for the TUI. Each usage event is converted
+ * to USD via `estimateCostUsd`; pricing is resolved by "provider/model" then
+ * bare model id (matching `AgentConfigFile.pricing` keys). No I/O, so the
+ * tracker is unit-testable in isolation.
+ */
+export function createTuiCostTracker(config: {
+  pricing: Record<string, ModelPricing>;
+  modelKey: string;
+  modelId: string;
+}): { add(usage: TokenUsage): void; usd: number } {
+  let usd = 0;
+  const pricing = config.pricing[config.modelKey] ?? config.pricing[config.modelId];
+  return {
+    add(usage: TokenUsage) {
+      usd += estimateCostUsd(usage, pricing).totalUsd;
+    },
+    get usd() {
+      return usd;
+    },
+  };
+}
+
 export async function runFullScreenAgent(options: FullScreenAgentOptions): Promise<void> {
   const keymap = await loadKeymap(options.keymapPath, options.keymap);
   const theme = await loadTheme(options.theme, options.cwd);
@@ -189,6 +232,11 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
   let sessionCost = 0;
   let diagnosticsEnabled = true;
   const sessionBudget = options.sessionBudget;
+  const sessionCostTracker = createTuiCostTracker({
+    pricing: options.pricing ?? {},
+    modelKey: activeModel.provider + "/" + activeModel.model,
+    modelId: activeModel.model,
+  });
   const pickerProviders = options.pickerProviders ?? buildDefaultPickerProviders(activeModel);
   const mcpServers = options.mcpServers ?? [];
   const tui = new FullScreenTui({
@@ -459,6 +507,72 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
       if (name === "todopanel") {
         return runTodoPanelSubcommand(tui, args);
       }
+      if (name === "goal") {
+        return renderGoalCommand(options.agent.snapshot(), options.agent.todoCounts());
+      }
+      if (name === "task") {
+        if (args) return runTodoSubcommand(options.agent, args);
+        const list = await options.agent.runTool("todo", { action: "list" });
+        return renderTaskCommand(list.content, options.agent.todoCounts());
+      }
+      if (name === "agents") {
+        return renderAgentsCommand(options.agent.snapshot(), await options.agent.status());
+      }
+      if (name === "doctor") {
+        const checkpoints = await options.agent.listCheckpoints();
+        const sessions = await options.sessions.list(options.cwd);
+        return renderDoctorCommand(
+          await options.agent.status(),
+          checkpoints.length,
+          sessions.length,
+        );
+      }
+      if (name === "config") {
+        return renderConfigCommand(await options.agent.status(), options.sandbox, options.cwd);
+      }
+      if (name === "clear") {
+        pendingAttachments = [];
+        tui.setAttachments([]);
+        const compacted = await options.agent.compact();
+        return (
+          "Context cleared: compacted " +
+          compacted.droppedMessages +
+          " messages · pending images cleared. (start fresh with /new)"
+        );
+      }
+      if (name === "rewind") {
+        return await options.agent.undoCheckpoint();
+      }
+      if (name === "permissions") {
+        return renderPermissionsCommand(
+          (await options.agent.status()).approval,
+          options.agent.toolDefinitions(),
+        );
+      }
+      if (name === "theme") {
+        const applied = tui.setTheme(args || undefined);
+        if (args && !applied) {
+          return "Unknown theme. Available: " + TUI_THEMES.map((item) => item.name).join(", ");
+        }
+        return "Theme: " + applied;
+      }
+      if (name === "login") {
+        const provider = args || "google";
+        return (
+          "OAuth login needs a browser redirect, so it runs outside the TUI:\n" +
+          "  focuscode auth login " +
+          provider +
+          "\nThen restart focuscode to pick up the credential."
+        );
+      }
+      if (name === "logout") {
+        return (
+          "Run in a separate terminal:\n" +
+          "  focuscode auth logout" +
+          (args ? " " + args : " [provider]") +
+          "\nThen restart focuscode."
+        );
+      }
       const prompt = options.resources.prompts.find((item) => item.name === name);
       if (prompt) {
         void tui.submitText(expandPromptTemplate(prompt, args));
@@ -573,7 +687,8 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
   });
   options.agent.setEventSink((event) => {
     if (event.type === "usage") {
-      sessionCost = event.session.outputTokens + event.session.inputTokens;
+      sessionCostTracker.add(event.session);
+      sessionCost = sessionCostTracker.usd;
       tui.setSessionCost(sessionCost, sessionBudget);
       return;
     }
@@ -819,12 +934,14 @@ async function loadKeymap(
 
 function tuiHelp(): string {
   return [
-    "/help · /status · /tools · /compact",
+    "/help · /status · /tools · /goal · /task · /agents",
+    "/doctor · /config · /permissions · /theme [name]",
+    "/compact · /clear · /interrupt <instruction> · /followup <instruction> · /unsteer [id]",
     "/image [path-or-url] (empty: clipboard) · /images · /image clear",
-    "/interrupt <instruction> · /followup <instruction> · /unsteer [id] · busy input queues steering",
     "/model [provider/model] · /approval <mode>",
-    "/sessions · /resume <id> · /new · /fork · /tree",
+    "/sessions · /resume <id> · /new · /fork · /tree · /rewind",
     "/skills · /skill <name> · /reload · /export · /cheer [on|off]",
+    "/login · /logout (OAuth, run in a separate terminal)",
     "/exit",
     "Tab complete · Ctrl+O newline · Ctrl+C abort · Ctrl+D exit · Ctrl+G mascot · Ctrl+T theme",
   ].join("\n");
@@ -1087,21 +1204,21 @@ async function scaffoldFocuscodeProject(cwd: string): Promise<string> {
     : "Project already initialized (.focuscode/ exists).";
 }
 
-/** Format session cost + companion level for /cost. */
+/** Format session cost (USD) + companion level for /cost. */
 function formatSessionCost(
-  tokens: number,
+  usd: number,
   budget: number | undefined,
   companion: CompanionState,
 ): string {
   const turns = companion.totalTurns;
   const lines = [
     "Session cost summary",
-    "· tokens (input+output): " + tokens,
-    ...(budget !== undefined ? ["· budget: " + budget] : []),
+    "· cost: $" + usd.toFixed(4),
+    ...(budget !== undefined ? ["· budget: $" + budget] : []),
     "· companion: Lv " + companion.level + " · " + levelName(companion.level),
     "· total turns: " + turns,
     "· total tool successes: " + companion.totalToolSuccesses,
-    "Note: USD pricing requires provider rate cards; this command shows token totals.",
+    "Note: cost is estimated from config.pricing; without pricing it shows $0.00.",
   ];
   return lines.join("\n");
 }

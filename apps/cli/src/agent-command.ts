@@ -404,6 +404,7 @@ export async function runAgentCommand(argv: string[]): Promise<void> {
         extensions,
         cwd,
         model: config.model,
+        pricing: config.pricing,
         approval: effectiveApproval,
         sandbox: sandbox.kind,
         title: config.tui.title ?? "FocusCode",
