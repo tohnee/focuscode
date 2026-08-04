@@ -1,6 +1,8 @@
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { extractApplyPatchPaths } from "@focuscode/action-domain";
+import type { CacheEpochManifestV1 } from "@focuscode/contracts";
+import { computeEpochManifest, diffEpochs } from "./cache-epoch.js";
 import { CheckpointStore, type CheckpointSummary } from "./checkpoints.js";
 import {
   ConversationContext,
@@ -163,6 +165,10 @@ export class CodingAgent {
   private doomLoopFingerprint = "";
   private doomLoopCount = 0;
   private static readonly DOOM_LOOP_THRESHOLD = 3;
+  // Cache-epoch tracking: the manifest of the last computed round plus a log
+  // of per-round churn events (changed fields), for prompt-cache diagnostics.
+  private lastEpoch: CacheEpochManifestV1 | undefined;
+  private epochChurn: Array<{ at: number; changed: string[] }> = [];
 
   private constructor(private readonly options: CodingAgentOptions) {
     if (options.effectPort && !options.effectContext) {
@@ -415,6 +421,19 @@ export class CodingAgent {
           this.model.toolMode === "prompt-json" || this.model.capabilities?.toolCalling === false
             ? []
             : this.registry.definitions();
+        // Track cache-epoch churn: compute the current epoch from the stable
+        // inputs and record any field changes versus the previous round.
+        const epoch = computeEpochManifest({
+          modelRevision: this.model.revision ?? this.model.model,
+          systemStable: systemPromptParts.stable,
+          toolDefinitions: this.registry.definitions(),
+          compatibility: this.model.compatibility,
+        });
+        const changed = this.lastEpoch ? diffEpochs(this.lastEpoch, epoch) : [];
+        if (changed.length > 0) {
+          this.epochChurn.push({ at: Date.now(), changed });
+        }
+        this.lastEpoch = epoch;
         await this.emit({ type: "model_start", model: this.model.model, round });
         const shouldStreamText = this.model.toolMode !== "prompt-json";
         const modelController = childController(controller.signal);
@@ -870,6 +889,25 @@ export class CodingAgent {
 
   toolDefinitions(): import("./types.js").ToolDefinition[] {
     return this.registry.definitions();
+  }
+
+  /**
+   * Cache-epoch diagnostics for the current session: the last computed epoch
+   * manifest, the timestamp of the most recent churn (undefined when no epoch
+   * has churned yet), and the per-churn changed-field lists. Each churn reason
+   * is a comma-joined list of the fields that changed at that round (e.g.
+   * "toolBundleHash" when a tool was added/removed).
+   */
+  getCacheDiagnostics(): {
+    current: CacheEpochManifestV1 | undefined;
+    lastChanged: number | undefined;
+    churnReasons: string[];
+  } {
+    return {
+      current: this.lastEpoch,
+      lastChanged: this.epochChurn.at(-1)?.at,
+      churnReasons: this.epochChurn.map((c) => c.changed.join(",")),
+    };
   }
 
   /**

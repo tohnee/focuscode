@@ -1,5 +1,6 @@
 export * from "./agent.js";
 export * from "./audit-journal.js";
+export * from "./cache-epoch.js";
 export * from "./checkpoints.js";
 export * from "./circuit-breaker.js";
 export * from "./config.js";

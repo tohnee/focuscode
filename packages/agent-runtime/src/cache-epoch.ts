@@ -41,3 +41,17 @@ export function computeEpochManifest(args: {
     ...(compat?.cacheControl?.mode ? { cacheMode: compat.cacheControl.mode } : {}),
   };
 }
+
+/** 返回 prev→next 之间变化的字段名(用于 churn 诊断)。无变化返回空数组。 */
+export function diffEpochs(prev: CacheEpochManifestV1, next: CacheEpochManifestV1): string[] {
+  const fields = [
+    "modelRevision",
+    "chatTemplateHash",
+    "toolBundleHash",
+    "systemHash",
+    "reasoningProtocol",
+    "toolProtocol",
+    "cacheMode",
+  ] as const;
+  return fields.filter((field) => prev[field] !== next[field]);
+}
