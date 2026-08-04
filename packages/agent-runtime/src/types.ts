@@ -126,7 +126,7 @@ export interface ProviderCompatibility {
      * - "none": 不插入任何缓存标记。
      */
     mode: "anthropic-ephemeral" | "openai-prefix" | "none";
-    /** OpenAI prefix cache 最小前缀 token 估算（仅用于日志阈值判断，不影响请求） */
+    /** OpenAI prefix cache 最小前缀 token 估算；stable 段低于该阈值时退化为单块 system prompt。 */
     minPrefixTokens?: number;
     /**
      * Provider 要求的稳定缓存键字段名（如 Kimi 的 "prompt_cache_key"）。
