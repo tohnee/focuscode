@@ -14,6 +14,8 @@ import { renderContextBar, type ContextUsageState } from "./context-bar.js";
 import { renderPalette, type PaletteState } from "./command-palette.js";
 import { renderSearchBar, type SearchState } from "./search.js";
 import { renderVimIndicator, type VimState } from "./vim.js";
+import { renderMinimal } from "./renderer-minimal.js";
+import { renderWorkbench } from "./renderer-workbench.js";
 import { computeLayout, type ComputedLayout, type LayoutState, type PaneId } from "./layout.js";
 import { renderTodoPanel, type TodoPanelState } from "./todo-panel.js";
 import { renderTreePanel, type TreePanelState } from "./tree-panel.js";
@@ -77,6 +79,8 @@ export interface TuiRenderState {
   sessionCost?: number;
   /** Optional session budget cap in USD; when set, the cost bar shows a ratio. */
   sessionBudget?: number;
+  /** 缓存命中率与估算节约额;由 CLI 层用 cacheMetrics/estimateCostUsd 计算后注入。 */
+  cacheMetrics?: { hitRatio: number; savedUsd: number };
   /** SpecEngine 进度状态;缺省 idle 时不渲染。 */
   specProgress?: SpecProgressState;
   /** SpecEngine 待确认决策;存在时渲染交互式 UI。 */
@@ -100,7 +104,7 @@ export interface TuiRenderState {
   /** Session tree 侧栏面板状态;仅在 split/wide 布局且 visible 时渲染。 */
   treePanel?: TreePanelState;
   /** Which pane currently has keyboard focus; used for focus highlight in sidebar. */
-  activePane?: "input" | "todo" | "spec" | "context" | "tree";
+  activePane?: "input" | "todo" | "spec" | "context" | "tree" | "nav" | "preview";
   /** Selected item index within each sidebar pane (for keyboard navigation). */
   paneSelection?: { todo: number; spec: number; context: number; tree: number };
   /** Toast notification rendered over the top-right corner with fade animation. */
@@ -149,12 +153,23 @@ export function renderTui(state: TuiRenderState): string {
   const height = Math.max(12, state.height);
   const theme = state.theme;
 
-  // Layout dispatch: non-classic modes (split/focus/wide) use layout-aware rendering.
+  // Layout dispatch: non-classic modes use layout-aware rendering.
   // Overlays (picker/palette/spec-history) always use classic rendering since they take over the full screen.
   let frame: string;
   if (state.layout && !state.picker && !state.palette?.visible && !state.specHistoryView) {
     const computed = computeLayout(state.layout, width, height);
-    if (computed.mode !== "classic") {
+    if (computed.mode === "workbench") {
+      frame = renderWorkbench(
+        state,
+        width,
+        height,
+        theme,
+        computed.nav?.width ?? 0,
+        computed.preview?.width ?? 0,
+      );
+    } else if (computed.mode === "minimal") {
+      frame = renderMinimal(state, width, height, theme);
+    } else if (computed.mode !== "classic") {
       frame = renderWithLayout(state, width, height, theme, computed);
     } else {
       frame = renderClassicFrame(state, width, height, theme);
@@ -257,7 +272,9 @@ function renderClassicFrame(
   let reasoningLine = "";
   if (state.reasoning) {
     if (state.reasoningExpanded) {
-      const text = state.reasoning.replaceAll(/\r?\n/g, " ");
+      // Model output: sanitize control sequences before rendering (the
+      // documented "不信任模型输出中的终端控制字符" rule).
+      const text = sanitizeTerminalText(state.reasoning).replaceAll(/\r?\n/g, " ");
       const truncated = text.length > bodyWidth - 4 ? text.slice(0, bodyWidth - 5) + "…" : text;
       reasoningLine = "💭 " + truncated;
     } else {
@@ -711,10 +728,14 @@ function renderInputRows(state: TuiRenderState, width: number): string[] {
   return rows.slice(startRow, startRow + MAX_INPUT_ROWS).map((text, offset) => {
     const logical = startRow + offset;
     const prefix = logical === 0 ? label + " " : " ".repeat(promptWidth);
+    // The echoed input is the user's own text but may carry pasted bytes
+    // (clipboard pastejacking, LSP completion labels): strip control
+    // sequences before redrawing the input line.
+    const safeText = sanitizeTerminalText(text);
     let content =
       logical === cursorRow
-        ? renderInputCursor(text, state.inputCursor.col, contentWidth)
-        : truncatePlain(expandTabs(text), contentWidth);
+        ? renderInputCursor(safeText, state.inputCursor.col, contentWidth)
+        : truncatePlain(expandTabs(safeText), contentWidth);
     if (logical === rows.length - 1 || offset === MAX_INPUT_ROWS - 1) content += attachmentText;
     return (
       fg(theme.accent, "│") +
@@ -928,7 +949,7 @@ function renderSpecHistory(
     const statusColor = entry.status === "completed" ? theme.success : theme.warning;
     const dur = entry.totalDuration ? " · " + (entry.totalDuration / 1000).toFixed(1) + "s" : "";
     const timeAgo = formatTimeAgo(entry.completedAt);
-    const topic = truncatePlain(entry.topic, innerWidth - 12);
+    const topic = truncatePlain(sanitizeTerminalText(entry.topic), innerWidth - 12);
     const line = " " + (selected ? "›" : " ") + " " + fg(statusColor, statusIcon) + " " + topic;
     const meta = faintLocal(fg(theme.muted, dur + " · " + timeAgo));
     const full = line + meta;
@@ -940,8 +961,22 @@ function renderSpecHistory(
   const selected = view.entries[view.selectedIndex];
   if (selected) {
     lines.push(fg(theme.muted, dash));
-    lines.push(bold(fg(theme.foreground, "  " + truncatePlain(selected.topic, innerWidth - 4))));
-    lines.push(faintLocal(fg(theme.muted, "  " + truncatePlain(selected.specId, innerWidth - 4))));
+    lines.push(
+      bold(
+        fg(
+          theme.foreground,
+          "  " + truncatePlain(sanitizeTerminalText(selected.topic), innerWidth - 4),
+        ),
+      ),
+    );
+    lines.push(
+      faintLocal(
+        fg(
+          theme.muted,
+          "  " + truncatePlain(sanitizeTerminalText(selected.specId), innerWidth - 4),
+        ),
+      ),
+    );
     lines.push("");
     for (const stage of selected.stages) {
       const icon =
@@ -960,7 +995,7 @@ function renderSpecHistory(
             : theme.muted;
       const dur = stage.durationMs ? faintLocal(" " + stage.durationMs + "ms") : "";
       const fb = stage.fellBack ? faintLocal(fg(theme.warning, " (fallback)")) : "";
-      lines.push("  " + fg(color, icon) + " " + stage.name + dur + fb);
+      lines.push("  " + fg(color, icon) + " " + sanitizeTerminalText(stage.name) + dur + fb);
     }
   }
 

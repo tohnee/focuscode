@@ -2,7 +2,13 @@ import type { ReadStream, WriteStream } from "node:tty";
 import { collectCompletions, type CompletionProvider, type CompletionState } from "./completion.js";
 import type { CompanionState } from "./companion.js";
 import { EditorBuffer } from "./editor.js";
-import { DEFAULT_KEYMAP, TerminalInputDecoder, type TuiAction, type TuiKeymap } from "./keymap.js";
+import {
+  DEFAULT_KEYMAP,
+  PREFIX_BINDINGS,
+  TerminalInputDecoder,
+  type TuiAction,
+  type TuiKeymap,
+} from "./keymap.js";
 import { getMascot, TUI_MASCOTS, type MascotMood, type TuiMascot } from "./mascots.js";
 import {
   confirmPicker,
@@ -133,6 +139,8 @@ export class FullScreenTui {
   private speech: string | undefined;
   private scrollOffset = 0;
   private disposed = false;
+  /** Removes the abnormal-exit signal handlers installed by run(). */
+  private signalCleanup: (() => void) | undefined;
   private exitResolve!: () => void;
   private readonly exited = new Promise<void>((resolve) => {
     this.exitResolve = resolve;
@@ -148,6 +156,7 @@ export class FullScreenTui {
   private companion: CompanionState | undefined;
   private sessionCost: number | undefined;
   private sessionBudget: number | undefined;
+  private cacheMetrics: { hitRatio: number; savedUsd: number } | undefined;
   private specProgress: SpecProgressState = createInitialSpecProgress();
   private specConfirmation: SpecConfirmationState | undefined;
   private reasoning: string | undefined;
@@ -158,7 +167,9 @@ export class FullScreenTui {
   private vimEnabled = false;
   private vimState: VimState = createVimState();
   /** Which sidebar pane currently has keyboard focus ("input" = main input has focus). */
-  private activePane: "input" | "todo" | "spec" | "context" | "tree" = "input";
+  private activePane: "input" | "todo" | "spec" | "context" | "tree" | "nav" | "preview" = "input";
+  /** tmux 前缀键等待态：Ctrl+B 之后的下一个键是面板组合。 */
+  private prefixPending = false;
   /** Selected item index within each sidebar pane. */
   private paneSelection: { todo: number; spec: number; context: number; tree: number } = {
     todo: 0,
@@ -215,6 +226,19 @@ export class FullScreenTui {
       this.render();
     }, 500);
     this.timer.unref();
+    // Restore the terminal on abnormal exit: only dispose() (Ctrl+D) used to
+    // reset raw mode and leave the alternate screen, so a crash or a
+    // SIGINT/SIGTERM/SIGHUP left the user's shell broken (raw mode, cursor
+    // hidden). dispose() removes these handlers again.
+    const restore = () => this.dispose();
+    for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
+      process.once(signal, restore);
+    }
+    this.signalCleanup = () => {
+      for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
+        process.removeListener(signal, restore);
+      }
+    };
     this.render();
     await this.exited;
   }
@@ -295,6 +319,37 @@ export class FullScreenTui {
     this.render();
   }
 
+  /**
+   * Switch the active theme by name (from TUI_THEMES), or cycle to the next
+   * theme when the name is omitted. Returns the applied theme name, or an
+   * empty string when a named theme was requested but not found. Backs the
+   * /theme slash command (Ctrl+T remains the instant cycle).
+   */
+  setTheme(name?: string): string {
+    if (name) {
+      const match = TUI_THEMES.find(
+        (candidate) => candidate.name.toLowerCase() === name.toLowerCase(),
+      );
+      if (!match) return "";
+      this.theme = match;
+      this.render();
+      return this.theme.name;
+    }
+    this.theme = this.nextTheme();
+    this.render();
+    return this.theme.name;
+  }
+
+  /**
+   * Next theme in the cycle. Lookup is by theme id: getTheme/validate return
+   * a fresh object, so reference-based indexOf would always miss and cycle
+   * back to the first theme.
+   */
+  private nextTheme(): TuiTheme {
+    const currentIndex = TUI_THEMES.findIndex((item) => item.id === this.theme.id);
+    return TUI_THEMES[(Math.max(0, currentIndex) + 1) % TUI_THEMES.length]!;
+  }
+
   setSession(session: string): void {
     this.session = session;
     this.render();
@@ -315,6 +370,12 @@ export class FullScreenTui {
   setSessionCost(spent: number | undefined, budget?: number): void {
     this.sessionCost = spent;
     this.sessionBudget = budget;
+    this.render();
+  }
+
+  /** Update the cache hit metrics rendered under the Cost block. */
+  setCacheMetrics(metrics: { hitRatio: number; savedUsd: number }): void {
+    this.cacheMetrics = metrics;
     this.render();
   }
 
@@ -498,7 +559,11 @@ export class FullScreenTui {
 
   /** Append reasoning text (from reasoning_delta events). */
   appendReasoning(delta: string): void {
-    this.reasoning = (this.reasoning ?? "") + delta;
+    // Cap the reasoning buffer (the transcript is capped too): an unbounded
+    // buffer grows memory and makes every 500ms tick copy and re-scan the
+    // whole string.
+    const MAX_REASONING_CHARS = 20_000;
+    this.reasoning = ((this.reasoning ?? "") + delta).slice(-MAX_REASONING_CHARS);
     this.render();
   }
 
@@ -749,7 +814,9 @@ export class FullScreenTui {
   /** Perform the primary action on the currently focused sidebar pane (e.g. toggle todo). */
   performSidebarAction(): void {
     if (this.activePane === "input") return;
-    if (this.activePane === "todo") {
+    // workbench NORMAL 模式下 nav 面板聚焦时，动作落在 todo 列表上。
+    const pane = this.activePane === "nav" ? "todo" : this.activePane;
+    if (pane === "todo") {
       const idx = this.paneSelection.todo;
       const item = this.todoPanel.items[idx];
       if (item) {
@@ -763,7 +830,9 @@ export class FullScreenTui {
   /** Move the sidebar pane selection up or down (called by arrow keys when a pane is focused). */
   moveSidebarSelection(delta: number): void {
     if (this.activePane === "input") return;
-    const key = this.activePane;
+    // 导航面板显示 todo 列表，选择索引复用 todo 槽位。
+    const key = this.activePane === "nav" ? "todo" : this.activePane;
+    if (key === "preview") return;
     const max = this.paneItemCount(key) - 1;
     this.paneSelection[key] = Math.max(0, Math.min(max, this.paneSelection[key] + delta));
     this.render();
@@ -886,6 +955,9 @@ export class FullScreenTui {
     const prompt = text.trim();
     if (!prompt) return;
     this.history.push(prompt);
+    // Cap prompt history like the transcript; long sessions must not grow
+    // unbounded user input in memory.
+    this.history = this.history.slice(-100);
     this.historyIndex = this.history.length;
     if (prompt.startsWith("/") && this.options.onCommand) {
       const result = await this.options.onCommand(prompt);
@@ -913,6 +985,8 @@ export class FullScreenTui {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.signalCleanup?.();
+    this.signalCleanup = undefined;
     if (this.timer) clearInterval(this.timer);
     if (this.moodRevertTimer) {
       clearTimeout(this.moodRevertTimer);
@@ -968,6 +1042,7 @@ export class FullScreenTui {
       ...(this.companion ? { companion: this.companion } : {}),
       ...(this.sessionCost !== undefined ? { sessionCost: this.sessionCost } : {}),
       ...(this.sessionBudget !== undefined ? { sessionBudget: this.sessionBudget } : {}),
+      ...(this.cacheMetrics ? { cacheMetrics: this.cacheMetrics } : {}),
       specProgress: this.specProgress,
       ...(this.specConfirmation ? { specConfirmation: this.specConfirmation } : {}),
       ...(this.reasoning ? { reasoning: this.reasoning } : {}),
@@ -1080,10 +1155,33 @@ export class FullScreenTui {
       }
       // Other input falls through to normal insert handling below.
     }
+    // Workbench NORMAL 模式：导航/预览面板聚焦时，j/k/G/Enter/q 等按键用于面板导航。
+    if (this.activePane === "nav" || this.activePane === "preview") {
+      if (this.handleNavModalInput(value)) return;
+    }
+    // tmux 前缀键：Ctrl+B 之后的下一个键解析为面板组合。
+    if (this.prefixPending) {
+      this.prefixPending = false;
+      const keys = this.inputDecoder.push(value);
+      const first = keys[0];
+      if (first?.type === "action" && PREFIX_BINDINGS[first.action]) {
+        void this.action(PREFIX_BINDINGS[first.action]!).catch((error: unknown) => {
+          this.setStatus(error instanceof Error ? error.message : String(error));
+        });
+        return;
+      }
+      if (first?.type === "text" && first.text === "z") {
+        void this.action("panel_zoom");
+        return;
+      }
+      // 未识别的前缀组合：吞掉，不落到输入框。
+      return;
+    }
     for (const key of this.inputDecoder.push(value)) {
       if (key.type === "text") {
         this.cancelCompletion();
         this.editor.insertText(key.text);
+        this.maybeAutoComplete();
       } else if (key.type === "action") {
         void this.action(key.action).catch((error: unknown) => {
           this.setStatus(error instanceof Error ? error.message : String(error));
@@ -1581,6 +1679,75 @@ export class FullScreenTui {
     }
   }
 
+  /** 命令浮层：输入以 / 开头时自动弹出命令补全（yazi 输入即过滤的节奏）。 */
+  private maybeAutoComplete(): void {
+    const text = this.editor.getText();
+    if (text.trimStart().startsWith("/") && !this.completion && !this.palette.visible) {
+      this.triggerCompletion();
+    } else if (!text.trimStart().startsWith("/")) {
+      this.cancelCompletion();
+    }
+  }
+
+  /**
+   * Workbench NORMAL 模式（yazi 列表导航）：导航/预览面板聚焦时的按键处理。
+   * nav: j/k/G 移动 todo 选择，Enter 切换选中项状态；preview: 只读。
+   * 两个面板共用 q/Esc 返回输入。返回 true 表示已消费（不落入输入框）。
+   */
+  private handleNavModalInput(value: string): boolean {
+    if (value === "\u001b") {
+      this.panelFocus("input");
+      return true;
+    }
+    const inNav = this.activePane === "nav";
+    for (const key of this.inputDecoder.push(value)) {
+      if (key.type === "action") {
+        switch (key.action) {
+          case "submit":
+            if (inNav) this.performSidebarAction();
+            break;
+          case "history_previous":
+            if (inNav) this.moveSidebarSelection(-1);
+            break;
+          case "history_next":
+            if (inNav) this.moveSidebarSelection(1);
+            break;
+          case "home":
+            if (inNav) this.moveSidebarSelection(-Number.MAX_SAFE_INTEGER);
+            break;
+          case "end":
+            if (inNav) this.moveSidebarSelection(Number.MAX_SAFE_INTEGER);
+            break;
+          default:
+            break; // 其他 action 在 NORMAL 模式下吞掉
+        }
+      } else if (key.type === "text") {
+        const char = key.text;
+        if (inNav) {
+          if (char === "j") this.moveSidebarSelection(1);
+          else if (char === "k") this.moveSidebarSelection(-1);
+          else if (char === "G") this.moveSidebarSelection(Number.MAX_SAFE_INTEGER);
+        }
+        if (char === "q") this.panelFocus("input");
+      } else if (key.type === "mouse") {
+        this.handleMouseEvent(key);
+      }
+    }
+    return true;
+  }
+
+  /** 在输入与 workbench 面板（导航/预览）之间切换焦点。 */
+  panelFocus(pane: "input" | "nav" | "preview"): void {
+    this.activePane = pane;
+    this.render();
+  }
+
+  /** tmux Ctrl+B z：缩放对话流（隐藏导航/预览栏），再按还原。 */
+  toggleZoom(): void {
+    this.layout = { ...this.layout, zoom: !this.layout.zoom };
+    this.render();
+  }
+
   /**
    * Handle a parsed mouse event from the terminal. Currently a no-op
    * placeholder: the TUI logs the event for debugging but does not yet
@@ -1710,7 +1877,7 @@ export class FullScreenTui {
     } else if (action === "clear") {
       this.transcript = [];
     } else if (action === "cycle_theme") {
-      this.theme = TUI_THEMES[(TUI_THEMES.indexOf(this.theme) + 1) % TUI_THEMES.length]!;
+      this.theme = this.nextTheme();
       this.setStatus("Theme: " + this.theme.name);
     } else if (action === "cycle_mascot") {
       this.mascot = TUI_MASCOTS[(TUI_MASCOTS.indexOf(this.mascot) + 1) % TUI_MASCOTS.length]!;
@@ -1729,6 +1896,23 @@ export class FullScreenTui {
     } else if (action === "cycle_layout") {
       this.cycleLayoutMode();
       this.setStatus("Layout: " + this.layout.mode);
+    } else if (action === "prefix") {
+      this.prefixPending = true;
+    } else if (action === "panel_focus_left") {
+      this.panelFocus("nav");
+      this.setStatus("Nav panel (NORMAL: j/k navigate, q back)");
+    } else if (action === "panel_focus_right") {
+      this.panelFocus("preview");
+      this.setStatus("Preview panel (q or Esc back to input)");
+    } else if (action === "panel_zoom") {
+      this.toggleZoom();
+      this.setStatus(
+        this.layout.zoom ? "Zoomed: transcript only (Ctrl+B z to restore)" : "Workbench restored",
+      );
+    } else if (action === "toggle_help") {
+      this.setStatus(
+        "Ctrl+B 前缀: ←/→ 面板 · z 缩放 | NORMAL: j/k/G 导航 · Enter 切换 · q 返回 | Ctrl+P 面板 · Ctrl+F 搜索 · Tab 补全",
+      );
     } else if (action === "toggle_todo_panel") {
       this.toggleTodoPanel();
       this.setStatus(this.todoPanel.visible ? "Todo panel on" : "Todo panel off");

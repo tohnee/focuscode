@@ -8,6 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import {
   activeBranch,
+  cacheMetrics,
   estimateCostUsd,
   expandPromptTemplate,
   loadImageAttachment,
@@ -206,12 +207,14 @@ const DEFAULT_COMPANION_PATH = () => join(homedir(), ".focuscode", "companion.js
  * Pricing is resolved by "provider/model" then bare model id (matching
  * `AgentConfigFile.pricing` keys). No I/O, so the tracker is unit-testable in
  * isolation.
+ * `pricing` exposes the resolved per-model pricing so the usage handler can
+ * derive the cache savings (cached tokens × input rate) without re-resolving.
  */
 export function createTuiCostTracker(config: {
   pricing: Record<string, ModelPricing>;
   modelKey: string;
   modelId: string;
-}): { set(usage: TokenUsage): void; usd: number } {
+}): { set(usage: TokenUsage): void; usd: number; pricing: ModelPricing | undefined } {
   let usd = 0;
   const pricing = config.pricing[config.modelKey] ?? config.pricing[config.modelId];
   return {
@@ -220,6 +223,9 @@ export function createTuiCostTracker(config: {
     },
     get usd() {
       return usd;
+    },
+    get pricing() {
+      return pricing;
     },
   };
 }
@@ -693,6 +699,13 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
       sessionCostTracker.set(event.session);
       sessionCost = sessionCostTracker.usd;
       tui.setSessionCost(sessionCost, sessionBudget);
+      const { hitRatio } = cacheMetrics(event.session);
+      const savedUsd =
+        hitRatio > 0
+          ? ((event.session.cachedInputTokens ?? 0) / 1_000_000) *
+            (sessionCostTracker.pricing?.input ?? 0)
+          : 0;
+      tui.setCacheMetrics({ hitRatio, savedUsd });
       return;
     }
     if (event.type === "agent_end") {

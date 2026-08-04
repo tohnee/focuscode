@@ -204,6 +204,20 @@ describe("FullScreenTui reasoning state", () => {
   });
 });
 
+describe("FullScreenTui cache metrics", () => {
+  it("setCacheMetrics stores metrics and snapshot exposes them", () => {
+    const tui = createTui();
+    tui.setCacheMetrics({ hitRatio: 0.4, savedUsd: 0.72 });
+    const snap = tui.snapshot();
+    expect(snap.cacheMetrics).toEqual({ hitRatio: 0.4, savedUsd: 0.72 });
+  });
+
+  it("cacheMetrics is undefined until set", () => {
+    const tui = createTui();
+    expect(tui.snapshot().cacheMetrics).toBeUndefined();
+  });
+});
+
 describe("FullScreenTui context usage", () => {
   it("setContextUsage stores token counts", () => {
     const tui = createTui();
@@ -388,10 +402,28 @@ describe("FullScreenTui vim mode", () => {
 });
 
 describe("FullScreenTui layout state", () => {
-  it("initial layout is classic mode", () => {
+  it("initial layout is workbench mode", () => {
     const tui = createTui();
     const snap = tui.snapshot();
-    expect(snap.layout?.mode).toBe("classic");
+    expect(snap.layout?.mode).toBe("workbench");
+  });
+
+  it("setTheme switches by name and cycles when omitted", () => {
+    const tui = createTui();
+    const first = tui.snapshot().theme.name;
+    const applied = tui.setTheme();
+    const index = TUI_THEMES.findIndex((item) => item.name === first);
+    expect(applied).toBe(TUI_THEMES[(index + 1) % TUI_THEMES.length]!.name);
+    expect(tui.snapshot().theme.name).toBe(applied);
+    const named = tui.setTheme(first);
+    expect(named).toBe(first);
+    expect(tui.snapshot().theme.name).toBe(first);
+  });
+
+  it("setTheme returns empty string for an unknown theme name", () => {
+    const tui = createTui();
+    expect(tui.setTheme("no-such-theme")).toBe("");
+    expect(tui.snapshot().theme.name).not.toBe("");
   });
 
   it("setLayoutMode updates mode to split", () => {
@@ -401,8 +433,10 @@ describe("FullScreenTui layout state", () => {
     expect(snap.layout?.mode).toBe("split");
   });
 
-  it("cycleLayoutMode rotates classic → split → focus → wide → classic", () => {
+  it("cycleLayoutMode rotates workbench → classic → split → focus → wide → minimal", () => {
     const tui = createTui();
+    expect(tui.snapshot().layout?.mode).toBe("workbench");
+    tui.cycleLayoutMode();
     expect(tui.snapshot().layout?.mode).toBe("classic");
     tui.cycleLayoutMode();
     expect(tui.snapshot().layout?.mode).toBe("split");
@@ -411,7 +445,9 @@ describe("FullScreenTui layout state", () => {
     tui.cycleLayoutMode();
     expect(tui.snapshot().layout?.mode).toBe("wide");
     tui.cycleLayoutMode();
-    expect(tui.snapshot().layout?.mode).toBe("classic");
+    expect(tui.snapshot().layout?.mode).toBe("minimal");
+    tui.cycleLayoutMode();
+    expect(tui.snapshot().layout?.mode).toBe("workbench");
   });
 
   it("setLayoutMode split makes sidebar panes visible", () => {
@@ -440,9 +476,9 @@ describe("FullScreenTui layout state", () => {
   it("cycle_layout action cycles layout mode", () => {
     const tui = createTui();
     const anyTui = tui as unknown as { action: (a: string) => Promise<void> };
-    expect(tui.snapshot().layout?.mode).toBe("classic");
+    expect(tui.snapshot().layout?.mode).toBe("workbench");
     void anyTui.action("cycle_layout");
-    expect(tui.snapshot().layout?.mode).toBe("split");
+    expect(tui.snapshot().layout?.mode).toBe("classic");
   });
 });
 
@@ -919,5 +955,144 @@ describe("FullScreenTui spec decision action routing", () => {
     expect(() => void anyTui.action("spec_confirm")).not.toThrow();
     expect(() => void anyTui.action("spec_cancel")).not.toThrow();
     expect(tui.getSpecConfirmationState()).toBeUndefined();
+  });
+});
+
+describe("FullScreenTui workbench keyboard (yazi × tmux)", () => {
+  function withTodos(tui: FullScreenTui): void {
+    tui.addTodoItem("Task A", "high");
+    tui.addTodoItem("Task B", "medium");
+    tui.addTodoItem("Task C", "low");
+  }
+
+  /** 带命令补全 provider 的 TUI：/ 开头时收集 slash 命令候选。 */
+  function createTuiWithCompletion(): FullScreenTui {
+    const tui = createTui();
+    const anyTui = tui as unknown as { options: { completionProviders?: unknown[] } };
+    anyTui.options.completionProviders = [
+      {
+        complete(prefix: string, fullText: string) {
+          if (!prefix.startsWith("/") || !fullText.startsWith(prefix)) return [];
+          return ["/goal", "/task", "/clear", "/permissions"].map((command) => ({
+            value: command,
+            description: "command",
+          }));
+        },
+      },
+    ];
+    return tui;
+  }
+
+  it("ctrl+b prefix + right arrow focuses preview panel", () => {
+    const tui = createTui();
+    tui.feedInputForTest("\u0002"); // Ctrl+B → prefixPending
+    tui.feedInputForTest("\u001b[C"); // → panel_focus_right
+    expect(tui.snapshot().activePane).toBe("preview");
+  });
+
+  it("ctrl+b prefix + left arrow focuses nav panel", () => {
+    const tui = createTui();
+    tui.feedInputForTest("\u0002");
+    tui.feedInputForTest("\u001b[D"); // → panel_focus_left
+    expect(tui.snapshot().activePane).toBe("nav");
+  });
+
+  it("ctrl+b z toggles zoom (tmux style)", () => {
+    const tui = createTui();
+    expect(tui.snapshot().layout?.zoom).toBeUndefined();
+    tui.feedInputForTest("\u0002");
+    tui.feedInputForTest("z");
+    expect(tui.snapshot().layout?.zoom).toBe(true);
+    tui.feedInputForTest("\u0002");
+    tui.feedInputForTest("z");
+    expect(tui.snapshot().layout?.zoom).toBe(false);
+  });
+
+  it("ctrl+b followed by unknown key is swallowed (not typed into input)", () => {
+    const tui = createTui();
+    tui.feedInputForTest("\u0002");
+    tui.feedInputForTest("x");
+    expect(tui.snapshot().input).toBe("");
+  });
+
+  it("NORMAL mode: j/k move todo selection in nav panel", () => {
+    const tui = createTui();
+    withTodos(tui);
+    tui.feedInputForTest("\u0002");
+    tui.feedInputForTest("\u001b[D"); // focus nav
+    expect(tui.snapshot().paneSelection.todo).toBe(0);
+    tui.feedInputForTest("j");
+    expect(tui.snapshot().paneSelection.todo).toBe(1);
+    tui.feedInputForTest("j");
+    expect(tui.snapshot().paneSelection.todo).toBe(2);
+    tui.feedInputForTest("k");
+    expect(tui.snapshot().paneSelection.todo).toBe(1);
+    tui.feedInputForTest("G");
+    expect(tui.snapshot().paneSelection.todo).toBe(2);
+  });
+
+  it("NORMAL mode: Enter toggles selected todo item", () => {
+    const tui = createTui();
+    withTodos(tui);
+    tui.feedInputForTest("\u0002");
+    tui.feedInputForTest("\u001b[D"); // focus nav
+    tui.feedInputForTest("j"); // select Task B
+    tui.feedInputForTest("\r"); // Enter → toggle
+    const items = tui.snapshot().todoPanel?.items ?? [];
+    expect(items[1]?.status).toBe("completed");
+  });
+
+  it("NORMAL mode: q returns to input without typing q", () => {
+    const tui = createTui();
+    tui.feedInputForTest("\u0002");
+    tui.feedInputForTest("\u001b[D"); // focus nav
+    tui.feedInputForTest("q");
+    expect(tui.snapshot().activePane).toBe("input");
+    expect(tui.snapshot().input).toBe("");
+  });
+
+  it("NORMAL mode: Esc returns to input from nav", () => {
+    const tui = createTui();
+    tui.feedInputForTest("\u0002");
+    tui.feedInputForTest("\u001b[D");
+    tui.feedInputForTest("\u001b");
+    expect(tui.snapshot().activePane).toBe("input");
+  });
+
+  it("preview panel: q returns to input, other keys are swallowed", () => {
+    const tui = createTui();
+    tui.feedInputForTest("\u0002");
+    tui.feedInputForTest("\u001b[C"); // focus preview
+    tui.feedInputForTest("hello"); // must NOT land in input
+    expect(tui.snapshot().input).toBe("");
+    expect(tui.snapshot().activePane).toBe("preview");
+    tui.feedInputForTest("q");
+    expect(tui.snapshot().activePane).toBe("input");
+  });
+
+  it("typing / triggers completion automatically (command overlay)", () => {
+    const tui = createTuiWithCompletion();
+    tui.feedInputForTest("/");
+    const snap = tui.snapshot();
+    expect(snap.input).toBe("/");
+    expect(snap.completion).toBeDefined();
+    expect(snap.completion!.candidates.length).toBeGreaterThan(0);
+  });
+
+  it("typing non-slash text cancels command completion", () => {
+    const tui = createTuiWithCompletion();
+    tui.feedInputForTest("/");
+    expect(tui.snapshot().completion).toBeDefined();
+    tui.feedInputForTest("\u0015"); // Ctrl+U → kill to start, 清空输入
+    tui.feedInputForTest("hello");
+    expect(tui.snapshot().input).toBe("hello");
+    expect(tui.snapshot().completion).toBeUndefined();
+  });
+
+  it("ctrl+/ shows keymap help in status", () => {
+    const tui = createTui();
+    tui.feedInputForTest("\u001f"); // Ctrl+/
+    expect(tui.snapshot().status).toContain("Ctrl+B 前缀");
+    expect(tui.snapshot().status).toContain("NORMAL");
   });
 });
