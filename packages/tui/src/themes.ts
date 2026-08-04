@@ -215,6 +215,19 @@ export const TUI_THEMES: readonly TuiTheme[] = [
     muted: "#504945",
     border: "─",
   },
+  {
+    id: "shadow",
+    name: "Midnight Shadow",
+    background: "#080818",
+    foreground: "#c8d4e8",
+    accent: "#5b8cff",
+    secondary: "#d98030",
+    success: "#88a820",
+    warning: "#e8a030",
+    danger: "#d04050",
+    muted: "#2a3450",
+    border: "─",
+  },
 ] as const;
 
 export function getTheme(value: string | TuiTheme = "foxglow"): TuiTheme {

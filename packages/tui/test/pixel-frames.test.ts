@@ -57,7 +57,7 @@ describe("pixel frames", () => {
   });
 
   it("grows star badges for the other mascots with level", () => {
-    for (const id of ["mochi", "byte", "nori", "pico", "bubu", "kumo"]) {
+    for (const id of ["mochi", "byte", "nori", "pico", "bubu", "kumo", "nyx"]) {
       const stars = (level: number) => (tailsForLevel(level, id)[0]?.match(/★/g) ?? []).length;
       expect(stars(1), id).toBe(1);
       expect(stars(5), id).toBe(5);

@@ -47,6 +47,23 @@
   --dreamy-radius-md: var(--r-md);
   --dreamy-radius-lg: var(--r-lg);
 
+  /* ===== Midnight 夜影 theme (deep navy + electric blue + warm orange) ===== */
+  --midnight-bg: #080818;
+  --midnight-surface: #0f0f24;
+  --midnight-surface-2: #181838;
+  --midnight-surface-3: #2a2a50;
+  --midnight-ink: #c8d4e8;
+  --midnight-ink-2: #8898b8;
+  --midnight-ink-3: #4a5878;
+  --midnight-line: #1e2444;
+  --midnight-accent: #5b8cff;
+  --midnight-accent-ink: #080818;
+  --midnight-secondary: #d98030;
+  --midnight-success: #88a820;
+  --midnight-warning: #e8a030;
+  --midnight-danger: #d04050;
+  --midnight-info: #5b8cff;
+
   /* ===== Surfaces - dark terminal default (foxglow) ===== */
   --bg: #0d0d12;
   --surface: #151520;
@@ -82,6 +99,8 @@
   --mascot-bubu-soft: #fee2e2;
   --mascot-kumo: #c4a77d;     /* capybara coffee */
   --mascot-kumo-soft: #f3e8d8;
+  --mascot-nyx: #5b8cff;     /* midnight blue */
+  --mascot-nyx-soft: #dce6ff;
 
   /* ===== Mood state colors (idle/thinking/working/happy/oops/...) ===== */
   --mood-idle: var(--ink-3);
@@ -152,6 +171,32 @@ html[data-theme="dreamy"] {
   --state-info: var(--dreamy-info);
 }
 
+/* ===== Midnight theme override (applied via <html data-theme="midnight">) ===== */
+html[data-theme="midnight"] {
+  --bg: var(--midnight-bg);
+  --surface: var(--midnight-surface);
+  --surface-2: var(--midnight-surface-2);
+  --surface-3: var(--midnight-surface-3);
+  --ink: var(--midnight-ink);
+  --ink-2: var(--midnight-ink-2);
+  --ink-3: var(--midnight-ink-3);
+  --line: var(--midnight-line);
+  --brand: var(--midnight-accent);
+  --brand-ink: var(--midnight-accent-ink);
+  --brand-50: #dce6ff;
+  --brand-100: #bfd0ff;
+  --brand-200: #8fb0ff;
+  --brand-300: #5b8cff;
+  --brand-400: #3a6cdd;
+  --brand-500: #5b8cff;
+  --brand-600: #4070dd;
+  --brand-700: #2a54b8;
+  --state-success: var(--midnight-success);
+  --state-warning: var(--midnight-warning);
+  --state-error: var(--midnight-danger);
+  --state-info: var(--midnight-info);
+}
+
 @theme inline {
   --color-brand: var(--brand);
   --color-brand-50: var(--brand-50);
@@ -184,6 +229,7 @@ html[data-theme="dreamy"] {
   --color-mascot-pico: var(--mascot-pico);
   --color-mascot-bubu: var(--mascot-bubu);
   --color-mascot-kumo: var(--mascot-kumo);
+  --color-mascot-nyx: var(--mascot-nyx);
 }
 
 /* Terminal font stack */
@@ -225,6 +271,9 @@ html[data-theme="dreamy"] {
 .text-mascot-kumo { color: var(--mascot-kumo); }
 .bg-mascot-kumo { background-color: var(--mascot-kumo); }
 .border-mascot-kumo { border-color: var(--mascot-kumo); }
+.text-mascot-nyx { color: var(--mascot-nyx); }
+.bg-mascot-nyx { background-color: var(--mascot-nyx); }
+.border-mascot-nyx { border-color: var(--mascot-nyx); }
 
 /* ===== Bond segments (4-segment ◆/◇ progress) ===== */
 .bond-seg-filled { color: var(--brand); }
@@ -336,6 +385,7 @@ html[data-theme="dreamy"] {
     --color-mascot-pico: var(--mascot-pico);
     --color-mascot-bubu: var(--mascot-bubu);
     --color-mascot-kumo: var(--mascot-kumo);
+    --color-mascot-nyx: var(--mascot-nyx);
     --color-foreground: var(--dreamy-foreground);
     --color-card: var(--dreamy-card);
     --color-primary: var(--dreamy-primary);
@@ -466,6 +516,10 @@ html[data-theme="dreamy"] {
       .text-mascot-kumo { color: var(--mascot-kumo); }
       .border-mascot-kumo { border-color: var(--mascot-kumo); }
       .ring-mascot-kumo { --tw-ring-color: var(--mascot-kumo); }
+      .bg-mascot-nyx { background-color: var(--mascot-nyx); }
+      .text-mascot-nyx { color: var(--mascot-nyx); }
+      .border-mascot-nyx { border-color: var(--mascot-nyx); }
+      .ring-mascot-nyx { --tw-ring-color: var(--mascot-nyx); }
       .bg-foreground { background-color: var(--dreamy-foreground); }
       .text-foreground { color: var(--dreamy-foreground); }
       .border-foreground { border-color: var(--dreamy-foreground); }
@@ -539,15 +593,19 @@ html[data-theme="dreamy"] {
               <span class="gtt-dot gtt-dream"></span>
               <span>Dreamy 星眠</span>
             </button>
+            <button class="gtt-seg" data-gtheme="midnight">
+              <span class="gtt-dot gtt-midnight"></span>
+              <span>Midnight 夜影</span>
+            </button>
           </div>
         </div>
         <h1 class="gal-title">你的编程伙伴</h1>
-        <p class="gal-subtitle">7 位伙伴，各自的性格与口吻。安静的愉悦感，代码仍是主角。</p>
+        <p class="gal-subtitle">8 位伙伴，各自的性格与口吻。安静的愉悦感，代码仍是主角。</p>
         <div class="gal-meta-row">
           <span class="gal-meta-item"><span class="gmi-dot" style="background:var(--state-success)"></span>8 种心情状态</span>
           <span class="gal-meta-item"><span class="gmi-dot" style="background:var(--brand)"></span>9 级成长路径</span>
           <span class="gal-meta-item"><span class="gmi-dot" style="background:var(--state-info)"></span>4 段羁绊进度</span>
-          <span class="gal-meta-item"><span class="gmi-dot" style="background:var(--state-warning)"></span>Dreamy 星眠主题</span>
+          <span class="gal-meta-item"><span class="gmi-dot" style="background:var(--state-warning)"></span>Dreamy 星眠 + Midnight 夜影主题</span>
         </div>
       </div>
     </header>
@@ -757,9 +815,13 @@ html[data-theme="dreamy"] {
          ============================================================ -->
     <footer class="gal-footer">
       <div class="gal-footer-inner">
-        <div class="gf-note">
+        <div class="gf-note gf-dreamy">
           <span class="gf-moon">🌙</span>
-          <span class="gf-text"><strong>Dreamy 星眠</strong>：夜紫 (#14101c) + 云粉 (#f4a8d8) + 薄荷 (#7ee0c8)，搭配非像素版 Mochi 与柔光粒子。切换后所有面板、伙伴光晕与状态色自动跟随主题。</span>
+          <span class="gf-text"><strong>Dreamy 星眠</strong>：夜紫 (#14101c) + 云粉 (#f4a8d8) + 薄荷 (#7ee0c8)，搭配非像素版 Mochi 与柔光粒子。</span>
+        </div>
+        <div class="gf-note gf-midnight">
+          <span class="gf-moon">🐈‍⬛</span>
+          <span class="gf-text"><strong>Midnight 夜影</strong>：深靛 (#080818) + 电蓝 (#5b8cff) + 暖橙 (#d98030) + 铃苔绿 (#88a820)，灵感来自像素黑猫 Nyx，深夜编码的静谧伴侣。</span>
         </div>
         <div class="gf-meta">FocusCode v0.5.0-beta · Companion Personalization Spec</div>
       </div>
@@ -878,6 +940,7 @@ html[data-theme="dreamy"] {
     .gtt-dot { width: 8px; height: 8px; border-radius: 50%; }
     .gtt-fox { background: #ff8700; }
     .gtt-dream { background: #f4a8d8; }
+    .gtt-midnight { background: #5b8cff; }
 
     .gal-title {
       font-size: 36px;
@@ -1357,6 +1420,10 @@ html[data-theme="dreamy"] {
       border: 1px solid color-mix(in srgb, #f4a8d8 20%, var(--gal-line));
       border-radius: var(--gal-radius-sm);
     }
+    .gf-midnight {
+      background: color-mix(in srgb, #5b8cff 5%, var(--gal-surface));
+      border: 1px solid color-mix(in srgb, #5b8cff 20%, var(--gal-line));
+    }
     .gf-moon { font-size: 20px; flex-shrink: 0; }
     .gf-text { font-size: 12px; color: var(--gal-ink-2); line-height: 1.6; }
     .gf-text strong { color: var(--gal-ink); font-weight: 700; }
@@ -1408,6 +1475,11 @@ html[data-theme="dreamy"] {
           accentVar:"var(--mascot-kumo)",
           levelNames:["小小水豚","慢读学徒","冷静调试员","栈边观察家","咖啡工程师","沉稳架构师","河岸领航员","云海守护豚","不慌大贤豚"],
           voice:{ working:"保持节奏，一次只做好一步。", happy:"嗯，很稳。就按这个节奏。", oops:"先喝口水，再看错误现场。", levelup:"杯子添满了，默契也升级了。" }
+        },
+        { id:"nyx", name:"Nyx 夜纱", species:"午夜影猫", catchphrase:"深夜的代码，有我陪着你。", icon:"🐈‍⬛", shortName:"nyx",
+          accentVar:"var(--mascot-nyx)",
+          levelNames:["夜影幼猫","星耳学徒","蓝瞳猎手","铃响巡夜者","影步工程师","月光架构师","深空守护猫","银河织梦猫","永夜灵猫"],
+          voice:{ working:"在夜色里逐行排查，不漏一个分号。", happy:"这行代码在月光下亮了起来。", oops:"阴影里藏了个小 bug，我来把它揪出来。", levelup:"颈上的铃又亮了一分，升级啦！" }
         }
       ];
 
@@ -1487,6 +1559,8 @@ html[data-theme="dreamy"] {
           const theme = seg.dataset.gtheme;
           if (theme === 'dreamy') {
             document.documentElement.setAttribute('data-theme', 'dreamy');
+          } else if (theme === 'midnight') {
+            document.documentElement.setAttribute('data-theme', 'midnight');
           } else {
             document.documentElement.removeAttribute('data-theme');
           }

@@ -136,6 +136,32 @@ const PIXEL_KUMO_FRAMES: PixelFrameSet = {
   levelup: [["  ▀▄▀▄▀  ", " ▒▄▄▄▄▄▄▒ ▲", "▒█ ◆ㅅ◆ █▒", " ▒▀▄▄▄▀▒ "]],
 };
 
+const PIXEL_NYX_FRAMES: PixelFrameSet = {
+  idle: [
+    [" ▄█▲   ▲█▄ ", " ██▓   ▓██◞", " █ ◕   ◕ █ ", " █▓  ⏣  ▓█◞", "  ▀▀▀▀▀▀▀  "],
+    [" ▄█▲   ▲█▄ ", " ██▓   ▓██◞", " █ ▬   ▬ █ ", " █▓  ⏣  ▓█◞", "  ▀▀▀▀▀▀▀  "],
+  ],
+  thinking: [[" ▄█▲   ▲█▄ ▄▀", " ██▓   ▓██◞ ", " █ •   • █  ", " █▓  ~  ▓█◞ ", "  ▀▀▀▀▀▀▀   "]],
+  working: [
+    [" ▄█▲   ▲█▄ ", " ██▓   ▓██◞", " █ ▶   ◀ █ ", " █▓  ⏣  ▓█◞", "  ▀▀▀▀▀▀▀  ", " ░▒▓▄▄▄▄▄▓▒░ "],
+    [" ▄█▲   ▲█▄ ", " ██▓   ▓██◞", " █ ▶   ◀ █ ", " █▓  ⏣  ▓█◞", "  ▀▀▀▀▀▀▀  ", " ░▒▓▀▀▀▀▀▓▒░ "],
+  ],
+  happy: [["✦ ▄█▲   ▲█▄ ✦", "  ██▓   ▓██◞ ", "  █ ◕ω◕ █  ★", "  █▓  ⏣  ▓█◞", "   ▀▀▀▀▀▀▀   "]],
+  oops: [[" ▄█▲   ▲█▄ !", " ██▓   ▓██◞", " █ ✕   ✕ █ ", " █▓  △  ▓█◞", "  ▀▀▀▀▀▀▀  "]],
+  sleeping: [
+    [" ▄█▲   ▲█▄ z", " ██▓   ▓██◞", " █ ▬   ▬ █Z", " █▓  ⏣  ▓█◞", "  ▀▀▀▀▀▀▀  "],
+    [" ▄█▲   ▲█▄  ", " ██▓   ▓██◞", " █ ▬   ▬ █ z", " █▓  ⏣  ▓█◞", "  ▀▀▀▀▀▀▀  Z"],
+  ],
+  celebrating: [
+    ["★ ▄█▲   ▲█▄ ★", "♪ ██▓   ▓██◞ ", "  █ ◕ω◕ █  ♪", "  █▓  ⏣  ▓█◞", "   ▀▀▀▀▀▀▀  ★"],
+    ["✦ ▄█▲   ▲█▄ ✦", "♪ ██▓   ▓██◞ ", "  █ ◕ω◕ █  ♪", "  █▓  ⏣  ▓█◞", "   ▀▀▀▀▀▀▀  ✦"],
+  ],
+  levelup: [
+    ["    ▀▄▀▄▀    ", " ▄█▲   ▲█▄ ▲", " ██▓   ▓██◞ ", " █ ◆   ◆ █ ", " █▓  ⏣  ▓█◞", "  ▀▀▀▀▀▀▀  "],
+    ["  ✦ ▀▄▀▄▀ ✦  ", " ▄█▲   ▲█▄ ▲", " ██▓   ▓██◞ ", " █ ◆   ◆ █ ", " █▓  ⏣  ▓█◞", "  ▀▀▀▀▀▀▀  "],
+  ],
+};
+
 /** Pixel-game style frames for every built-in mascot, keyed by mascot id. */
 export const PIXEL_MASCOT_FRAMES: Record<string, PixelFrameSet> = {
   foxy: PIXEL_FOXY_FRAMES,
@@ -145,6 +171,7 @@ export const PIXEL_MASCOT_FRAMES: Record<string, PixelFrameSet> = {
   pico: PIXEL_PICO_FRAMES,
   bubu: PIXEL_BUBU_FRAMES,
   kumo: PIXEL_KUMO_FRAMES,
+  nyx: PIXEL_NYX_FRAMES,
 };
 
 const clampLevel = (level: number): number =>

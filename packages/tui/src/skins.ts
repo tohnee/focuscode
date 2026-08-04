@@ -273,6 +273,34 @@ export const BUILTIN_SKINS: readonly SkinPack[] = [
       PIXEL_MASCOT_FRAMES.mochi!,
     ),
   },
+  {
+    schemaVersion: SKIN_SCHEMA_VERSION,
+    id: "nyx",
+    name: "Nyx 夜影",
+    author: "FocusCode",
+    homepage: "https://github.com/focuscode/focuscode",
+    pixel: true,
+    theme: {
+      id: "nyx",
+      name: "Midnight Shadow",
+      background: "#080818",
+      foreground: "#c8d4e8",
+      accent: "#5b8cff",
+      secondary: "#d98030",
+      success: "#88a820",
+      warning: "#e8a030",
+      danger: "#d04050",
+      muted: "#2a3450",
+      border: "─",
+    },
+    mascot: pixelMascot(
+      "nyx",
+      "Nyx 夜纱",
+      "午夜影猫",
+      "深夜的代码，有我陪着你。",
+      PIXEL_MASCOT_FRAMES.nyx!,
+    ),
+  },
 ].map((skin) => validateSkinPack(skin));
 
 export function listBuiltinSkins(): readonly SkinPack[] {
