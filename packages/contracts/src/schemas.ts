@@ -328,11 +328,11 @@ export const CacheEpochManifestSchema = Type.Object(
     toolBundleHash: Type.String({ minLength: 1 }),
     /** stable system 段(含 instructions/extensionPrompt)的 sha256。 */
     systemHash: Type.String({ minLength: 1 }),
-    /** thinkingFormat 方言("openai"|"deepseek"|"qwen"|"zai")。 */
+    /** thinkingFormat 方言(如 deepseek / qwen / zai 等)。 */
     reasoningProtocol: Type.Optional(Type.String()),
-    /** wire protocol("openai-chat"|"anthropic-messages"|...)。 */
+    /** wire protocol(如 chat / messages 等)。 */
     toolProtocol: Type.Optional(Type.String()),
-    /** cacheControl.mode("openai-prefix"|"anthropic-ephemeral"|"none")。 */
+    /** cacheControl.mode(如 prefix / ephemeral / none)。 */
     cacheMode: Type.Optional(Type.String()),
   },
   Strict,
