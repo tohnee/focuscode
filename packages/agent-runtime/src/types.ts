@@ -312,6 +312,20 @@ export interface ModelProfile {
   reliability: ModelReliabilityPolicy;
 }
 
+/** 经济型 compaction 的定价参数(USD per 1M tokens + 剩余轮次预估)。 */
+export interface CompactionEconomics {
+  /** 未命中输入单价(USD/1M)。 */
+  missPricePerM: number;
+  /** 命中输入单价(USD/1M);缺省视为 0。 */
+  hitPricePerM?: number;
+  /** 生成 summary 的输出单价(USD/1M);缺省用固定常量近似。 */
+  outputPricePerM?: number;
+  /** 会话预计剩余轮次(经济预估用)。 */
+  expectedRemainingTurns: number;
+  /** 风险边际系数(默认 1.5);oneTimeCost 乘以该值。 */
+  riskMargin?: number;
+}
+
 export interface AgentRuntimeOptions {
   cwd: string;
   model: ModelProfile;

@@ -32,6 +32,7 @@ import type {
   AgentRunResult,
   AgentRuntimeOptions,
   AgentToolCall,
+  CompactionEconomics,
   ModelClient,
   ModelProfile,
   ModelResponse,
@@ -140,6 +141,13 @@ export interface CodingAgentOptions extends AgentRuntimeOptions {
       options: Array<{ label: string }>;
     }>;
   }) => Promise<Record<string, string> | undefined>;
+  /**
+   * 经济型 compaction 参数。设置后,当未来缓存未命中的预期节省大于一次
+   * 压缩的一次性成本时,ConversationContext 会在 82% 压力点之前提前压缩,
+   * 以节省高 cache 差价下每轮重新预填充的费用。未设置时行为与之前完全一致
+   * (仅按 82% 压力点压缩)。
+   */
+  compactionEconomics?: CompactionEconomics;
 }
 
 export class CodingAgent {
@@ -180,7 +188,7 @@ export class CodingAgent {
     this.permission = new PermissionController({ cwd: options.cwd, ...options.permission });
     this.model = options.model;
     this.modelClient = options.modelClient;
-    this.context = new ConversationContext(options.model);
+    this.context = new ConversationContext(options.model, options.compactionEconomics);
     this.maxRounds = options.maxRounds ?? 40;
     this.eventSink = options.eventSink;
     this.steering = new SteeringQueue(options.steeringMaximum ?? 32);
@@ -781,7 +789,7 @@ export class CodingAgent {
     if (this.running) throw new Error("Cannot change model during a running turn");
     this.model = profile;
     this.modelClient = client;
-    this.context = new ConversationContext(profile);
+    this.context = new ConversationContext(profile, this.options.compactionEconomics);
     await this.options.sessionStore.setModel(this.sessionId, profile);
     await this.refresh();
   }

@@ -1,4 +1,10 @@
-import type { AgentMessage, AgentToolCall, ModelProfile, TokenUsage } from "./types.js";
+import type {
+  AgentMessage,
+  AgentToolCall,
+  CompactionEconomics,
+  ModelProfile,
+  TokenUsage,
+} from "./types.js";
 import {
   activeBranch,
   type SessionCompactionStructured,
@@ -14,8 +20,43 @@ export interface CompiledConversation {
   compactableEntries: SessionEntry[];
 }
 
+/**
+ * 经济型 compaction 信号:当未来缓存未命中的预期节省超过一次压缩的
+ * 一次性成本(summary 生成 + 缓存预热)乘上风险边际时返回 true。
+ * 纯函数、无副作用;仅在上下文超过 60% 压力下限且分支足够长时才会触发,
+ * 因此小上下文永远不会因经济信号而提前压缩。
+ */
+export function economicCompactionSignal(params: {
+  estimatedTokens: number;
+  usable: number;
+  branchLength: number;
+  compactableTokens: number;
+  economics: CompactionEconomics;
+}): boolean {
+  const { estimatedTokens, usable, branchLength, compactableTokens, economics } = params;
+  // 低于 60% 压力下限或分支过短时,上下文太小,不值得为省钱提前压缩。
+  if (estimatedTokens <= usable * 0.6 || branchLength <= 6) return false;
+  const missPrice = economics.missPricePerM;
+  const hitPrice = economics.hitPricePerM ?? 0;
+  const compactM = compactableTokens / 1_000_000;
+  // 每个剩余轮次把 compactableTokens 从前缀里移除:未命中时这部分按
+  // miss 单价计费,压缩后按 hit 单价计费(命中)或不再出现,故省下差价。
+  const futureSavings = compactM * (missPrice - hitPrice) * economics.expectedRemainingTurns;
+  // summary 生成是一次模型调用,输出 token 按输出单价计费。压缩后 summary
+  // 受 24k 字符上限约束(约 6k token),用被压缩 token 的 25% 近似输出规模。
+  const outputPrice = economics.outputPricePerM ?? 8.0; // 粗略默认
+  const summaryCost = compactM * 0.25 * outputPrice;
+  // 压缩后前缀变化,下一轮是完整未命中,需重新预填充被丢弃的前缀。
+  const warmupCost = compactM * missPrice;
+  const margin = economics.riskMargin ?? 1.5;
+  return futureSavings > (summaryCost + warmupCost) * margin;
+}
+
 export class ConversationContext {
-  constructor(private readonly model: ModelProfile) {}
+  constructor(
+    private readonly model: ModelProfile,
+    private readonly economics?: CompactionEconomics,
+  ) {}
 
   compile(snapshot: SessionSnapshot, toolsSchemaChars = 0): CompiledConversation {
     const branch = activeBranch(snapshot);
@@ -32,7 +73,8 @@ export class ConversationContext {
       Math.ceil(toolsSchemaChars / 4) +
       Math.ceil((summary?.length ?? 0) / 4);
     const usable = Math.max(1_000, this.model.contextWindow - this.model.maxOutputTokens);
-    const shouldCompact = estimatedTokens > usable * 0.82 && branch.length > 6;
+    // 计算 split/keepBudget 需在 shouldCompact 决策之前,以便经济信号
+    // 能得知本次压缩将实际丢弃的 token 量(compactableTokens)。
     const keepBudget = Math.max(2_000, Math.floor(usable * 0.45));
     let keptTokens = 0;
     let split = branch.length;
@@ -41,6 +83,21 @@ export class ConversationContext {
       keptTokens += estimateMessage(branch[split]!.message);
     }
     split = adjustSplitForToolPairs(branch, split);
+
+    // 硬阈值:82% 压力点(行为与引入经济信号之前完全一致)。
+    const pressure = estimatedTokens > usable * 0.82 && branch.length > 6;
+    let shouldCompact = pressure;
+    if (!shouldCompact && this.economics) {
+      shouldCompact = economicCompactionSignal({
+        estimatedTokens,
+        usable,
+        branchLength: branch.length,
+        compactableTokens: branch
+          .slice(0, split)
+          .reduce((sum, entry) => sum + estimateMessage(entry.message), 0),
+        economics: this.economics,
+      });
+    }
     return {
       messages,
       ...(summary ? { summary } : {}),
