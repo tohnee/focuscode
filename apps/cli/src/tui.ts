@@ -199,21 +199,24 @@ export interface FullScreenAgentOptions {
 const DEFAULT_COMPANION_PATH = () => join(homedir(), ".focuscode", "companion.json");
 
 /**
- * Pure session-cost accumulator for the TUI. Each usage event is converted
- * to USD via `estimateCostUsd`; pricing is resolved by "provider/model" then
- * bare model id (matching `AgentConfigFile.pricing` keys). No I/O, so the
- * tracker is unit-testable in isolation.
+ * Pure session-cost tracker for the TUI. Every usage event carries the
+ * CUMULATIVE session-to-date token totals (agent-runtime's `sessionUsage`,
+ * summed across all session entries), so `set` REPLACES the stored USD on each
+ * call rather than accumulating — accumulating would double-count every turn.
+ * Pricing is resolved by "provider/model" then bare model id (matching
+ * `AgentConfigFile.pricing` keys). No I/O, so the tracker is unit-testable in
+ * isolation.
  */
 export function createTuiCostTracker(config: {
   pricing: Record<string, ModelPricing>;
   modelKey: string;
   modelId: string;
-}): { add(usage: TokenUsage): void; usd: number } {
+}): { set(usage: TokenUsage): void; usd: number } {
   let usd = 0;
   const pricing = config.pricing[config.modelKey] ?? config.pricing[config.modelId];
   return {
-    add(usage: TokenUsage) {
-      usd += estimateCostUsd(usage, pricing).totalUsd;
+    set(usage: TokenUsage) {
+      usd = estimateCostUsd(usage, pricing).totalUsd;
     },
     get usd() {
       return usd;
@@ -687,7 +690,7 @@ export async function runFullScreenAgent(options: FullScreenAgentOptions): Promi
   });
   options.agent.setEventSink((event) => {
     if (event.type === "usage") {
-      sessionCostTracker.add(event.session);
+      sessionCostTracker.set(event.session);
       sessionCost = sessionCostTracker.usd;
       tui.setSessionCost(sessionCost, sessionBudget);
       return;
