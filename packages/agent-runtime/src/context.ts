@@ -93,7 +93,7 @@ export class ConversationContext {
         usable,
         branchLength: branch.length,
         compactableTokens: branch
-          .slice(0, split)
+          .slice(0, Math.max(0, split))
           .reduce((sum, entry) => sum + estimateMessage(entry.message), 0),
         economics: this.economics,
       });
