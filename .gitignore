@@ -12,3 +12,13 @@ apps/cli/model-packs/
 # 临时预览图
 pixel-preview.png
 *.preview.png
+
+# 设计素材预览(未被代码引用,不入库)
+*.design-preview.png
+contact-sheet.png
+frame0-600.png
+pet-*.png
+petbouncer-ref.gif
+ref-frame*.png
+gif-frames/
+view-gif.html
