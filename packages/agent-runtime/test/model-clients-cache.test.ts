@@ -129,23 +129,23 @@ describe("D7 cache_control · B. anthropicSystemField", () => {
 });
 
 describe("D7 cache_control · C. buildOpenAIRequest 缓存路径", () => {
-  it("TC-D7-11: openai-prefix 模式下首条 message 为 system role 含 stable", () => {
+  it("TC-D7-11: openai-prefix 模式下首条 message 为 system role 含 stable（stable 达到 minPrefixTokens）", () => {
     const request = baseRequest({
       systemPrompt: "ignored",
-      systemPromptParts: { stable: "stable prefix", dynamic: "dynamic suffix" },
+      systemPromptParts: { stable: "x".repeat(5000), dynamic: "dynamic suffix" },
     });
     const compatibility = fullCompatibility({
       cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
     });
     const body = buildOpenAIRequest(request, compatibility);
     const messages = body.messages as Array<{ role: string; content: string }>;
-    expect(messages[0]).toEqual({ role: "system", content: "stable prefix" });
+    expect(messages[0]).toEqual({ role: "system", content: "x".repeat(5000) });
   });
 
   it("TC-D7-12: openai-prefix 模式下 dynamic 作为第二条 system message", () => {
     const request = baseRequest({
       systemPrompt: "ignored",
-      systemPromptParts: { stable: "stable", dynamic: "dynamic" },
+      systemPromptParts: { stable: "x".repeat(5000), dynamic: "dynamic" },
     });
     const compatibility = fullCompatibility({
       cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
@@ -179,6 +179,61 @@ describe("D7 cache_control · C. buildOpenAIRequest 缓存路径", () => {
     const body = buildOpenAIRequest(request, compatibility);
     const messages = body.messages as Array<{ role: string; content: string }>;
     expect(messages[0]).toEqual({ role: "system", content: "legacy prompt" });
+  });
+
+  it("TC-D7-27: stable 估算 token 低于 minPrefixTokens 时回退为单体 systemPrompt", () => {
+    const request = baseRequest({
+      systemPrompt: "monolithic prompt",
+      systemPromptParts: { stable: "hi", dynamic: "world" },
+    });
+    const compatibility = fullCompatibility({
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
+    });
+    const body = buildOpenAIRequest(request, compatibility);
+    const messages = body.messages as Array<{ role: string; content: string }>;
+    expect(messages[0]).toEqual({ role: "system", content: "monolithic prompt" });
+    expect(messages[0].content).not.toBe("hi");
+    expect(messages[1]).toEqual({ role: "user", content: "hello" });
+  });
+
+  it("TC-D7-28: stable 达到 minPrefixTokens 阈值时仍拆分前缀", () => {
+    const request = baseRequest({
+      systemPrompt: "monolithic prompt",
+      systemPromptParts: { stable: "x".repeat(5000), dynamic: "world" },
+    });
+    const compatibility = fullCompatibility({
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
+    });
+    const body = buildOpenAIRequest(request, compatibility);
+    const messages = body.messages as Array<{ role: string; content: string }>;
+    expect(messages[0]).toEqual({ role: "system", content: "x".repeat(5000) });
+    expect(messages[1]).toEqual({ role: "system", content: "world" });
+  });
+
+  it("TC-D7-29: minPrefixTokens 为 0 时小 stable 仍拆分（向后兼容）", () => {
+    const request = baseRequest({
+      systemPrompt: "monolithic prompt",
+      systemPromptParts: { stable: "hi", dynamic: "world" },
+    });
+    const compatibility = fullCompatibility({
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 0 },
+    });
+    const body = buildOpenAIRequest(request, compatibility);
+    const messages = body.messages as Array<{ role: string; content: string }>;
+    expect(messages[0]).toEqual({ role: "system", content: "hi" });
+  });
+
+  it("TC-D7-30: minPrefixTokens 未声明时小 stable 仍拆分（向后兼容）", () => {
+    const request = baseRequest({
+      systemPrompt: "monolithic prompt",
+      systemPromptParts: { stable: "hi", dynamic: "world" },
+    });
+    const compatibility = fullCompatibility({
+      cacheControl: { mode: "openai-prefix" },
+    });
+    const body = buildOpenAIRequest(request, compatibility);
+    const messages = body.messages as Array<{ role: string; content: string }>;
+    expect(messages[0]).toEqual({ role: "system", content: "hi" });
   });
 });
 
@@ -236,7 +291,7 @@ describe("D7 cache_control · E. 日志埋点", () => {
 
   it("TC-D7-19: buildOpenAIRequest 在 openai-prefix 模式输出 [cache:openai-prefix] 日志", () => {
     const request = baseRequest({
-      systemPromptParts: { stable: "stable", dynamic: "dynamic" },
+      systemPromptParts: { stable: "x".repeat(5000), dynamic: "dynamic" },
     });
     const compatibility = fullCompatibility({
       cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
@@ -245,6 +300,21 @@ describe("D7 cache_control · E. 日志埋点", () => {
     const calls = stderrSpy.mock.calls.map((call) => String(call[0]));
     const cacheLog = calls.find((line) => line.includes("[cache:openai-prefix]"));
     expect(cacheLog).toBeDefined();
+  });
+
+  it("TC-D7-31: stable 低于 minPrefixTokens 时输出 reason=below-minPrefixTokens 日志", () => {
+    const request = baseRequest({
+      systemPromptParts: { stable: "hi", dynamic: "world" },
+    });
+    const compatibility = fullCompatibility({
+      cacheControl: { mode: "openai-prefix", minPrefixTokens: 1024 },
+    });
+    buildOpenAIRequest(request, compatibility);
+    const calls = stderrSpy.mock.calls.map((call) => String(call[0]));
+    const cacheLog = calls.find((line) => line.includes("reason=below-minPrefixTokens"));
+    expect(cacheLog).toBeDefined();
+    expect(cacheLog).toMatch(/stable=1/);
+    expect(cacheLog).toMatch(/min=1024/);
   });
 
   it("TC-D7-20: anthropicSystemField 输出 [cache:anthropic-ephemeral] 日志", () => {

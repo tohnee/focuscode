@@ -233,24 +233,41 @@ export function buildOpenAIRequest(
 ): Record<string, unknown> {
   const mode = compatibility.cacheControl.mode;
   const parts = request.systemPromptParts;
+  const minPrefixTokens = compatibility.cacheControl.minPrefixTokens ?? 0;
+  // 估算 stable 段 token 数(与 context.ts estimateMessage 同口径:字符数/4)。
+  const stableTokens = parts ? Math.ceil(parts.stable.length / 4) : 0;
   let messages: unknown[];
-  if (mode === "openai-prefix" && parts) {
+  const shouldSplit =
+    mode === "openai-prefix" &&
+    parts !== undefined &&
+    (minPrefixTokens === 0 || stableTokens >= minPrefixTokens);
+  if (shouldSplit) {
     // 将 stable 段独立为首条 system message，dynamic 段作为第二条 system message，
     // 确保 stable 前缀在所有轮次中保持不变，最大化 Provider 侧 prefix cache 命中率。
     messages = [
-      { role: "system", content: parts.stable },
-      ...(parts.dynamic ? [{ role: "system", content: parts.dynamic }] : []),
+      { role: "system", content: parts!.stable },
+      ...(parts!.dynamic ? [{ role: "system", content: parts!.dynamic }] : []),
       ...request.messages.map((message) => toOpenAIMessageShape(message, compatibility)),
     ];
     if (process.env.FOCUSCODE_DEBUG_CACHE) {
       process.stderr.write(
-        `[cache:openai-prefix] stable=${parts.stable.length}ch dynamic=${parts.dynamic.length}ch\n`,
+        `[cache:openai-prefix] stable=${parts!.stable.length}ch dynamic=${parts!.dynamic.length}ch\n`,
       );
     }
   } else {
     if (mode === "openai-prefix" && !parts && process.env.FOCUSCODE_DEBUG_CACHE) {
       process.stderr.write(
         `[cache:none] reason=no-systemPromptParts mode=openai-prefix model=${request.model}\n`,
+      );
+    }
+    if (
+      mode === "openai-prefix" &&
+      parts &&
+      stableTokens < minPrefixTokens &&
+      process.env.FOCUSCODE_DEBUG_CACHE
+    ) {
+      process.stderr.write(
+        `[cache:none] reason=below-minPrefixTokens stable=${stableTokens} min=${minPrefixTokens} model=${request.model}\n`,
       );
     }
     messages = toOpenAIMessages(request.systemPrompt, request.messages, compatibility);
