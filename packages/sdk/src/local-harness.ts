@@ -167,7 +167,13 @@ export class LocalHarness {
 export async function createLocalHarness(options: LocalHarnessOptions): Promise<LocalHarness> {
   const workspace = await WorkspaceGuard.create(options.repoRoot);
   const profile = await buildRepoProfile(workspace.root);
-  const runner = new SafeCommandRunner(profile.commands, { cwd: workspace.root });
+  // Repo-controlled commands (from the repo's own .focuscode/config.json) are
+  // registered for execution only when the integrator explicitly trusts the
+  // repo config: an untrusted repo can ship arbitrary command argv that the
+  // model would otherwise run with the user's privileges (auto-safe mode
+  // auto-grants registered commands).
+  const commands = options.trustRepoConfig ? profile.commands : [];
+  const runner = new SafeCommandRunner(commands, { cwd: workspace.root });
   const registry = createLocalToolRegistry(workspace, runner);
   const approvalMode = options.approvalMode ?? "deny";
   const policyConfig: PolicyConfig = {
@@ -177,7 +183,7 @@ export async function createLocalHarness(options: LocalHarnessOptions): Promise<
     maxRiskScore: 50,
     allowNetwork: false,
     allowSecrets: false,
-    autoGrantRegisteredCommands: approvalMode === "auto-safe",
+    autoGrantRegisteredCommands: approvalMode === "auto-safe" && options.trustRepoConfig === true,
     autoGrantSafeWrites: approvalMode === "auto-safe",
   };
   const approval = options.approval ?? denyApproval;

@@ -6,6 +6,11 @@ import type { ShellExecutor } from "@focuscode/agent-runtime";
 // Set API key before any tests run
 process.env.OPENAI_API_KEY = "test-key";
 
+// The tests must not depend on the developer's ~/.focuscode/config.json
+// (e.g. a configured deepseek provider would require DEEPSEEK_API_KEY), so
+// the provider is pinned explicitly in every createCodingAgent call.
+const PINNED_PROVIDER = { provider: "openai" } as const;
+
 const mockShellExecutor: ShellExecutor = {
   kind: "host",
   async execute() {
@@ -22,6 +27,7 @@ const mockShellExecutor: ShellExecutor = {
 async function createSourceSession(root: string, sessionDirectory: string) {
   return createCodingAgent({
     cwd: root,
+    ...PINNED_PROVIDER,
     model: "fixture/fixture",
     shellExecutor: mockShellExecutor,
     // P1-F: use an explicit sessionDirectory under the test temp root so the
@@ -37,6 +43,7 @@ describe("forkSession SDK 层暴露", () => {
     const source = await createSourceSession(root, `${root}/sessions`);
     const { agent, sessions } = await createCodingAgent({
       cwd: root,
+      ...PINNED_PROVIDER,
       model: "fixture/fixture",
       forkSession: source.agent.sessionId,
       shellExecutor: mockShellExecutor,
@@ -56,6 +63,7 @@ describe("forkSession SDK 层暴露", () => {
     const leafEntryId = sourceSnapshot.leafId;
     const { agent, sessions } = await createCodingAgent({
       cwd: root,
+      ...PINNED_PROVIDER,
       model: "fixture/fixture",
       forkSession: source.agent.sessionId,
       forkEntryId: leafEntryId,
@@ -72,6 +80,7 @@ describe("forkSession SDK 层暴露", () => {
     const source = await createSourceSession(root, `${root}/sessions`);
     const { agent, sessions } = await createCodingAgent({
       cwd: root,
+      ...PINNED_PROVIDER,
       model: "fixture/fixture",
       forkSession: source.agent.sessionId,
       sessionName: "forked-branch",
