@@ -66,8 +66,16 @@ export async function runAuthCommand(argv: string[]): Promise<void> {
     .split(/[,\s]+/)
     .map((scope) => scope.trim())
     .filter(Boolean);
-  const clientSecret =
-    parsed.options.get("client-secret") ?? process.env[clientSecretEnvironment(provider)];
+  // SECURITY (SECURITY.md): the client secret must never be accepted as a CLI
+  // argument — it leaks into shell history and `ps` output. Env var only.
+  if (parsed.options.has("client-secret")) {
+    throw new Error(
+      "--client-secret is not accepted (it leaks into shell history and process listings); set " +
+        clientSecretEnvironment(provider) +
+        " instead",
+    );
+  }
+  const clientSecret = process.env[clientSecretEnvironment(provider)];
   const profile = parsed.options.get("issuer")
     ? await discoverOAuthProfile(provider, parsed.options.get("issuer")!, {
         clientId,
@@ -155,7 +163,9 @@ function customProfile(
   options: Map<string, string>,
 ): OAuthProfile {
   const deviceUrl = options.get("device-url");
-  const clientSecret = options.get("client-secret");
+  // The client secret comes only from FOCUSCODE_<PROVIDER>_CLIENT_SECRET;
+  // --client-secret is rejected before customProfile is reached.
+  const clientSecret = process.env[clientSecretEnvironment(provider)];
   const audience = options.get("audience");
   return {
     id: provider,

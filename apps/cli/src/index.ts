@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { constants } from "node:fs";
+import { constants, realpathSync } from "node:fs";
 import { access, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
+import { fileURLToPath } from "node:url";
 import { exportTaskAssets, FileMemoryStore } from "@focuscode/asset-plane";
 import { TaskSpecSchema, assertSchema, type TaskSpecV1 } from "@focuscode/contracts";
 import { FileFactStore } from "@focuscode/persistence";
@@ -57,6 +58,19 @@ function option(args: ParsedArgs, key: string, fallback?: string): string | unde
   return value ?? fallback;
 }
 
+/**
+ * Boolean flag check that honors `--flag=false`: the parser stores the inline
+ * value, so `.has()` alone would treat `--trust-repo-config=false` as SET and
+ * invert the trust boundary. An explicit "false" disables the flag.
+ */
+function flag(args: ParsedArgs, key: string): boolean {
+  const value = args.options.get(key);
+  return value !== undefined && value !== "false";
+}
+
+export { parseArgs, flag };
+export type { ParsedArgs };
+
 async function pathExists(path: string): Promise<boolean> {
   try {
     await access(path, constants.F_OK);
@@ -73,11 +87,11 @@ async function initCommand(args: ParsedArgs): Promise<void> {
   const directory = join(repoRoot, ".focuscode");
   const path = join(directory, "config.json");
   const agentPath = join(directory, "agent.json");
-  if (((await pathExists(path)) || (await pathExists(agentPath))) && !args.options.has("force")) {
+  if (((await pathExists(path)) || (await pathExists(agentPath))) && !flag(args, "force")) {
     throw new Error(`${directory} already contains FocusCode config; use --force to replace it`);
   }
   const verification = await detectVerification(repoRoot);
-  const enterprise = args.options.has("enterprise");
+  const enterprise = flag(args, "enterprise");
   const sandboxImage = option(args, "sandbox-image", "node:22-bookworm")!;
   if (enterprise && !/@sha256:[a-f0-9]{64}$/i.test(sandboxImage)) {
     throw new Error("Enterprise init requires --sandbox-image <image>@sha256:<digest>");
@@ -197,7 +211,7 @@ async function runCommand(args: ParsedArgs): Promise<void> {
       repoRoot,
       stateDirectory,
       approvalMode,
-      trustRepoConfig: args.options.has("trust-repo-config"),
+      trustRepoConfig: flag(args, "trust-repo-config"),
       ...(prompt ? { approval: prompt.port } : {}),
     };
     const harness = scriptPath
@@ -398,7 +412,16 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
-  process.stderr.write(`focuscode: ${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
+// Run only when invoked as the CLI entry point, so tests (and library
+// imports) do not execute the command loop. Compare against the realpath:
+// globally installed bins are symlinks, while import.meta.url is the
+// resolved entry path.
+const isMainEntry =
+  process.argv[1] !== undefined &&
+  fileURLToPath(import.meta.url) === realpathSync(resolve(process.argv[1]));
+if (isMainEntry) {
+  main().catch((error) => {
+    process.stderr.write(`focuscode: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  });
+}

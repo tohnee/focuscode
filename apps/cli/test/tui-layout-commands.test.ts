@@ -36,16 +36,16 @@ function createTui(): FullScreenTui {
 describe("runLayoutSubcommand", () => {
   it("cycle with no args advances to next mode", () => {
     const tui = createTui();
-    expect(tui.snapshot().layout?.mode).toBe("classic");
+    expect(tui.snapshot().layout?.mode).toBe("workbench");
     const result = runLayoutSubcommand(tui, "");
-    expect(result).toContain("split");
-    expect(tui.snapshot().layout?.mode).toBe("split");
+    expect(result).toContain("classic");
+    expect(tui.snapshot().layout?.mode).toBe("classic");
   });
 
   it("explicit 'cycle' arg also advances", () => {
     const tui = createTui();
     runLayoutSubcommand(tui, "cycle");
-    expect(tui.snapshot().layout?.mode).toBe("split");
+    expect(tui.snapshot().layout?.mode).toBe("classic");
   });
 
   it("sets specific mode 'split'", () => {
@@ -78,7 +78,7 @@ describe("runLayoutSubcommand", () => {
     const tui = createTui();
     const result = runLayoutSubcommand(tui, "diagonal");
     expect(result).toContain("Usage");
-    expect(tui.snapshot().layout?.mode).toBe("classic");
+    expect(tui.snapshot().layout?.mode).toBe("workbench");
   });
 });
 
