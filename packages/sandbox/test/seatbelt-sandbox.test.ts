@@ -40,17 +40,24 @@ describe("SeatbeltSandbox — unit (cross-platform)", () => {
     expect(health.detail).toContain("macOS-only");
   });
 
-  it("health() returns available on darwin when sandbox-exec -h succeeds", async () => {
-    const { runner } = capture([{ exitCode: 0 }]);
+  it("health() returns available on darwin when a minimal profile executes", async () => {
+    const captured = capture([{ exitCode: 0 }]);
     const sb = new SeatbeltSandbox({
       workspaceRoot: "/repo",
       platform: "darwin",
-      processRunner: runner,
+      processRunner: captured.runner,
     });
     const health = await sb.health();
     expect(health.available).toBe(true);
     expect(health.backend).toBe("seatbelt");
     expect(health.isolation).toBe("kernel");
+    // Regression: the probe must run a real minimal profile, not `-h`, which
+    // exits 64 (EX_USAGE) on modern macOS despite a working install.
+    expect(captured.invocations[0]?.arguments).toEqual([
+      "-p",
+      "(version 1)(allow default)",
+      "/usr/bin/true",
+    ]);
   });
 
   it("health() returns unavailable on darwin when sandbox-exec is missing", async () => {
@@ -90,12 +97,14 @@ describe("SeatbeltSandbox — unit (cross-platform)", () => {
     const dashDashIndex = invocation?.arguments.indexOf("--") ?? -1;
     expect(dashDashIndex).toBeGreaterThan(1);
     const shellArgs = invocation?.arguments.slice(dashDashIndex + 1);
-    expect(shellArgs?.[0]).toBe(process.env.SHELL ?? "/bin/sh");
+    // POSIX sh mode is used inside the sandbox: interactive zsh/bash abort
+    // under a hardened seatbelt profile.
+    expect(shellArgs?.[0]).toBe("/bin/sh");
     expect(shellArgs?.[1]).toBe("-lc");
     expect(shellArgs?.[2]).toBe("echo hi");
   });
 
-  it("execute() builds a profile that allows /usr/bin, /bin, /usr/lib and workspace writes", async () => {
+  it("execute() builds a profile with default-deny, exec allowlist and workspace-only writes", async () => {
     const captured = capture();
     const sb = new SeatbeltSandbox({
       workspaceRoot: "/repo",
@@ -109,14 +118,16 @@ describe("SeatbeltSandbox — unit (cross-platform)", () => {
       timeoutMs: 1_000,
     });
     const profile = captured.invocations[0]?.arguments[1] ?? "";
-    // Must allow reading system binaries so the shell can execute.
-    expect(profile).toContain("/usr/bin");
-    expect(profile).toContain("/bin");
-    expect(profile).toContain("/usr/lib");
-    // Must allow read/write inside the workspace root.
-    expect(profile).toContain("/repo");
-    // Must deny file-write* outside the allowed subpaths (default deny).
-    expect(profile).toContain("(deny file-write*");
+    // Default-deny baseline with an explicit exec allowlist for system bins.
+    expect(profile).toContain("(deny default)");
+    expect(profile).toContain('(allow process-exec (subpath "/usr/bin"))');
+    expect(profile).toContain('(allow process-exec (subpath "/bin"))');
+    // Reads are allowed globally (see buildProfile note); writes are
+    // restricted to the workspace root only.
+    expect(profile).toContain("(allow file-read*)");
+    expect(profile).toContain('(allow file-write* (subpath "/repo"))');
+    // The sandboxed shell must be able to fork children.
+    expect(profile).toContain("(allow process-fork)");
   });
 
   it("execute() rejects a cwd that escapes the workspace root", async () => {
@@ -164,9 +175,13 @@ describe("SeatbeltSandbox — unit (cross-platform)", () => {
     });
     await sb.health();
     expect(captured.invocations[0]?.executable).toBe("/usr/bin/sandbox-exec");
-    // P1-G: health() probes with -h (not --version) because real macOS
-    // sandbox-exec does not support --version.
-    expect(captured.invocations[0]?.arguments).toContain("-h");
+    // health() runs a minimal profile (not -h, which exits 64 on modern
+    // macOS despite a working install).
+    expect(captured.invocations[0]?.arguments).toEqual([
+      "-p",
+      "(version 1)(allow default)",
+      "/usr/bin/true",
+    ]);
   });
 
   it("P1-G: escapes paths in the SBPL profile to prevent injection", async () => {

@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PolicyEngine } from "@focuscode/action-domain";
@@ -52,6 +52,20 @@ describe("FileReceiptJournal", () => {
     await appendFile(path, '{"schemaVersion":"effect-recei', "utf8");
     const loaded = await journal.load();
     expect(loaded.map((receipt) => receipt.actionId)).toEqual(["good"]);
+  });
+
+  it("writes the journal and its directory with private permissions", async () => {
+    const root = await createTestDirectory("journal-mode");
+    const journal = new FileReceiptJournal(join(root, "nested", "receipts.jsonl"));
+    await journal.append(receiptFixture("a1"));
+    if (process.platform !== "win32") {
+      const fileInfo = await stat(join(root, "nested", "receipts.jsonl"));
+      // Receipts carry tool arguments, commands and outputs; they must not be
+      // world-readable (umask default would be 0644).
+      expect(fileInfo.mode & 0o777).toBe(0o600);
+      const dirInfo = await stat(join(root, "nested"));
+      expect(dirInfo.mode & 0o777).toBe(0o700);
+    }
   });
 
   it("fails closed on a corrupt line that is not the final line", async () => {

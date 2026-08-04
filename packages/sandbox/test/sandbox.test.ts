@@ -1,3 +1,6 @@
+import { mkdtempSync, symlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   DockerSandbox,
@@ -284,7 +287,7 @@ describe("DockerSandbox taskLifetime mode", () => {
       name,
       "/bin/sh",
       "-lc",
-      "npm install",
+      expect.stringMatching(/^FOCUSCODE_RUN_ID=[0-9a-f-]+ 'npm install'$/),
     ]);
     const exec = dockerCapture.invocations[2];
     expect(exec?.arguments).toEqual([
@@ -294,7 +297,7 @@ describe("DockerSandbox taskLifetime mode", () => {
       name,
       "/bin/sh",
       "-lc",
-      "npm test",
+      expect.stringMatching(/^FOCUSCODE_RUN_ID=[0-9a-f-]+ 'npm test'$/),
     ]);
     expect(exec?.signal).toBe(controller.signal);
   });
@@ -381,9 +384,13 @@ describe("DockerSandbox taskLifetime mode", () => {
       timeoutMs: 10,
     });
     expect(result.timedOut).toBe(true);
-    const pkill = dockerCapture.invocations[2];
-    expect(pkill?.arguments[0]).toBe("exec");
-    expect(pkill?.arguments.join(" ")).toContain("pkill -f 'sleep 30'");
+    const sweep = dockerCapture.invocations[2];
+    expect(sweep?.arguments[0]).toBe("exec");
+    // The timeout sweep is marker-based (unique per invocation), not a
+    // truncated command-pattern match.
+    expect(sweep?.arguments.join(" ")).toContain("FOCUSCODE_RUN_ID=");
+    expect(sweep?.arguments.join(" ")).toContain("pgrep -f");
+    expect(sweep?.arguments.join(" ")).not.toContain("pkill -f 'sleep 30'");
     expect(dockerCapture.invocations.some((i) => i.arguments[0] === "rm")).toBe(false);
     await docker.execute({
       command: "echo ok",
@@ -392,5 +399,32 @@ describe("DockerSandbox taskLifetime mode", () => {
       timeoutMs: 10,
     });
     expect(dockerCapture.invocations.filter((i) => i.arguments[0] === "run")).toHaveLength(1);
+  });
+
+  it("rejects a cwd that escapes the workspace through a symlink", async () => {
+    const outside = mkdtempSync(join(tmpdir(), "fc-realpath-outside-"));
+    const real = mkdtempSync(join(tmpdir(), "fc-realpath-root-"));
+    const link = join(real, "escape-link");
+    symlinkSync(outside, link);
+    const hostCapture = capture();
+    const host = new HostSandbox({ workspaceRoot: real, processRunner: hostCapture.runner });
+    await expect(
+      host.execute({ command: "pwd", cwd: link, workspaceRoot: real, timeoutMs: 1000 }),
+    ).rejects.toThrow("escapes workspace");
+    expect(hostCapture.invocations).toHaveLength(0);
+
+    // A legitimate cwd inside the workspace still runs.
+    const insideCapture = capture();
+    const hostInside = new HostSandbox({
+      workspaceRoot: real,
+      processRunner: insideCapture.runner,
+    });
+    await hostInside.execute({
+      command: "pwd",
+      cwd: real,
+      workspaceRoot: real,
+      timeoutMs: 1000,
+    });
+    expect(insideCapture.invocations).toHaveLength(1);
   });
 });

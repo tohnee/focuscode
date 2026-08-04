@@ -1,4 +1,4 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -58,6 +58,69 @@ describe("encrypted credential store", () => {
     });
     const second = new EncryptedCredentialStore({ directory });
     expect((await second.get("github", "work"))?.token.accessToken).toBe("abc");
+  });
+
+  it("uses a fresh random scrypt salt per save so envelopes do not share a derived key", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "focus-auth-salt-"));
+    const store = new EncryptedCredentialStore({ directory, passphrase: "test-passphrase" });
+    await store.set("google", "default", {
+      profile: createOAuthProfile("google", { clientId: "id" }),
+      token: { accessToken: "first", tokenType: "Bearer" },
+    });
+    const firstEnvelope = JSON.parse(
+      await readFile(join(directory, "credentials.enc.json"), "utf8"),
+    ) as { salt?: string; iv?: string };
+    // The envelope must carry the random salt it was derived with.
+    expect(typeof firstEnvelope.salt).toBe("string");
+    expect((firstEnvelope.salt ?? "").length).toBeGreaterThan(0);
+    await store.set("google", "default", {
+      profile: createOAuthProfile("google", { clientId: "id" }),
+      token: { accessToken: "second", tokenType: "Bearer" },
+    });
+    const secondEnvelope = JSON.parse(
+      await readFile(join(directory, "credentials.enc.json"), "utf8"),
+    ) as { salt?: string };
+    // A second save must re-salt: the same passphrase must not derive the
+    // same key across stores (offline dictionary attack hardening).
+    expect(secondEnvelope.salt).not.toBe(firstEnvelope.salt);
+    expect((await store.get("google"))?.token.accessToken).toBe("second");
+  });
+
+  it("still reads envelopes written with the legacy fixed salt", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "focus-auth-legacy-"));
+    const { scryptSync, randomBytes, createCipheriv } = await import("node:crypto");
+    const database = {
+      schemaVersion: "focuscode-credential-db.v1",
+      credentials: {
+        "google:default": {
+          provider: "google",
+          account: "default",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          profile: createOAuthProfile("google", { clientId: "id" }),
+          token: { accessToken: "legacy-token", tokenType: "Bearer" },
+        },
+      },
+    };
+    const key = scryptSync("test-passphrase", "focuscode-credentials-v1", 32);
+    const iv = randomBytes(12);
+    const cipher = createCipheriv("aes-256-gcm", key, iv);
+    const ciphertext = Buffer.concat([
+      cipher.update(JSON.stringify(database), "utf8"),
+      cipher.final(),
+    ]);
+    await writeFile(
+      join(directory, "credentials.enc.json"),
+      JSON.stringify({
+        schemaVersion: "focuscode-credentials.v1",
+        algorithm: "aes-256-gcm",
+        iv: iv.toString("base64"),
+        tag: cipher.getAuthTag().toString("base64"),
+        ciphertext: ciphertext.toString("base64"),
+      }) + "\n",
+    );
+    const store = new EncryptedCredentialStore({ directory, passphrase: "test-passphrase" });
+    expect((await store.get("google"))?.token.accessToken).toBe("legacy-token");
   });
 });
 

@@ -3,12 +3,20 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type {
+  AppendAckV1,
+  AppendRequestV1,
   AtomicDecisionResultV1,
   CertifiedModelRefV1,
   DecisionPort,
+  DomainEventV1,
   EffectPort,
   EffectReceiptV1,
+  FactPort,
+  KernelCheckpointV1,
   TurnInputV1,
+  VerificationReportV1,
+  VerificationRequestV1,
+  VerifyPort,
 } from "@focuscode/contracts";
 import {
   FakeEffectPort,
@@ -44,6 +52,58 @@ class CrashAfterFirstDecision implements DecisionPort {
 class CrashOnSubmitEffectPort implements EffectPort {
   async submit(): Promise<EffectReceiptV1[]> {
     throw new Error("simulated effect crash");
+  }
+}
+
+/** Simulates a worker dying inside the completion gate: baseline verifies, target verify throws. */
+class ThrowsOnTargetVerify implements VerifyPort {
+  private calls = 0;
+
+  async verify(request: VerificationRequestV1): Promise<VerificationReportV1> {
+    this.calls += 1;
+    if (this.calls >= 2) throw new Error("simulated verifier crash");
+    return new StaticVerifier("PASS", "PASS").verify(request);
+  }
+}
+
+/** Counts verifier invocations so a test can prove the gate was not re-run. */
+class CountingVerifier implements VerifyPort {
+  calls = 0;
+
+  constructor(private readonly inner: VerifyPort) {}
+
+  async verify(request: VerificationRequestV1): Promise<VerificationReportV1> {
+    this.calls += 1;
+    return this.inner.verify(request);
+  }
+}
+
+/**
+ * Simulates a crash between the VerificationCompleted append and the
+ * REVIEW_READY transition by failing exactly that transition append.
+ */
+class ThrowOnReviewReadyTransition implements FactPort {
+  constructor(private readonly inner: FactPort) {}
+
+  async append(request: AppendRequestV1): Promise<AppendAckV1> {
+    const event = request.events[0];
+    const payload = event?.payload as { to?: unknown } | undefined;
+    if (event?.kind === "TaskStateChanged" && payload?.to === "REVIEW_READY") {
+      throw new Error("simulated transition crash");
+    }
+    return this.inner.append(request);
+  }
+
+  loadEvents(taskId: string): Promise<DomainEventV1[]> {
+    return this.inner.loadEvents(taskId);
+  }
+
+  loadCheckpoint(taskId: string): Promise<KernelCheckpointV1 | undefined> {
+    return this.inner.loadCheckpoint(taskId);
+  }
+
+  saveCheckpoint(checkpoint: KernelCheckpointV1): Promise<void> {
+    return this.inner.saveCheckpoint(checkpoint);
   }
 }
 
@@ -302,7 +362,13 @@ describe("FocusKernel crash recovery across instances", () => {
       reason: "started without receipt",
     });
     expect(resumedEffects.submitted).toEqual([]);
-    expect(result.checkpoint.actionCount).toBe(0);
+    // The started-but-unobserved action counts against the budget (it was
+    // really dispatched), and the task blocks for reconciliation instead of
+    // continuing to issue fresh decisions on unknown state.
+    expect(result.checkpoint.actionCount).toBe(1);
+    expect(result.checkpoint.state).toBe("RECONCILING");
+    expect(result.events.some((event) => event.kind === "TaskBlocked")).toBe(true);
+    expect(result.events.some((event) => event.kind === "VerificationCompleted")).toBe(false);
 
     // Resuming again is idempotent: no second EffectUnknown is appended.
     const secondEffects = new FakeEffectPort();
@@ -321,5 +387,90 @@ describe("FocusKernel crash recovery across instances", () => {
     });
     expect(second.events.filter((event) => event.kind === "EffectUnknown")).toHaveLength(1);
     expect(secondEffects.submitted).toEqual([]);
+    // The second resume is idempotent: the task stays in RECONCILING with no
+    // new events appended.
+    expect(second.checkpoint.state).toBe("RECONCILING");
+    expect(second.events.filter((event) => event.kind === "TaskBlocked")).toHaveLength(1);
+  });
+
+  it("resumes the completion gate after a crash between VERIFYING and VerificationCompleted", async () => {
+    const directory = await tempFactDirectory();
+    const tool = fixtureTool();
+    const execution = fixtureExecution("verifying-resume-task");
+    // Run 1: baseline verifies, then the worker dies inside the target gate,
+    // after the VERIFYING transition was persisted.
+    const crashedKernel = new FocusKernel({
+      decision: new ScriptedDecisionPort([
+        { kind: "completion_candidate", summary: "ready", evidence: [], residualRisks: [] },
+      ]),
+      effects: new FakeEffectPort(),
+      facts: new FileFactStore(directory),
+      verifier: new ThrowsOnTargetVerify(),
+      tools: [tool],
+      workerId: "worker-verify-crash",
+    });
+    await expect(
+      crashedKernel.run({ task: fixtureTask(), execution, model: fixtureModel() }),
+    ).rejects.toThrow(/simulated verifier crash/);
+
+    // Run 2: the gate must complete instead of wedging the task in VERIFYING.
+    const facts = new FileFactStore(directory);
+    const resumedKernel = new FocusKernel({
+      decision: new ScriptedDecisionPort([]),
+      effects: new FakeEffectPort(),
+      facts,
+      verifier: new StaticVerifier("PASS", "PASS"),
+      tools: [tool],
+      workerId: "worker-verify-resume",
+    });
+    const result = await resumedKernel.run({
+      task: fixtureTask(),
+      execution,
+      model: fixtureModel(),
+    });
+    expect(result.checkpoint.state).toBe("REVIEW_READY");
+    expect(result.events.filter((event) => event.kind === "VerificationCompleted")).toHaveLength(1);
+    expect(result.verification?.conclusion).toBe("PASS");
+  });
+
+  it("replays the gate transition without re-verifying when VerificationCompleted already landed", async () => {
+    const directory = await tempFactDirectory();
+    const tool = fixtureTool();
+    const execution = fixtureExecution("verifying-idempotent-task");
+    const counting = new CountingVerifier(new StaticVerifier("PASS", "PASS"));
+    // Run 1: the gate completes but the REVIEW_READY transition append fails.
+    const crashedKernel = new FocusKernel({
+      decision: new ScriptedDecisionPort([
+        { kind: "completion_candidate", summary: "ready", evidence: [], residualRisks: [] },
+      ]),
+      effects: new FakeEffectPort(),
+      facts: new ThrowOnReviewReadyTransition(new FileFactStore(directory)),
+      verifier: counting,
+      tools: [tool],
+      workerId: "worker-transition-crash",
+    });
+    await expect(
+      crashedKernel.run({ task: fixtureTask(), execution, model: fixtureModel() }),
+    ).rejects.toThrow(/simulated transition crash/);
+
+    // Run 2: the recorded report replays the transition; the verifier is not
+    // called a third time (baseline + target happened in run 1).
+    const facts = new FileFactStore(directory);
+    const resumedKernel = new FocusKernel({
+      decision: new ScriptedDecisionPort([]),
+      effects: new FakeEffectPort(),
+      facts,
+      verifier: counting,
+      tools: [tool],
+      workerId: "worker-transition-resume",
+    });
+    const result = await resumedKernel.run({
+      task: fixtureTask(),
+      execution,
+      model: fixtureModel(),
+    });
+    expect(result.checkpoint.state).toBe("REVIEW_READY");
+    expect(counting.calls).toBe(2);
+    expect(result.events.filter((event) => event.kind === "VerificationCompleted")).toHaveLength(1);
   });
 });

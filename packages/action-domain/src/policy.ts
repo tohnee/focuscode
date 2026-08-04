@@ -13,6 +13,28 @@ import {
 export type PolicyDisposition = "grant" | "approval_required" | "deny";
 
 /**
+ * Session tools that carry a structured `path` argument the model controls.
+ * The protected-resource gate must cover every path-reading tool, not just the
+ * file-edit ones: grep/find/ls take a model-supplied path yet are classified
+ * `read` and would otherwise silently read `.env`/`.ssh` in any approval mode.
+ */
+const PATH_READING_TOOLS = ["read", "write", "edit", "git_diff", "grep", "find", "ls"] as const;
+
+/**
+ * Folds a path for protected-resource comparison. Default filesystems on
+ * macOS (APFS) and Windows (NTFS) are case-insensitive, and APFS also ignores
+ * trailing dots/spaces, so `.ENV`, `.Env.` or `.env. ` would otherwise bypass
+ * the gate while resolving to the protected file. Folding is strictly
+ * conservative: on case-sensitive filesystems it may deny a variant that is
+ * technically a different file, which is the fail-closed direction.
+ */
+function foldPath(path: string): string {
+  return normalizeRelativePath(path)
+    .toLowerCase()
+    .replace(/[. ]+$/g, "");
+}
+
+/**
  * Conversational-agent approval modes. Setting PolicyConfig.approvalMode
  * switches PolicyEngine.evaluate to the session approval matrix, the single
  * rule source behind the agent-runtime PermissionController.
@@ -223,7 +245,14 @@ export class PolicyEngine {
     if (this.config.approvalMode !== undefined) {
       return this.evaluateSessionRules(intent, tool, projectedRiskScore);
     }
-    if (tool.id === "apply_edit_ir" || effectClasses.has("command") || effectClasses.has("git")) {
+    // The kernel envelope grants only actions whose tool declares no
+    // side-effect class. Classifying from the tool's declaration (not the
+    // intent's self-declared claims) closes the default-allow escape where an
+    // intent with empty expectedEffects fell through to the read-only grant.
+    if (
+      tool.id === "apply_edit_ir" ||
+      tool.effectClasses.some((effectClass) => effectClass !== "read")
+    ) {
       return {
         disposition: "approval_required",
         reason: "This action changes workspace state or starts a process",
@@ -382,17 +411,17 @@ export class PolicyEngine {
     if (toolId === "apply_patch") {
       const patch = argumentsValue.patch;
       if (typeof patch !== "string") return undefined;
-      const paths = extractApplyPatchPaths(patch);
+      const paths = extractApplyPatchPaths(patch).map(foldPath);
       return this.normalizedProtectedPaths().find((protectedPath) =>
         paths.some((path) => path === protectedPath || path.startsWith(`${protectedPath}/`)),
       );
     }
-    if (!["read", "write", "edit", "git_diff"].includes(toolId)) return undefined;
+    if (!(PATH_READING_TOOLS as readonly string[]).includes(toolId)) return undefined;
     const rawPath = argumentsValue.path;
     if (typeof rawPath !== "string") return undefined;
-    const normalized = normalizeRelativePath(rawPath);
+    const folded = foldPath(rawPath);
     return this.normalizedProtectedPaths().find(
-      (protectedPath) => normalized === protectedPath || normalized.startsWith(`${protectedPath}/`),
+      (protectedPath) => folded === protectedPath || folded.startsWith(`${protectedPath}/`),
     );
   }
 
@@ -401,13 +430,13 @@ export class PolicyEngine {
   }
 
   private normalizedProtectedPaths(): string[] {
-    return this.config.protectedPaths.map(normalizeRelativePath);
+    return this.config.protectedPaths.map(foldPath);
   }
 
   private isProtected(path: string): boolean {
-    const normalized = normalizeRelativePath(path);
+    const folded = foldPath(path);
     return this.normalizedProtectedPaths().some((protectedPath) => {
-      return normalized === protectedPath || normalized.startsWith(`${protectedPath}/`);
+      return folded === protectedPath || folded.startsWith(`${protectedPath}/`);
     });
   }
 }

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { realpath } from "node:fs/promises";
 import { relative, resolve, sep } from "node:path";
-import { runHostProcess } from "./process-runner.js";
+import { registerParentDeathCleanup, runHostProcess } from "./process-runner.js";
 import type {
   DockerSandboxOptions,
   HostSandboxOptions,
@@ -33,7 +34,7 @@ export class HostSandbox implements SandboxExecutor {
   }
 
   async execute(command: SandboxCommand): Promise<SandboxResult> {
-    assertWorkspace(command, this.workspaceRoot);
+    await assertWorkspace(command, this.workspaceRoot);
     const shell = shellInvocation(command.command);
     return {
       ...(await this.runner({
@@ -70,6 +71,7 @@ export class DockerSandbox implements SandboxExecutor {
   private readonly docker: string;
   private readonly runner: ProcessRunner;
   private taskContainer: string | undefined;
+  private unregisterTaskContainer: (() => void) | undefined;
 
   constructor(options: DockerSandboxOptions) {
     this.workspaceRoot = resolve(options.workspaceRoot);
@@ -92,7 +94,7 @@ export class DockerSandbox implements SandboxExecutor {
   }
 
   async execute(command: SandboxCommand): Promise<SandboxResult> {
-    assertWorkspace(command, this.workspaceRoot);
+    await assertWorkspace(command, this.workspaceRoot);
     const relativeCwd = relative(this.workspaceRoot, resolve(command.cwd));
     const containerCwd = relativeCwd
       ? `/workspace/${relativeCwd.split(sep).join("/")}`
@@ -114,6 +116,17 @@ export class DockerSandbox implements SandboxExecutor {
       "-lc",
       command.command,
     ];
+    // If the CLI dies while docker run is attached, the container keeps
+    // executing on the daemon side; force-remove it on parent death.
+    const unregister = registerParentDeathCleanup(() => {
+      void this.runner({
+        executable: this.docker,
+        arguments: ["rm", "--force", containerName],
+        cwd: this.workspaceRoot,
+        timeoutMs: 10_000,
+        maxOutputChars: 4_000,
+      }).catch(() => undefined);
+    });
     const result = await this.runner({
       executable: this.docker,
       arguments: argumentsValue,
@@ -131,6 +144,7 @@ export class DockerSandbox implements SandboxExecutor {
         maxOutputChars: 4_000,
       }).catch(() => undefined);
     }
+    unregister();
     return {
       ...result,
       backend: this.kind,
@@ -141,6 +155,8 @@ export class DockerSandbox implements SandboxExecutor {
     if (!this.taskContainer) return;
     const containerName = this.taskContainer;
     this.taskContainer = undefined;
+    this.unregisterTaskContainer?.();
+    this.unregisterTaskContainer = undefined;
     await this.runner({
       executable: this.docker,
       arguments: ["rm", "--force", containerName],
@@ -214,6 +230,17 @@ export class DockerSandbox implements SandboxExecutor {
       );
     }
     this.taskContainer = containerName;
+    // A task container is long-lived by design; if the CLI dies it must not
+    // keep running the untrusted workspace. Force-remove on parent death.
+    this.unregisterTaskContainer = registerParentDeathCleanup(() => {
+      void this.runner({
+        executable: this.docker,
+        arguments: ["rm", "--force", containerName],
+        cwd: this.workspaceRoot,
+        timeoutMs: 10_000,
+        maxOutputChars: 4_000,
+      }).catch(() => undefined);
+    });
     return containerName;
   }
 
@@ -222,6 +249,12 @@ export class DockerSandbox implements SandboxExecutor {
     containerCwd: string,
   ): Promise<SandboxResult> {
     const containerName = await this.ensureContainer();
+    // The command runs under a unique marker so the timeout sweep can kill
+    // exactly this invocation's tree: the marker stays in the outer shell's
+    // argv (it is part of the -c string), and the sweep kills the matched
+    // shell plus its descendants two levels deep. A process that strips its
+    // own argv or daemonizes beyond that depth is a documented residual.
+    const marker = `FOCUSCODE_RUN_ID=${randomUUID()}`;
     const result = await this.runner({
       executable: this.docker,
       arguments: [
@@ -231,7 +264,7 @@ export class DockerSandbox implements SandboxExecutor {
         containerName,
         "/bin/sh",
         "-lc",
-        command.command,
+        `${marker} ${shellQuote(command.command)}`,
       ],
       cwd: this.workspaceRoot,
       timeoutMs: command.timeoutMs,
@@ -239,10 +272,26 @@ export class DockerSandbox implements SandboxExecutor {
       ...(command.signal ? { signal: command.signal } : {}),
     });
     if (result.timedOut || command.signal?.aborted) {
-      const pattern = command.command.slice(0, 40).replaceAll("'", `'\\''`);
+      // The pattern uses the classic self-exclusion trick ([x] vs x): the
+      // sweep shell's own argv contains the literal "[x]" form, so pgrep
+      // matches the target invocation only, never the sweep itself.
+      const markerLast = marker[marker.length - 1];
+      const markerPattern = `${marker.slice(0, -1)}[${markerLast}]`;
+      const sweep = [
+        "for p in $(pgrep -f",
+        shellQuote(markerPattern),
+        "); do",
+        '  for c in $(pgrep -P "$p"); do',
+        '    pkill -9 -P "$c" 2>/dev/null || true',
+        '    kill -9 "$c" 2>/dev/null || true',
+        "  done",
+        '  kill -9 "$p" 2>/dev/null || true',
+        "done",
+        "true",
+      ].join(" ");
       await this.runner({
         executable: this.docker,
-        arguments: ["exec", containerName, "sh", "-c", `pkill -f '${pattern}' || true`],
+        arguments: ["exec", containerName, "sh", "-c", sweep],
         cwd: this.workspaceRoot,
         timeoutMs: 10_000,
         maxOutputChars: 4_000,
@@ -338,7 +387,7 @@ export class SshVmSandbox implements SandboxExecutor {
   }
 
   async execute(command: SandboxCommand): Promise<SandboxResult> {
-    assertWorkspace(command, this.workspaceRoot);
+    await assertWorkspace(command, this.workspaceRoot);
     const relativeCwd = relative(this.workspaceRoot, resolve(command.cwd));
     const remoteCwd = relativeCwd
       ? `${this.options.remoteWorkspace}/${relativeCwd.split(sep).join("/")}`
@@ -405,14 +454,30 @@ export class SshVmSandbox implements SandboxExecutor {
   }
 }
 
-function assertWorkspace(command: SandboxCommand, expectedRoot: string): void {
-  const root = resolve(command.workspaceRoot);
-  if (root !== expectedRoot)
-    throw new Error("Sandbox workspace does not match configured workspace");
-  const cwd = resolve(command.cwd);
+/**
+ * Lexical AND physical containment check. Resolving both the configured root
+ * and the requested cwd through realpath first defeats symlink escapes: a cwd
+ * (or workspace root) whose path traverses a symlink pointing outside the
+ * workspace must not pass the check and execute outside the intended tree.
+ */
+async function assertWorkspace(command: SandboxCommand, expectedRoot: string): Promise<void> {
+  const root = await realpathSafe(resolve(command.workspaceRoot));
+  const expected = await realpathSafe(resolve(expectedRoot));
+  if (root !== expected) throw new Error("Sandbox workspace does not match configured workspace");
+  const cwd = await realpathSafe(resolve(command.cwd));
   const rel = relative(root, cwd);
   if (rel === ".." || rel.startsWith(`..${sep}`) || resolve(root, rel) !== cwd) {
     throw new Error("Sandbox command cwd escapes workspace");
+  }
+}
+
+async function realpathSafe(path: string): Promise<string> {
+  try {
+    return await realpath(path);
+  } catch {
+    // The path may not exist yet (spawn will fail anyway); fall back to the
+    // lexical form so the containment check still runs.
+    return resolve(path);
   }
 }
 

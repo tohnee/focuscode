@@ -71,6 +71,36 @@ export class FocusKernel {
       };
     }
 
+    if (checkpoint.state === "RECONCILING") {
+      // Previously blocked on a started-but-unobserved action (crash window C);
+      // awaiting human reconciliation. Idempotent: no new events are appended.
+      return { checkpoint, events: existingEvents };
+    }
+
+    const pendingOrphans = (
+      await this.dependencies.facts.loadEvents(request.execution.taskId)
+    ).some((event) => event.kind === "EffectUnknown");
+    if (checkpoint.state === "RUNNING" && pendingOrphans) {
+      // Crash window C: an action was started without a receipt, so its side
+      // effect may have executed. The kernel never auto re-executes (§4.2) and
+      // it must not keep issuing fresh decisions on unknown state either —
+      // block for reconciliation instead of resuming the loop.
+      await this.append(checkpoint, request.execution, "TaskBlocked", {
+        reason: "started-but-unobserved action requires reconciliation",
+      });
+      await this.transition(
+        checkpoint,
+        request.execution,
+        "RECONCILING",
+        "orphaned action awaits reconciliation",
+      );
+      await this.dependencies.facts.saveCheckpoint(checkpoint);
+      return {
+        checkpoint,
+        events: await this.dependencies.facts.loadEvents(request.execution.taskId),
+      };
+    }
+
     if (checkpoint.state === "CREATED") {
       if (!existingEvents.some((event) => event.kind === "TaskCreated")) {
         await this.append(checkpoint, request.execution, "TaskCreated", { task: request.task });
@@ -93,8 +123,21 @@ export class FocusKernel {
       await this.transition(checkpoint, request.execution, "RUNNING", "worker lease acquired");
     }
 
-    const started = Date.parse(checkpoint.startedAt);
     let finalVerification: VerificationReportV1 | undefined;
+    if (checkpoint.state === "VERIFYING") {
+      // Crash window: the transition to VERIFYING was persisted but the gate
+      // did not complete (worker died mid-verification). Resume the gate so
+      // the task cannot wedge permanently in VERIFYING.
+      finalVerification = await this.resumeCompletionGate(request, checkpoint);
+      await this.dependencies.facts.saveCheckpoint(checkpoint);
+      return {
+        checkpoint,
+        events: await this.dependencies.facts.loadEvents(request.execution.taskId),
+        ...(finalVerification ? { verification: finalVerification } : {}),
+      };
+    }
+
+    const started = Date.parse(checkpoint.startedAt);
     while (checkpoint.state === "RUNNING") {
       if (checkpoint.turn >= request.execution.budget.maxTurns) {
         await this.block(checkpoint, request.execution, "Turn budget exhausted");
@@ -251,30 +294,61 @@ export class FocusKernel {
           "VERIFYING",
           "completion requires gate",
         );
-        const report = await this.dependencies.verifier.verify({
-          taskId: request.execution.taskId,
-          phase: "target",
-          ...(checkpoint.baseline ? { baseline: checkpoint.baseline } : {}),
-        });
-        await this.append(checkpoint, request.execution, "VerificationCompleted", { report });
-        if (report.conclusion === "PASS") {
-          await this.transition(
-            checkpoint,
-            request.execution,
-            "REVIEW_READY",
-            "verification passed",
-          );
-        } else {
-          await this.transition(
-            checkpoint,
-            request.execution,
-            "BLOCKED",
-            `verification concluded ${report.conclusion}`,
-          );
-        }
-        return report;
+        return this.resumeCompletionGate(request, checkpoint);
       }
     }
+  }
+
+  /**
+   * Runs the target verification and completes the gate (VERIFYING →
+   * REVIEW_READY/BLOCKED). Shared by the live completion path and the crash
+   * resume path; idempotent: if a VerificationCompleted event already exists
+   * (crash between the append and the state transition), the transition is
+   * replayed from the recorded report instead of re-running the verifier.
+   */
+  private async resumeCompletionGate(
+    request: KernelRunRequest,
+    checkpoint: KernelCheckpointV1,
+  ): Promise<VerificationReportV1> {
+    const events = await this.dependencies.facts.loadEvents(request.execution.taskId);
+    const lastVerification = [...events]
+      .reverse()
+      .find((event) => event.kind === "VerificationCompleted");
+    const payload =
+      lastVerification?.payload && typeof lastVerification.payload === "object"
+        ? (lastVerification.payload as Record<string, unknown>)
+        : {};
+    const recorded = payload.report as VerificationReportV1 | undefined;
+    if (recorded && typeof recorded.conclusion === "string") {
+      if (recorded.conclusion === "PASS") {
+        await this.transition(checkpoint, request.execution, "REVIEW_READY", "verification passed");
+      } else {
+        await this.transition(
+          checkpoint,
+          request.execution,
+          "BLOCKED",
+          `verification concluded ${recorded.conclusion}`,
+        );
+      }
+      return recorded;
+    }
+    const report = await this.dependencies.verifier.verify({
+      taskId: request.execution.taskId,
+      phase: "target",
+      ...(checkpoint.baseline ? { baseline: checkpoint.baseline } : {}),
+    });
+    await this.append(checkpoint, request.execution, "VerificationCompleted", { report });
+    if (report.conclusion === "PASS") {
+      await this.transition(checkpoint, request.execution, "REVIEW_READY", "verification passed");
+    } else {
+      await this.transition(
+        checkpoint,
+        request.execution,
+        "BLOCKED",
+        `verification concluded ${report.conclusion}`,
+      );
+    }
+    return report;
   }
 
   private newCheckpoint(request: KernelRunRequest, eventVersion: number): KernelCheckpointV1 {
@@ -300,6 +374,12 @@ export class FocusKernel {
     execution: ExecutionContextV1,
   ): Promise<KernelCheckpointV1> {
     const missing = events.filter((event) => event.seq > checkpoint.eventVersion);
+    // Budget accounting during replay: count distinct actions that were
+    // dispatched (ActionStarted) or observed (EffectObserved). Counting only
+    // observed receipts undercounts real executions when a crash leaves
+    // started-but-unobserved actions behind, letting a resumed task exceed
+    // its declared action budget.
+    const countedActionIds = new Set<string>();
     for (const event of missing) {
       const payload =
         event.payload && typeof event.payload === "object"
@@ -316,12 +396,21 @@ export class FocusKernel {
       if (event.kind === "PreflightCompleted" && payload.baseline) {
         checkpoint.baseline = payload.baseline as VerificationReportV1;
       }
+      if (event.kind === "ActionStarted") {
+        const actionId = typeof payload.actionId === "string" ? payload.actionId : undefined;
+        if (actionId && !countedActionIds.has(actionId)) {
+          countedActionIds.add(actionId);
+          checkpoint.actionCount += 1;
+        }
+      }
       if (event.kind === "EffectObserved" && payload.receipt) {
-        checkpoint.recentEffects = [
-          ...checkpoint.recentEffects,
-          payload.receipt as KernelCheckpointV1["recentEffects"][number],
-        ].slice(-32);
-        checkpoint.actionCount += 1;
+        const receipt = payload.receipt as KernelCheckpointV1["recentEffects"][number];
+        checkpoint.recentEffects = [...checkpoint.recentEffects, receipt].slice(-32);
+        const actionId = typeof receipt.actionId === "string" ? receipt.actionId : undefined;
+        if (actionId && !countedActionIds.has(actionId)) {
+          countedActionIds.add(actionId);
+          checkpoint.actionCount += 1;
+        }
       }
       checkpoint.eventVersion = event.seq;
     }

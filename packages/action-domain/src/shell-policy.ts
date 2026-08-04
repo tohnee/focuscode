@@ -433,7 +433,11 @@ export function isArbitraryShell(command: string): boolean {
 
 export function commandReferencesPath(command: string, path: string): boolean {
   const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(?:^|[\\s'"/])${escaped}(?:[\\s'"/]|$)`).test(command.replaceAll("\\", "/"));
+  // Case-insensitive: APFS/NTFS are case-insensitive, so `cat .ENV` must not
+  // bypass the protected-resource scan.
+  return new RegExp(`(?:^|[\\s'"/])${escaped}(?:[\\s'"/]|$)`, "i").test(
+    command.replaceAll("\\", "/"),
+  );
 }
 
 /**

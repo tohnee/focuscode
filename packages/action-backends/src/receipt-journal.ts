@@ -28,9 +28,11 @@ export class FileReceiptJournal implements ReceiptJournal {
   constructor(private readonly filePath: string) {}
 
   async append(receipt: EffectReceiptV1): Promise<void> {
-    await mkdir(dirname(this.filePath), { recursive: true });
+    // Receipts carry tool arguments, commands and outputs: the journal must be
+    // private to the user (0o600, matching the session store and fact store).
+    await mkdir(dirname(this.filePath), { recursive: true, mode: 0o700 });
     const line = JSON.stringify(receipt) + "\n";
-    const handle = await open(this.filePath, "a");
+    const handle = await open(this.filePath, "a", 0o600);
     try {
       await handle.write(line);
       await handle.sync();

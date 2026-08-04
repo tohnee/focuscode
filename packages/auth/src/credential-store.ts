@@ -7,6 +7,8 @@ import type { StoredCredential } from "./types.js";
 interface EncryptedEnvelope {
   schemaVersion: "focuscode-credentials.v1";
   algorithm: "aes-256-gcm";
+  /** scrypt salt for passphrase-derived keys; absent on pre-random-salt envelopes. */
+  salt?: string;
   iv: string;
   tag: string;
   ciphertext: string;
@@ -95,7 +97,7 @@ export class EncryptedCredentialStore {
     }
     const decipher = createDecipheriv(
       "aes-256-gcm",
-      await this.key(),
+      await this.key(envelope.salt ? Buffer.from(envelope.salt, "base64") : undefined),
       Buffer.from(envelope.iv, "base64"),
     );
     decipher.setAuthTag(Buffer.from(envelope.tag, "base64"));
@@ -117,8 +119,9 @@ export class EncryptedCredentialStore {
 
   private async save(database: CredentialDatabase): Promise<void> {
     await mkdir(this.directory, { recursive: true, mode: 0o700 });
+    const salt = randomBytes(16);
     const iv = randomBytes(12);
-    const cipher = createCipheriv("aes-256-gcm", await this.key(), iv);
+    const cipher = createCipheriv("aes-256-gcm", await this.key(salt), iv);
     const ciphertext = Buffer.concat([
       cipher.update(JSON.stringify(database), "utf8"),
       cipher.final(),
@@ -126,6 +129,7 @@ export class EncryptedCredentialStore {
     const envelope: EncryptedEnvelope = {
       schemaVersion: "focuscode-credentials.v1",
       algorithm: "aes-256-gcm",
+      salt: salt.toString("base64"),
       iv: iv.toString("base64"),
       tag: cipher.getAuthTag().toString("base64"),
       ciphertext: ciphertext.toString("base64"),
@@ -136,9 +140,16 @@ export class EncryptedCredentialStore {
     await chmod(this.databasePath, 0o600);
   }
 
-  private async key(): Promise<Buffer> {
+  /**
+   * Derives the encryption key. With a passphrase the scrypt salt is a random
+   * per-envelope value (stored beside the ciphertext); the legacy fixed salt
+   * is kept only to read envelopes written before random salts existed, so
+   * existing stores keep working. Without a passphrase a random 32-byte key
+   * file is used.
+   */
+  private async key(salt?: Buffer): Promise<Buffer> {
     if (this.options.passphrase) {
-      return scryptSync(this.options.passphrase, "focuscode-credentials-v1", 32);
+      return scryptSync(this.options.passphrase, salt ?? "focuscode-credentials-v1", 32);
     }
     if (await exists(this.keyPath)) {
       const info = await stat(this.keyPath);

@@ -10,6 +10,7 @@
  * On non-darwin platforms `health()` resolves to `{ available: false }`
  * (fail-quiet), allowing the factory to fall back to another executor.
  */
+import { realpathSync } from "node:fs";
 import { relative, resolve, sep } from "node:path";
 import { runHostProcess } from "./process-runner.js";
 import type {
@@ -59,7 +60,10 @@ export class SeatbeltSandbox implements SandboxExecutor {
   async execute(command: SandboxCommand): Promise<SandboxResult> {
     assertWorkspace(command, this.workspaceRoot);
     const profile = this.buildProfile();
-    const shell = process.env.SHELL ?? "/bin/sh";
+    // POSIX sh mode, not the user's interactive shell: under a hardened
+    // seatbelt profile, zsh and bash abort (SIGABRT, exit 134) during their
+    // interactive initialization while /bin/sh (sh mode) runs cleanly.
+    const shell = "/bin/sh";
     const argumentsValue = ["-p", profile, "--", shell, "-lc", command.command];
     return {
       ...(await this.runner({
@@ -83,13 +87,15 @@ export class SeatbeltSandbox implements SandboxExecutor {
       };
     }
     try {
-      // P1-G: real macOS `sandbox-exec` does NOT support `--version`. Probe
-      // with `-h` (help) which exits 0 on real installs and 1 when the
-      // binary is missing. This makes the auto-chain actually pick seatbelt
-      // on macOS instead of silently skipping it.
+      // Probe by actually executing a trivial allow-all profile against
+      // /usr/bin/true. `-h` cannot be used as the probe: modern macOS
+      // (25.x) treats it as an illegal option and exits 64 (EX_USAGE) on a
+      // perfectly working install, which made the auto-chain skip seatbelt
+      // and fail on machines without Docker/gVisor. Running a minimal
+      // profile verifies both the binary and the sandbox execution path.
       const result = await this.runner({
         executable: this.sandboxExec,
-        arguments: ["-h"],
+        arguments: ["-p", "(version 1)(allow default)", "/usr/bin/true"],
         cwd: this.workspaceRoot,
         timeoutMs: 5_000,
         maxOutputChars: 1_000,
@@ -117,35 +123,46 @@ export class SeatbeltSandbox implements SandboxExecutor {
   }
 
   /**
-   * Builds a seatbelt profile string that:
-   *  - denies everything by default
-   *  - explicitly denies all file writes (overridden by more specific allows)
-   *  - allows executing and reading system binaries (/usr/bin, /bin)
-   *  - allows reading system libraries (/usr/lib)
-   *  - allows read/write only inside the workspace root
-   *  - allows executing the node binary and the configured shell
+   * Builds a seatbelt profile string:
+   *  - denies everything by default (including all network access)
+   *  - allows executing system binaries, the shell and the node binary
+   *  - allows reads everywhere and writes ONLY inside the workspace root
+   *
+   * Read allowlist note: modern macOS (15+/25+) serves system libraries from
+   * the dyld shared cache and synthesizes /bin, /usr, /System as firmlinks;
+   * file operations are matched against their resolved vnode paths, so a
+   * subpath allowlist of system directories neither compiles the right rules
+   * nor stays maintainable. The containment value of this executor is write
+   * isolation (untrusted commands cannot modify anything outside the
+   * workspace) plus default-deny network — reads are therefore allowed
+   * globally. A read-restricted executor should be Docker/gVisor.
    *
    * P1-G: all interpolated paths are escaped via `escapeSbplString` so a
    * workspace/shell/node path containing `"` or `\` cannot inject SBPL
    * rules and escape containment.
    */
   private buildProfile(): string {
-    const root = escapeSbplString(this.workspaceRoot);
-    const shell = escapeSbplString(process.env.SHELL ?? "/bin/sh");
-    const nodeBin = escapeSbplString(process.execPath);
+    // subpath rules match the resolved vnode path, not symlinked spellings:
+    // /var → /private/var and /tmp → /private/tmp, so a workspace under
+    // /var/folders must be written as its realpath or every write is denied.
+    const root = escapeSbplString(realpathSyncSafe(this.workspaceRoot));
+    // process-exec rules must use the explicit (literal "...") form: modern
+    // macOS (25.x) rejects a bare string with "illegal argument" (exit 65)
+    // at profile compile time. Binaries are also resolved to their real
+    // paths so an exec through a symlinked binary matches the rule.
+    const shell = escapeSbplString(realpathSyncSafe("/bin/sh"));
+    const nodeBin = escapeSbplString(realpathSyncSafe(process.execPath));
     return [
       "(version 1)",
       "(deny default)",
-      "(deny file-write*)",
-      '(allow process-exec (subpath "/usr/bin"))',
       '(allow process-exec (subpath "/bin"))',
-      '(allow file-read* (subpath "/usr/bin"))',
-      '(allow file-read* (subpath "/bin"))',
-      '(allow file-read* (subpath "/usr/lib"))',
+      '(allow process-exec (subpath "/usr/bin"))',
+      "(allow process-fork)",
+      "(allow file-read*)",
       `(allow file-write* (subpath "${root}"))`,
       `(allow file-read* (subpath "${root}"))`,
-      `(allow process-exec "${nodeBin}")`,
-      `(allow process-exec "${shell}")`,
+      `(allow process-exec (literal "${nodeBin}"))`,
+      `(allow process-exec (literal "${shell}"))`,
     ].join("\n");
   }
 }
@@ -154,10 +171,21 @@ function assertWorkspace(command: SandboxCommand, expectedRoot: string): void {
   const root = resolve(command.workspaceRoot);
   if (root !== expectedRoot)
     throw new Error("Sandbox workspace does not match configured workspace");
-  const cwd = resolve(command.cwd);
-  const rel = relative(root, cwd);
-  if (rel === ".." || rel.startsWith(`..${sep}`) || resolve(root, rel) !== cwd) {
+  // Resolve through realpath so a symlinked cwd pointing outside the
+  // workspace cannot pass the lexical check.
+  const cwd = resolve(realpathSyncSafe(resolve(command.cwd)));
+  const realRoot = realpathSyncSafe(root);
+  const rel = relative(realRoot, cwd);
+  if (rel === ".." || rel.startsWith(`..${sep}`) || resolve(realRoot, rel) !== cwd) {
     throw new Error("Sandbox command cwd escapes workspace");
+  }
+}
+
+function realpathSyncSafe(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    return resolve(path);
   }
 }
 
