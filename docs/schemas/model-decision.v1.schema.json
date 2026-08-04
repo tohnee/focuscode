@@ -5,7 +5,10 @@
     {
       "additionalProperties": false,
       "type": "object",
-      "required": ["kind", "content"],
+      "required": [
+        "kind",
+        "content"
+      ],
       "properties": {
         "kind": {
           "const": "respond",
@@ -22,7 +25,10 @@
     {
       "additionalProperties": false,
       "type": "object",
-      "required": ["kind", "questions"],
+      "required": [
+        "kind",
+        "questions"
+      ],
       "properties": {
         "kind": {
           "const": "ask_user",
@@ -41,7 +47,10 @@
     {
       "additionalProperties": false,
       "type": "object",
-      "required": ["kind", "intents"],
+      "required": [
+        "kind",
+        "intents"
+      ],
       "properties": {
         "kind": {
           "const": "tool_intent",
@@ -79,7 +88,11 @@
               "tool": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["id", "version", "schemaDigest"],
+                "required": [
+                  "id",
+                  "version",
+                  "schemaDigest"
+                ],
                 "properties": {
                   "id": {
                     "minLength": 1,
@@ -101,7 +114,10 @@
                 "items": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["class", "description"],
+                  "required": [
+                    "class",
+                    "description"
+                  ],
                   "properties": {
                     "class": {
                       "anyOf": [
@@ -161,7 +177,10 @@
     {
       "additionalProperties": false,
       "type": "object",
-      "required": ["kind", "delegation"],
+      "required": [
+        "kind",
+        "delegation"
+      ],
       "properties": {
         "kind": {
           "const": "delegate_intent",
@@ -173,7 +192,11 @@
     {
       "additionalProperties": false,
       "type": "object",
-      "required": ["kind", "steps", "evidence"],
+      "required": [
+        "kind",
+        "steps",
+        "evidence"
+      ],
       "properties": {
         "kind": {
           "const": "plan_revision",
@@ -192,7 +215,11 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["artifactId", "mediaType", "digest"],
+            "required": [
+              "artifactId",
+              "mediaType",
+              "digest"
+            ],
             "properties": {
               "artifactId": {
                 "minLength": 1,
@@ -217,7 +244,12 @@
     {
       "additionalProperties": false,
       "type": "object",
-      "required": ["kind", "summary", "evidence", "residualRisks"],
+      "required": [
+        "kind",
+        "summary",
+        "evidence",
+        "residualRisks"
+      ],
       "properties": {
         "kind": {
           "const": "completion_candidate",
@@ -232,7 +264,11 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["artifactId", "mediaType", "digest"],
+            "required": [
+              "artifactId",
+              "mediaType",
+              "digest"
+            ],
             "properties": {
               "artifactId": {
                 "minLength": 1,

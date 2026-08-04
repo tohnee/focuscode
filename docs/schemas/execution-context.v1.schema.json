@@ -30,7 +30,10 @@
     "actor": {
       "additionalProperties": false,
       "type": "object",
-      "required": ["id", "kind"],
+      "required": [
+        "id",
+        "kind"
+      ],
       "properties": {
         "id": {
           "minLength": 1,
@@ -73,7 +76,13 @@
     "budget": {
       "additionalProperties": false,
       "type": "object",
-      "required": ["maxTurns", "maxActions", "maxWallTimeMs", "maxChangedFiles", "maxChangedLines"],
+      "required": [
+        "maxTurns",
+        "maxActions",
+        "maxWallTimeMs",
+        "maxChangedFiles",
+        "maxChangedLines"
+      ],
       "properties": {
         "maxTurns": {
           "minimum": 1,

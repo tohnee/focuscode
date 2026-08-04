@@ -317,6 +317,28 @@ export const UsageRecordSchema = Type.Object(
 );
 export type UsageRecordV1 = Static<typeof UsageRecordSchema>;
 
+export const CacheEpochManifestSchema = Type.Object(
+  {
+    schemaVersion: Type.Literal("cache-epoch.v1"),
+    /** 模型 revision;来自 ModelProfile.revision。 */
+    modelRevision: Type.String({ minLength: 1 }),
+    /** chat template 指纹;暂用 provider+protocol 组合的 hash 占位。 */
+    chatTemplateHash: Type.Optional(Type.String()),
+    /** 核心工具 schema 的稳定指纹(JSON canonical sha256)。 */
+    toolBundleHash: Type.String({ minLength: 1 }),
+    /** stable system 段(含 instructions/extensionPrompt)的 sha256。 */
+    systemHash: Type.String({ minLength: 1 }),
+    /** thinkingFormat 方言("openai"|"deepseek"|"qwen"|"zai")。 */
+    reasoningProtocol: Type.Optional(Type.String()),
+    /** wire protocol("openai-chat"|"anthropic-messages"|...)。 */
+    toolProtocol: Type.Optional(Type.String()),
+    /** cacheControl.mode("openai-prefix"|"anthropic-ephemeral"|"none")。 */
+    cacheMode: Type.Optional(Type.String()),
+  },
+  Strict,
+);
+export type CacheEpochManifestV1 = Static<typeof CacheEpochManifestSchema>;
+
 export interface ParserDiagnosticV1 {
   code: string;
   message: string;

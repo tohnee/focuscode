@@ -22,7 +22,14 @@
     "task": {
       "additionalProperties": false,
       "type": "object",
-      "required": ["schemaVersion", "repoId", "baseRef", "mode", "objective", "acceptanceCriteria"],
+      "required": [
+        "schemaVersion",
+        "repoId",
+        "baseRef",
+        "mode",
+        "objective",
+        "acceptanceCriteria"
+      ],
       "properties": {
         "schemaVersion": {
           "const": "task-spec.v1",
@@ -65,7 +72,10 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["id", "description"],
+            "required": [
+              "id",
+              "description"
+            ],
             "properties": {
               "id": {
                 "minLength": 1,
@@ -160,7 +170,10 @@
         "actor": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "kind"],
+          "required": [
+            "id",
+            "kind"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -451,7 +464,10 @@
           "actor": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["id", "kind"],
+            "required": [
+              "id",
+              "kind"
+            ],
             "properties": {
               "id": {
                 "minLength": 1,
@@ -540,7 +556,11 @@
               "subject": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["taskId", "workerId", "modelCertificateId"],
+                "required": [
+                  "taskId",
+                  "workerId",
+                  "modelCertificateId"
+                ],
                 "properties": {
                   "taskId": {
                     "minLength": 1,
@@ -561,7 +581,9 @@
                 "items": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["name"],
+                  "required": [
+                    "name"
+                  ],
                   "properties": {
                     "name": {
                       "minLength": 1,
@@ -578,7 +600,10 @@
                 "items": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["kind", "value"],
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
                   "properties": {
                     "kind": {
                       "minLength": 1,
@@ -627,7 +652,10 @@
             "items": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["class", "detail"],
+              "required": [
+                "class",
+                "detail"
+              ],
               "properties": {
                 "class": {
                   "minLength": 1,
@@ -645,7 +673,11 @@
             "items": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["artifactId", "mediaType", "digest"],
+              "required": [
+                "artifactId",
+                "mediaType",
+                "digest"
+              ],
               "properties": {
                 "artifactId": {
                   "minLength": 1,
