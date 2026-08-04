@@ -63,12 +63,21 @@ function checkAbort(signal: AbortSignal | undefined): void {
 
 export class AgentToolRegistry {
   private readonly tools = new Map<string, AgentTool>();
+  private frozen = false;
 
   constructor(tools: AgentTool[] = []) {
     for (const tool of tools) this.register(tool);
   }
 
+  /** 冻结工具包:之后 register/unregister 抛错,保证运行期 tool bundle 字节级稳定。 */
+  freeze(): void {
+    this.frozen = true;
+  }
+
   register(tool: AgentTool): void {
+    if (this.frozen) {
+      throw new Error("Tool registry is frozen; cannot register " + tool.definition.name);
+    }
     if (!/^[a-z][a-z0-9_]{0,63}$/.test(tool.definition.name)) {
       throw new Error(`Invalid tool name: ${tool.definition.name}`);
     }
@@ -83,6 +92,9 @@ export class AgentToolRegistry {
   }
 
   unregister(name: string): boolean {
+    if (this.frozen) {
+      throw new Error("Tool registry is frozen; cannot unregister " + name);
+    }
     return this.tools.delete(name);
   }
 
