@@ -249,13 +249,15 @@ describe("renderWorkbench — Cost block cache metrics", () => {
     const frame = plain(
       workbenchState({
         sessionCost: 6.08,
-        cacheMetrics: { hitRatio: 0.4, savedUsd: 0.72 },
+        // savedUsd = (cachedInputTokens / 1_000_000) * pricing.input —
+        // canonical numbers (cached 400K, input price 2.0) yield 0.8.
+        cacheMetrics: { hitRatio: 0.4, savedUsd: 0.8 },
       }),
     );
     expect(frame).toContain("▌Cost");
     expect(frame).toContain("$6.0800");
     expect(frame).toContain("cache hit 40%");
-    expect(frame).toContain("saved $0.72");
+    expect(frame).toContain("saved $0.80");
   });
 
   it("omits cache line when no cache metrics", () => {

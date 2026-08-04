@@ -207,9 +207,9 @@ describe("FullScreenTui reasoning state", () => {
 describe("FullScreenTui cache metrics", () => {
   it("setCacheMetrics stores metrics and snapshot exposes them", () => {
     const tui = createTui();
-    tui.setCacheMetrics({ hitRatio: 0.4, savedUsd: 0.72 });
+    tui.setCacheMetrics({ hitRatio: 0.4, savedUsd: 0.8 });
     const snap = tui.snapshot();
-    expect(snap.cacheMetrics).toEqual({ hitRatio: 0.4, savedUsd: 0.72 });
+    expect(snap.cacheMetrics).toEqual({ hitRatio: 0.4, savedUsd: 0.8 });
   });
 
   it("cacheMetrics is undefined until set", () => {
